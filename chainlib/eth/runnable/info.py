@@ -24,7 +24,6 @@ from hexathon import (
         even,
         )
 import sha3
-from eth_abi import encode_single
 
 # local imports
 from chainlib.eth.address import (
