@@ -117,7 +117,10 @@ def unpack_hex(tx_raw_bytes, chain_spec):
 
 
 def __unpack_raw(tx_raw_bytes, chain_id=1):
-    d = rlp_decode(tx_raw_bytes)
+    try:
+        d = rlp_decode(tx_raw_bytes)
+    except Exception as e:
+        raise ValueError('RLP deserialization failed: {}'.format(e))
 
     logg.debug('decoding using chain id {}'.format(str(chain_id)))
     

@@ -77,7 +77,7 @@ class ABIMethodEncoder(ABIContract):
 
 
 
-class ABIContractDecoder:
+class ABIContractDecoder(ABIContract):
 
     
     def typ(self, v):
@@ -137,7 +137,8 @@ class ABIContractDecoder:
             m = getattr(self, self.types[i])
             s = self.contents[i]
             logg.debug('{} {} {} {} {}'.format(i, m, self.types[i], self.contents[i], s))
-            r.append(m(s.hex()))
+            #r.append(m(s.hex()))
+            r.append(m(s))
         return r
 
 
