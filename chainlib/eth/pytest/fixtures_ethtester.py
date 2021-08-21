@@ -17,7 +17,7 @@ from chainlib.connection import (
 from chainlib.eth.unittest.ethtester import create_tester_signer
 from chainlib.eth.address import to_checksum_address
 
-logg = logging.getLogger() #__name__)
+logg = logging.getLogger(__name__)
 
 
 @pytest.fixture(scope='function')
@@ -37,13 +37,6 @@ def call_sender(
         eth_accounts,
         ):
     return eth_accounts[0]
-#
-#
-#@pytest.fixture(scope='function')
-#def eth_signer(
-#        init_eth_tester,
-#        ):
-#    return init_eth_tester
 
 
 @pytest.fixture(scope='function')

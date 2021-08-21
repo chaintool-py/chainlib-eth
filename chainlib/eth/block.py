@@ -1,14 +1,19 @@
-# third-party imports
+# external imports
 from chainlib.jsonrpc import JSONRPCRequest
-from chainlib.eth.tx import Tx
+from chainlib.block import Block as BaseBlock
 from hexathon import (
         add_0x,
         strip_0x,
         even,
         )
 
+# local imports
+from chainlib.eth.tx import Tx
+
 
 def block_latest(id_generator=None):
+    """Implements chainlib.interface.ChainInterface method
+    """
     j = JSONRPCRequest(id_generator)
     o = j.template()
     o['method'] = 'eth_blockNumber'
@@ -16,6 +21,8 @@ def block_latest(id_generator=None):
 
 
 def block_by_hash(hsh, include_tx=True, id_generator=None):
+    """Implements chainlib.interface.ChainInterface method
+    """
     j = JSONRPCRequest(id_generator)
     o = j.template()
     o['method'] = 'eth_getBlockByHash'
@@ -25,6 +32,8 @@ def block_by_hash(hsh, include_tx=True, id_generator=None):
 
 
 def block_by_number(n, include_tx=True, id_generator=None):
+    """Implements chainlib.interface.ChainInterface method
+    """
     nhx = add_0x(even(hex(n)[2:]))
     j = JSONRPCRequest(id_generator)
     o = j.template()
@@ -35,6 +44,15 @@ def block_by_number(n, include_tx=True, id_generator=None):
 
 
 def transaction_count(block_hash, id_generator=None):
+    """Generate json-rpc query to get transaction count of block
+
+    :param block_hash: Block hash, in hex
+    :type block_hash: str
+    :param id_generator: JSONRPC id generator
+    :type id_generator: JSONRPCIdGenerator
+    :rtype: dict
+    :returns: rpc query object
+    """
     j = JSONRPCRequest(id_generator)
     o = j.template()
     o['method'] = 'eth_getBlockTransactionCountByHash'
@@ -42,7 +60,13 @@ def transaction_count(block_hash, id_generator=None):
     return j.finalize(o)
 
 
-class Block:
+class Block(BaseBlock):
+    """Encapsulates an Ethereum block
+
+    :param src: Block representation data
+    :type src: dict
+    :todo: Add hex to number parse to normalize
+    """
     
     def __init__(self, src):
         self.hash = src['hash']
@@ -58,22 +82,21 @@ class Block:
             self.timestamp = int(src['timestamp'])
 
 
-    def src(self):
-        return self.block_src
+    def get_tx(self, tx_hash):
+        i = 0
+        idx = -1
+        tx_hash = add_0x(tx_hash)
+        for tx in self.txs:
+            tx_hash_block = None
+            try:
+                tx_hash_block = add_0x(tx['hash'])
+            except TypeError:
+                tx_hash_block = add_0x(tx)
+            if tx_hash_block == tx_hash:
+                idx = i
+                break
+            i += 1
+        if idx == -1:
+            raise AttributeError('tx {} not found in block {}'.format(tx_hash, self.hash))
+        return idx
 
-
-    def tx(self, i):
-        return Tx(self.txs[i], self)
-
-
-    def tx_src(self, i):
-        return self.txs[i]
-
-
-    def __str__(self):
-        return 'block {} {} ({} txs)'.format(self.number, self.hash, len(self.txs))
-
-
-    @staticmethod
-    def from_src(src):
-        return Block(src)

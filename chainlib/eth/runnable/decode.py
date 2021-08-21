@@ -1,12 +1,3 @@
-#!python3
-
-"""Decode raw transaction
-
-.. moduleauthor:: Louis Holbrook <dev@holbrook.no>
-.. pgp:: 0826EDA1702D1E87C6E2875121D2E7BB88C2A746 
-
-"""
-
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 # standard imports
@@ -18,48 +9,29 @@ import logging
 import select
 
 # external imports
+import chainlib.eth.cli
 from chainlib.eth.tx import unpack
 from chainlib.chain import ChainSpec
 
 # local imports
 from chainlib.eth.runnable.util import decode_for_puny_humans
 
-
 logging.basicConfig(level=logging.WARNING)
 logg = logging.getLogger()
 
-def stdin_arg(t=0):
-    h = select.select([sys.stdin], [], [], t)
-    if len(h[0]) > 0:
-        v = h[0][0].read()
-        return v.rstrip()
-    return None
+script_dir = os.path.dirname(os.path.realpath(__file__)) 
+config_dir = os.path.join(script_dir, '..', 'data', 'config')
 
-argparser = argparse.ArgumentParser()
-argparser.add_argument('-i', '--chain-id', dest='i', default='evm:ethereum:1', type=str, help='Numeric network id')
-argparser.add_argument('-v', action='store_true', help='Be verbose')
-argparser.add_argument('-vv', action='store_true', help='Be more verbose')
-argparser.add_argument('tx', type=str, nargs='?', default=stdin_arg(), help='hex-encoded signed raw transaction')
+arg_flags = chainlib.eth.cli.Flag.VERBOSE | chainlib.eth.cli.Flag.CHAIN_SPEC | chainlib.eth.cli.Flag.ENV_PREFIX | chainlib.eth.cli.Flag.RAW
+argparser = chainlib.eth.cli.ArgumentParser(arg_flags)
+argparser.add_positional('tx_data', type=str, help='Transaction data to decode')
 args = argparser.parse_args()
+config = chainlib.eth.cli.Config.from_args(args, arg_flags, default_config_dir=config_dir)
 
-if args.vv:
-    logg.setLevel(logging.DEBUG)
-elif args.v:
-    logg.setLevel(logging.INFO)
-
-argp = args.tx
-logg.debug('txxxx {}'.format(args.tx))
-if argp == None:
-    argp = stdin_arg(t=3)
-    if argp == None:
-        argparser.error('need first positional argument or value from stdin')
-
-chain_spec = ChainSpec.from_chain_str(args.i)
-
+chain_spec = ChainSpec.from_chain_str(config.get('CHAIN_SPEC'))
 
 def main():
-    tx_raw = argp
-    decode_for_puny_humans(tx_raw, chain_spec, sys.stdout)
+    decode_for_puny_humans(args.tx_data, chain_spec, sys.stdout)
 
 if __name__ == '__main__':
     main()

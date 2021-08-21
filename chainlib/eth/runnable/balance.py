@@ -1,30 +1,19 @@
-#!python3
-
-"""Token balance query script
-
-.. moduleauthor:: Louis Holbrook <dev@holbrook.no>
-.. pgp:: 0826EDA1702D1E87C6E2875121D2E7BB88C2A746 
-
-"""
-
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 # standard imports
 import os
-import json
-import argparse
 import logging
 
-# third-party imports
+# external imports
 from hexathon import (
         add_0x,
         strip_0x,
         even,
         )
-import sha3
 
 # local imports
-from chainlib.eth.address import to_checksum
+import chainlib.eth.cli
+from chainlib.eth.address import AddressChecksum
 from chainlib.jsonrpc import (
         jsonrpc_result,
         IntSequenceGenerator,
@@ -35,53 +24,37 @@ from chainlib.eth.gas import (
         balance,
         )
 from chainlib.chain import ChainSpec
+from crypto_dev_signer.eth.signer import ReferenceSigner as EIP155Signer
 
 logging.basicConfig(level=logging.WARNING)
 logg = logging.getLogger()
 
-default_eth_provider = os.environ.get('RPC_PROVIDER')
-if default_eth_provider == None:
-    default_eth_provider = os.environ.get('ETH_PROVIDER', 'http://localhost:8545')
+script_dir = os.path.dirname(os.path.realpath(__file__)) 
+#config_dir = os.path.join(script_dir, '..', 'data', 'config')
 
-argparser = argparse.ArgumentParser()
-argparser.add_argument('-p', '--provider', dest='p', default=default_eth_provider, type=str, help='Web3 provider url (http only)')
-argparser.add_argument('-i', '--chain-spec', dest='i', type=str, default='evm:ethereum:1', help='Chain specification string')
-argparser.add_argument('-u', '--unsafe', dest='u', action='store_true', help='Auto-convert address to checksum adddress')
-argparser.add_argument('--seq', action='store_true', help='Use sequential rpc ids')
-argparser.add_argument('-v', action='store_true', help='Be verbose')
-argparser.add_argument('-vv', action='store_true', help='Be more verbose')
-argparser.add_argument('address', type=str, help='Account address')
+arg_flags = chainlib.eth.cli.argflag_std_read
+argparser = chainlib.eth.cli.ArgumentParser(arg_flags)
+argparser.add_positional('address', type=str, help='Ethereum address of recipient')
 args = argparser.parse_args()
+#config = chainlib.eth.cli.Config.from_args(args, arg_flags, default_config_dir=config_dir)
+config = chainlib.eth.cli.Config.from_args(args, arg_flags)
 
+wallet = chainlib.eth.cli.Wallet()
+wallet.from_config(config)
+holder_address = args.address
+if wallet.get_signer_address() == None and holder_address != None:
+    holder_address = wallet.from_address(holder_address)
 
-if args.vv:
-    logg.setLevel(logging.DEBUG)
-elif args.v:
-    logg.setLevel(logging.INFO)
+rpc = chainlib.eth.cli.Rpc()
+conn = rpc.connect_by_config(config)
 
-rpc_id_generator = None
-if args.seq:
-    rpc_id_generator = IntSequenceGenerator()
-
-auth = None
-if os.environ.get('RPC_AUTHENTICATION') == 'basic':
-    from chainlib.auth import BasicAuth
-    auth = BasicAuth(os.environ['RPC_USERNAME'], os.environ['RPC_PASSWORD'])
-conn = EthHTTPConnection(args.p, auth=auth)
-
-gas_oracle = OverrideGasOracle(conn)
-
-address = to_checksum(args.address)
-if not args.u and address != add_0x(args.address):
-    raise ValueError('invalid checksum address')
-
-chain_spec = ChainSpec.from_chain_str(args.i)
+chain_spec = ChainSpec.from_chain_str(config.get('CHAIN_SPEC'))
 
 def main():
     r = None
     decimals = 18
 
-    o = balance(address, id_generator=rpc_id_generator)
+    o = balance(holder_address, id_generator=rpc.id_generator)
     r = conn.do(o)
    
     hx = strip_0x(r)
