@@ -14,3 +14,31 @@
 
 #106 Timeout Should be used when an action timedout.
 #107 Conflict    Should be used when an action conflicts with another (ongoing?) action.
+
+# external imports
+from hexathon import add_0x
+
+
+def to_blockheight_param(height):
+    """Translate blockheight specifier to Ethereum json-rpc blockheight argument.
+
+    :param height: Height argument
+    :type height: any
+    :rtype: str
+    :returns: Argument value
+    """
+    if height == None:
+        height = 'latest'
+    elif isinstance(height, str):
+        try:
+            height = int(height)
+        except ValueError:
+            pass
+    if isinstance(height, int):
+        if height == 0:
+            height = 'latest'
+        elif height < 0:
+            height = 'pending'
+        else:
+            height = add_0x(int(height).to_bytes(8, 'big').hex())
+    return height 

@@ -4,11 +4,22 @@ import sys
 
 # local imports
 from chainlib.jsonrpc import JSONRPCRequest
-from chainlib.eth.connection import EthHTTPConnection
+from chainlib.chain import ChainSpec
+from chainlib.connection import (
+        JSONRPCHTTPConnection,
+        RPCConnection,
+        ConnType,
+        )
+
 
 # set up node connection and execute rpc call
 rpc_provider = os.environ.get('RPC_PROVIDER', 'http://localhost:8545')
-conn = EthHTTPConnection(rpc_provider)
+RPCConnection.register_constructor(ConnType.HTTP, JSONRPCHTTPConnection)
+
+tag = 'baz'
+chain_spec = ChainSpec('foo', 'bar', 42, tag=tag)
+RPCConnection.register_location(rpc_provider, chain_spec, tag='default')
+conn = RPCConnection.connect(chain_spec, 'default')
 
 # check the connection
 if not conn.check():

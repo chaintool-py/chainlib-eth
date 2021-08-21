@@ -17,6 +17,7 @@ address = add_0x(address_bytes.hex())
 rpc_provider = os.environ.get('RPC_PROVIDER', 'http://localhost:8545')
 rpc = EthHTTPConnection(rpc_provider)
 o = balance(address)
+print(o)
 r = rpc.do(o)
 
 clean_address = strip_0x(address)

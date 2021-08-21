@@ -1,2 +1,3 @@
 - 0.0.5-pending
 	* Receive all ethereum components from chainlib package
+	* Make settings configurable

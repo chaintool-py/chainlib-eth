@@ -9,6 +9,7 @@ import sha3
 from hexathon import (
         strip_0x,
         add_0x,
+        compact,
         )
 from rlp import decode as rlp_decode
 from rlp import encode as rlp_encode
@@ -16,25 +17,34 @@ from crypto_dev_signer.eth.transaction import EIP155Transaction
 from crypto_dev_signer.encoding import public_key_to_address
 from crypto_dev_signer.eth.encoding import chain_id_to_v
 from potaahto.symbols import snake_and_camel
-
-
-# local imports
 from chainlib.hash import keccak256_hex_to_hex
 from chainlib.status import Status
+from chainlib.jsonrpc import JSONRPCRequest
+from chainlib.tx import Tx as BaseTx
+from chainlib.eth.nonce import (
+        nonce as nonce_query,
+        nonce_confirmed as nonce_query_confirmed,
+        )
+from chainlib.block import BlockSpec
+
+# local imports
 from .address import to_checksum
 from .constant import (
         MINIMUM_FEE_UNITS,
         MINIMUM_FEE_PRICE,
         ZERO_ADDRESS,
+        DEFAULT_FEE_LIMIT,
         )
 from .contract import ABIContractEncoder
-from chainlib.jsonrpc import JSONRPCRequest
+from .jsonrpc import to_blockheight_param
 
-logg = logging.getLogger().getChild(__name__)
+logg = logging.getLogger(__name__)
 
 
 
 class TxFormat(enum.IntEnum):
+    """Tx generator output formats
+    """
     DICT = 0x00
     RAW = 0x01
     RAW_SIGNED = 0x02
@@ -56,24 +66,22 @@ field_debugs = [
         's',
         ]
 
-def count(address, confirmed=False, id_generator=None):
-    j = JSONRPCRequest(id_generator=id_generator)
-    o = j.template()
-    o['method'] = 'eth_getTransactionCount'
-    o['params'].append(address)
-    if confirmed:
-        o['params'].append('latest')
-    else:
-        o['params'].append('pending')
-    return j.finalize(o)
 
-count_pending = count
-
-def count_confirmed(address):
-    return count(address, True)
+count = nonce_query
+count_pending = nonce_query
+count_confirmed = nonce_query_confirmed
 
 
 def pack(tx_src, chain_spec):
+    """Serialize wire format transaction from transaction representation.
+
+    :param tx_src: Transaction source.
+    :type tx_src: dict
+    :param chain_spec: Chain spec to calculate EIP155 v value
+    :type chain_spec: chainlib.chain.ChainSpec
+    :rtype: bytes
+    :returns: Serialized transaction
+    """
     if isinstance(tx_src, Tx):
         tx_src = tx_src.as_dict()
     tx_src = Tx.src_normalize(tx_src)
@@ -96,6 +104,15 @@ def pack(tx_src, chain_spec):
 
 
 def unpack(tx_raw_bytes, chain_spec):
+    """Deserialize wire format transaction to transaction representation.
+
+    :param tx_raw_bytes: Serialized transaction
+    :type tx_raw_bytes: bytes
+    :param chain_spec: Chain spec to calculate EIP155 v value
+    :type chain_spec: chainlib.chain.ChainSpec
+    :rtype: dict
+    :returns: Transaction representation
+    """
     chain_id = chain_spec.chain_id()
     tx = __unpack_raw(tx_raw_bytes, chain_id)
     tx['nonce'] = int.from_bytes(tx['nonce'], 'big')
@@ -106,6 +123,15 @@ def unpack(tx_raw_bytes, chain_spec):
 
 
 def unpack_hex(tx_raw_bytes, chain_spec):
+    """Deserialize wire format transaction to transaction representation, using hex values for all numeric value fields.
+
+    :param tx_raw_bytes: Serialized transaction
+    :type tx_raw_bytes: bytes
+    :param chain_spec: Chain spec to calculate EIP155 v value
+    :type chain_spec: chainlib.chain.ChainSpec
+    :rtype: dict
+    :returns: Transaction representation
+    """
     chain_id = chain_spec.chain_id()
     tx = __unpack_raw(tx_raw_bytes, chain_id)
     tx['nonce'] = add_0x(hex(tx['nonce']))
@@ -193,6 +219,15 @@ def __unpack_raw(tx_raw_bytes, chain_id=1):
 
 
 def transaction(hsh, id_generator=None):
+    """Generate json-rpc query to retrieve transaction by hash from node.
+
+    :param hsh: Transaction hash, in hex
+    :type hsh: str
+    :param id_generator: json-rpc id generator
+    :type id_generator: JSONRPCIdGenerator
+    :rtype: dict
+    :returns: rpc query object
+    """
     j = JSONRPCRequest(id_generator=id_generator)
     o = j.template()
     o['method'] = 'eth_getTransactionByHash'
@@ -201,6 +236,17 @@ def transaction(hsh, id_generator=None):
 
 
 def transaction_by_block(hsh, idx, id_generator=None):
+    """Generate json-rpc query to retrieve transaction by block hash and index.
+
+    :param hsh: Block hash, in hex
+    :type hsh: str
+    :param idx: Transaction index
+    :type idx: int
+    :param id_generator: json-rpc id generator
+    :type id_generator: JSONRPCIdGenerator
+    :rtype: dict
+    :returns: rpc query object
+    """
     j = JSONRPCRequest(id_generator=id_generator)
     o = j.template()
     o['method'] = 'eth_getTransactionByBlockHashAndIndex'
@@ -210,6 +256,15 @@ def transaction_by_block(hsh, idx, id_generator=None):
 
 
 def receipt(hsh, id_generator=None):
+    """Generate json-rpc query to retrieve transaction receipt by transaction hash from node.
+
+    :param hsh: Transaction hash, in hex
+    :type hsh: str
+    :param id_generator: json-rpc id generator
+    :type id_generator: JSONRPCIdGenerator
+    :rtype: dict
+    :returns: rpc query object
+    """
     j = JSONRPCRequest(id_generator=id_generator)
     o = j.template()
     o['method'] = 'eth_getTransactionReceipt'
@@ -218,6 +273,15 @@ def receipt(hsh, id_generator=None):
 
 
 def raw(tx_raw_hex, id_generator=None):
+    """Generator json-rpc query to send raw transaction to node.
+
+    :param hsh: Serialized transaction, in hex
+    :type hsh: str
+    :param id_generator: json-rpc id generator
+    :type id_generator: JSONRPCIdGenerator
+    :rtype: dict
+    :returns: rpc query object
+    """
     j = JSONRPCRequest(id_generator=id_generator)
     o = j.template()
     o['method'] = 'eth_sendRawTransaction'
@@ -226,8 +290,23 @@ def raw(tx_raw_hex, id_generator=None):
 
 
 class TxFactory:
+    """Base class for generating and signing transactions or contract calls.
 
-    fee = 8000000
+    For transactions (state changes), a signer, gas oracle and nonce oracle needs to be supplied.
+
+    Gas oracle and nonce oracle may in some cases be needed for contract calls, if the node insists on counting gas for read-only operations.
+
+    :param chain_spec: Chain spec to use for signer.
+    :type chain_spec: chainlib.chain.ChainSpec
+    :param signer: Signer middleware.
+    :type param: Object implementing interface ofchainlib.eth.connection.sign_transaction_to_rlp.
+    :param gas_oracle: Backend to generate gas parameters
+    :type gas_oracle: Object implementing chainlib.eth.gas.GasOracle interface
+    :param nonce_oracle: Backend to generate gas parameters
+    :type nonce_oracle: Object implementing chainlib.eth.nonce.NonceOracle interface
+    """
+
+    fee = DEFAULT_FEE_LIMIT
 
     def __init__(self, chain_spec, signer=None, gas_oracle=None, nonce_oracle=None):
         self.gas_oracle = gas_oracle
@@ -237,6 +316,15 @@ class TxFactory:
 
 
     def build_raw(self, tx):
+        """Sign transaction data, returning the transaction hash and serialized transaction.
+
+        In most cases, chainlib.eth.tx.TxFactory.finalize should be used instead.
+
+        :param tx: Transaction representation
+        :type tx: dict
+        :rtype: tuple
+        :returns: Transaction hash (in hex), serialized transaction (in hex)
+        """
         if tx['to'] == None or tx['to'] == '':
             tx['to'] = '0x'
         txe = EIP155Transaction(tx, tx['nonce'], tx['chainId'])
@@ -247,12 +335,34 @@ class TxFactory:
 
 
     def build(self, tx, id_generator=None):
+        """Sign transaction and wrap in raw transaction json-rpc query.
+
+        In most cases, chainlib.eth.tx.TxFactory.finalize should be used instead.
+
+        :param tx: Transaction representation
+        type tx: dict
+        :param id_generator: JSONRPC id generator
+        :type id_generator: JSONRPCIdGenerator
+        :rtype: tuple
+        :returns: Transaction hash (in hex), raw transaction rpc query object
+        """
         (tx_hash_hex, tx_raw_hex) = self.build_raw(tx) 
         o = raw(tx_raw_hex, id_generator=id_generator)
         return (tx_hash_hex, o)
 
 
     def template(self, sender, recipient, use_nonce=False):
+        """Generate a base transaction template.
+
+        :param sender: Sender address, in hex
+        :type sender: str
+        :param receipient: Recipient address, in hex
+        :type recipient: str
+        :param use_nonce: Use and advance nonce in nonce generator.
+        :type use_nonce: bool
+        :rtype: dict
+        :returns: Transaction representation.
+        """
         gas_price = MINIMUM_FEE_PRICE
         gas_limit = MINIMUM_FEE_UNITS
         if self.gas_oracle != None:
@@ -276,18 +386,35 @@ class TxFactory:
 
 
     def normalize(self, tx):
+        """Generate field name redundancies (camel-case, snake-case).
+
+        :param tx: Transaction representation
+        :type tx: dict
+        :rtype: dict:
+        :returns: Transaction representation with redudant field names
+        """
         txe = EIP155Transaction(tx, tx['nonce'], tx['chainId'])
         txes = txe.serialize()
         return {
             'from': tx['from'],
             'to': txes['to'],
-            'gasPrice': txes['gasPrice'],
-            'gas': txes['gas'],
+            'gasPrice': '0x' + compact(txes['gasPrice']),
+            'gas': '0x' + compact(txes['gas']),
             'data': txes['data'],
                 }
 
 
     def finalize(self, tx, tx_format=TxFormat.JSONRPC, id_generator=None):
+        """Sign transaction and for specified output format.
+
+        :param tx: Transaction representation
+        :type tx: dict
+        :param tx_format: Transaction output format
+        :type tx_format: chainlib.eth.tx.TxFormat
+        :raises NotImplementedError: Unknown tx_format value
+        :rtype: varies
+        :returns: Transaction output in specified format.
+        """
         if tx_format == TxFormat.JSONRPC:
             return self.build(tx, id_generator=id_generator)
         elif tx_format == TxFormat.RLP_SIGNED:
@@ -296,6 +423,17 @@ class TxFactory:
 
 
     def set_code(self, tx, data, update_fee=True):
+        """Apply input data to transaction.
+
+        :param tx: Transaction representation
+        :type tx: dict
+        :param data: Input data to apply, in hex
+        :type data: str
+        :param update_fee: Recalculate gas limit based on added input
+        :type update_fee: bool
+        :rtype: dict
+        :returns: Transaction representation
+        """
         tx['data'] = data
         if update_fee:
             tx['gas'] = TxFactory.fee
@@ -307,6 +445,19 @@ class TxFactory:
 
     
     def transact_noarg(self, method, contract_address, sender_address, tx_format=TxFormat.JSONRPC):
+        """Convenience generator for contract transaction with no arguments.
+
+        :param method: Method name
+        :type method: str
+        :param contract_address: Contract address to transaction against, in hex
+        :type contract_address: str
+        :param sender_address: Transaction sender, in hex
+        :type sender_address: str
+        :param tx_format: Transaction output format
+        :type tx_format: chainlib.eth.tx.TxFormat
+        :rtype: varies
+        :returns: Transaction output in selected format
+        """
         enc = ABIContractEncoder()
         enc.method(method)
         data = enc.get()
@@ -316,7 +467,22 @@ class TxFactory:
         return tx
 
 
-    def call_noarg(self, method, contract_address, sender_address=ZERO_ADDRESS, id_generator=None):
+    def call_noarg(self, method, contract_address, sender_address=ZERO_ADDRESS, height=BlockSpec.LATEST, id_generator=None):
+        """Convenience generator for contract (read-only) call with no arguments.
+
+        :param method: Method name
+        :type method: str
+        :param contract_address: Contract address to transaction against, in hex
+        :type contract_address: str
+        :param sender_address: Transaction sender, in hex
+        :type sender_address: str
+        :param height: Transaction height specifier
+        :type height: chainlib.block.BlockSpec
+        :param id_generator: json-rpc id generator
+        :type id_generator: JSONRPCIdGenerator
+        :rtype: varies
+        :returns: Transaction output in selected format
+        """
         j = JSONRPCRequest(id_generator)
         o = j.template()
         o['method'] = 'eth_call'
@@ -326,34 +492,38 @@ class TxFactory:
         tx = self.template(sender_address, contract_address)
         tx = self.set_code(tx, data)
         o['params'].append(self.normalize(tx))
-        o['params'].append('latest')
+        height = to_blockheight_param(height)
+        o['params'].append(height)
         o = j.finalize(o)
         return o
 
 
-class Tx:
+class Tx(BaseTx):
+    """Wraps transaction data, transaction receipt data and block data, enforces local standardization of fields, and provides useful output formats for viewing transaction contents.
 
-    # TODO: force tx type schema parser (whether expect hex or int etc)
+    If block is applied, the transaction data or transaction hash must exist in its transactions array.
+
+    If receipt is applied, the transaction hash in the receipt must match the hash in the transaction data.
+
+    :param src: Transaction representation
+    :type src: dict
+    :param block: Apply block object in which transaction in mined.
+    :type block: chainlib.block.Block
+    :param rcpt: Apply receipt data 
+    :type rcpt: dict
+    #:todo: force tx type schema parser (whether expect hex or int etc)
+    #:todo: divide up constructor method
+    """
+
     def __init__(self, src, block=None, rcpt=None):
-        self.tx_src = self.src_normalize(src)
+        self.__rcpt_block_hash = None
+
+        src = self.src_normalize(src)
         self.index = -1
         tx_hash = add_0x(src['hash'])
-        if block != None:
-            i = 0
-            for tx in block.txs:
-                tx_hash_block = None
-                try:
-                    tx_hash_block = tx['hash']
-                except TypeError:
-                    tx_hash_block = add_0x(tx)
-                if tx_hash_block == tx_hash:
-                    self.index = i
-                    break
-                i += 1
-            if self.index == -1:
-                raise AttributeError('tx {} not found in block {}'.format(tx_hash, block.hash))
-        self.block = block
         self.hash = strip_0x(tx_hash)
+        if block != None:
+            self.apply_block(block)
         try:
             self.value = int(strip_0x(src['value']), 16)
         except TypeError:
@@ -378,6 +548,7 @@ class Tx:
             inpt = src['input']
         except KeyError:
             inpt = src['data']
+            src['input'] = src['data']
 
         if inpt != '0x':
             inpt = strip_0x(inpt)
@@ -408,13 +579,27 @@ class Tx:
 
         self.wire = None
  
+        self.tx_src = src
+
 
     def src(self):
+        """Retrieve normalized representation source used to construct transaction object.
+
+        :rtype: dict
+        :returns: Transaction representation
+        """
         return self.tx_src
    
 
     @classmethod
     def src_normalize(self, src):
+        """Normalizes transaction representation source data.
+
+        :param src: Transaction representation
+        :type src: dict
+        :rtype: dict
+        :returns: Transaction representation, normalized
+        """
         src = snake_and_camel(src)
 
         if isinstance(src.get('v'), str):
@@ -430,16 +615,40 @@ class Tx:
 
 
     def apply_receipt(self, rcpt):
+        """Apply receipt data to transaction object.
+
+        Effect is the same as passing a receipt at construction.
+
+        :param rcpt: Receipt data
+        :type rcpt: dict
+        """
         rcpt = self.src_normalize(rcpt)
         logg.debug('rcpt {}'.format(rcpt))
+
+        tx_hash = add_0x(rcpt['transaction_hash'])
+        if rcpt['transaction_hash'] != add_0x(self.hash):
+            raise ValueError('rcpt hash {} does not match transaction hash {}'.format(rcpt['transaction_hash'], self.hash))
+
+        block_hash = add_0x(rcpt['block_hash'])
+        if self.block != None:
+            if block_hash != add_0x(self.block.hash):
+                raise ValueError('rcpt block hash {} does not match transaction block hash {}'.format(rcpt['block_hash'], self.block.hash))
+
         try:
             status_number = int(rcpt['status'], 16)
         except TypeError:
             status_number = int(rcpt['status'])
-        if status_number == 1:
-            self.status = Status.SUCCESS
-        elif status_number == 0:
-            self.status = Status.ERROR
+        if rcpt['block_number'] == None:
+            self.status = Status.PENDING
+        else:
+            if status_number == 1:
+                self.status = Status.SUCCESS
+            elif status_number == 0:
+                self.status = Status.ERROR
+            try:
+                self.tx_index = int(rcpt['transaction_index'], 16)
+            except TypeError:
+                self.tx_index = int(rcpt['transaction_index'])
         # TODO: replace with rpc receipt/transaction translator when available
         contract_address = rcpt.get('contractAddress')
         if contract_address == None:
@@ -452,20 +661,43 @@ class Tx:
         except TypeError:
             self.gas_used = int(rcpt['gasUsed'])
 
+        self.__rcpt_block_hash = rcpt['block_hash']
+
 
     def apply_block(self, block):
-        #block_src = self.src_normalize(block_src)
+        """Apply block to transaction object.
+
+        :param block: Block object
+        :type block: chainlib.block.Block
+        """
+        if self.__rcpt_block_hash != None:
+            if block.hash != self.__rcpt_block_hash:
+                raise ValueError('block hash {} does not match already applied receipt block hash {}'.format(block.hash, self.__rcpt_block_hash))
+        self.index = block.get_tx(self.hash)
         self.block = block
 
 
     def generate_wire(self, chain_spec):
-        b = pack(self.src(), chain_spec)
-        self.wire = add_0x(b.hex())
+        """Generate transaction wire format.
+
+        :param chain_spec: Chain spec to interpret EIP155 v value.
+        :type chain_spec: chainlib.chain.ChainSpec
+        :rtype: str
+        :returns: Wire format, in hex
+        """
+        if self.wire == None:
+            b = pack(self.src(), chain_spec)
+            self.wire = add_0x(b.hex())
+        return self.wire
 
 
     @staticmethod
-    def from_src(src, block=None):
-        return Tx(src, block=block)
+    def from_src(src, block=None, rcpt=None):
+        """Creates a new Tx object.
+
+        Alias of constructor.
+        """
+        return Tx(src, block=block, rcpt=rcpt)
 
 
     def __str__(self):
@@ -480,13 +712,18 @@ class Tx:
 
 
     def to_human(self):
+        """Human-readable string dump of transaction contents.
+
+        :rtype: str
+        :returns: Contents
+        """
         s = """hash {}
 from {}
 to {}
 value {}
 nonce {}
-gasPrice {}
-gasLimit {}
+gas_price {}
+gas_limit {}
 input {}
 """.format(
         self.hash,
@@ -500,12 +737,23 @@ input {}
         )
 
         if self.status != Status.PENDING:
-            s += """gasUsed {}
+            s += """gas_used {}
 """.format(
         self.gas_used,
         )
 
         s += 'status ' + self.status.name + '\n'
+
+        if self.block != None:
+            s += """block_number {}
+block_hash {}
+tx_index {}
+""".format(
+        self.block.number,
+        self.block.hash,
+        self.tx_index,
+        )
+
 
         if self.contract != None:
             s += """contract {}
@@ -520,4 +768,3 @@ input {}
         )
 
         return s
-

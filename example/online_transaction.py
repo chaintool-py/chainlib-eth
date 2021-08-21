@@ -21,13 +21,21 @@ from chainlib.eth.tx import (
         )
 from chainlib.error import JSONRPCException
 
+script_dir = os.path.dirname(os.path.realpath(__file__))
+
+
 # eth transactions need an explicit chain parameter as part of their signature
 chain_spec = ChainSpec.from_chain_str('evm:ethereum:1')
 
 # create keystore and signer
 keystore = DictKeystore()
 signer = EIP155Signer(keystore)
-sender_address = keystore.new()
+
+# import private key for sender
+sender_keystore_file = os.path.join(script_dir, '..', 'tests', 'testdata', 'keystore', 'UTC--2021-01-08T17-18-44.521011372Z--eb3907ecad74a0013c259d5874ae7f22dcbcc95c')
+sender_address = keystore.import_keystore_file(sender_keystore_file)
+
+# create a new address to use as recipient
 recipient_address = keystore.new()
 
 # set up node connection
