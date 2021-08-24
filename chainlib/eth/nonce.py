@@ -5,6 +5,7 @@ from hexathon import (
         )
 
 # local imports
+from chainlib.nonce import NonceOracle as BaseNonceOracle
 from chainlib.jsonrpc import JSONRPCRequest
 
 
@@ -22,7 +23,6 @@ def nonce(address, confirmed=False, id_generator=None):
     o = j.template()
     o['method'] = 'eth_getTransactionCount'
     o['params'].append(address)
-    o['params'].append('pending')
     if confirmed:
         o['params'].append('latest')
     else:
@@ -34,7 +34,7 @@ def nonce_confirmed(address, id_generator=None):
     return nonce(address, confirmed=True, id_generator=id_generator)
 
 
-class NonceOracle:
+class NonceOracle(BaseNonceOracle):
     """Base class for the nonce parameter helpers.
 
     :param address: Address to retireve nonce for, in hex
@@ -43,9 +43,8 @@ class NonceOracle:
     :type id_generator: chainlib.connection.JSONRPCIdGenerator
     """
     def __init__(self, address, id_generator=None):
-        self.address = address
         self.id_generator = id_generator
-        self.nonce = self.get_nonce()
+        super(NonceOracle, self).__init__(address)
 
 
     def get_nonce(self):

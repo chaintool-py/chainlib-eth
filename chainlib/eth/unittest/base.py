@@ -176,7 +176,7 @@ class TestRPCConnection(RPCConnection):
         tx_dict = p[0]
         tx = EIP155Transaction(tx_dict, tx_dict['nonce'], tx_dict['chainId'])
         passphrase = p[1]
-        r = self.signer.sign_transaction_to_rlp(tx, passphrase)
+        r = self.signer.sign_transaction_to_wire(tx, passphrase)
         return r
 
 
@@ -192,9 +192,9 @@ class TestRPCConnection(RPCConnection):
         return self.signer.sign_transaction(tx, passphrase)
 
 
-    def sign_transaction_to_rlp(self, tx, passphrase=''):
+    def sign_transaction_to_wire(self, tx, passphrase=''):
         self.__verify_signer(tx, passphrase)
-        return self.signer.sign_transaction_to_rlp(tx, passphrase)
+        return self.signer.sign_transaction_to_wire(tx, passphrase)
 
 
     def disconnect(self):

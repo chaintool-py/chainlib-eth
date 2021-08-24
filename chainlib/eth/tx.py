@@ -299,7 +299,7 @@ class TxFactory:
     :param chain_spec: Chain spec to use for signer.
     :type chain_spec: chainlib.chain.ChainSpec
     :param signer: Signer middleware.
-    :type param: Object implementing interface ofchainlib.eth.connection.sign_transaction_to_rlp.
+    :type param: Object implementing interface ofchainlib.eth.connection.sign_transaction_to_wire
     :param gas_oracle: Backend to generate gas parameters
     :type gas_oracle: Object implementing chainlib.eth.gas.GasOracle interface
     :param nonce_oracle: Backend to generate gas parameters
@@ -328,7 +328,7 @@ class TxFactory:
         if tx['to'] == None or tx['to'] == '':
             tx['to'] = '0x'
         txe = EIP155Transaction(tx, tx['nonce'], tx['chainId'])
-        tx_raw = self.signer.sign_transaction_to_rlp(txe)
+        tx_raw = self.signer.sign_transaction_to_wire(txe)
         tx_raw_hex = add_0x(tx_raw.hex())
         tx_hash_hex = add_0x(keccak256_hex_to_hex(tx_raw_hex))
         return (tx_hash_hex, tx_raw_hex)

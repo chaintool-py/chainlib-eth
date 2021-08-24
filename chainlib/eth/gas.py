@@ -9,6 +9,7 @@ from hexathon import (
 from crypto_dev_signer.eth.transaction import EIP155Transaction
 
 # local imports
+from chainlib.fee import FeeOracle
 from chainlib.hash import keccak256_hex_to_hex
 from chainlib.jsonrpc import JSONRPCRequest
 from chainlib.eth.tx import (
@@ -100,7 +101,7 @@ class Gas(TxFactory):
         if data != None:
             tx['data'] = data
         txe = EIP155Transaction(tx, tx['nonce'], tx['chainId'])
-        tx_raw = self.signer.sign_transaction_to_rlp(txe)
+        tx_raw = self.signer.sign_transaction_to_wire(txe)
         tx_raw_hex = add_0x(tx_raw.hex())
         tx_hash_hex = add_0x(keccak256_hex_to_hex(tx_raw_hex))
 
@@ -114,7 +115,7 @@ class Gas(TxFactory):
 
 
 
-class RPCGasOracle:
+class RPCGasOracle(FeeOracle):
     """JSON-RPC only gas parameter helper.
 
     :param conn: RPC connection
@@ -128,13 +129,13 @@ class RPCGasOracle:
     """
 
     def __init__(self, conn, code_callback=None, min_price=1, id_generator=None):
+        super(RPCGasOracle, self).__init__(code_callback=code_callback)
         self.conn = conn
-        self.code_callback = code_callback
         self.min_price = min_price
         self.id_generator = id_generator
 
 
-    def get_gas(self, code=None, input_data=None):
+    def get_fee(self, code=None, input_data=None):
         """Retrieve gas parameters from node.
 
         If code is given, the set code callback will be used to estimate gas usage.
@@ -161,6 +162,10 @@ class RPCGasOracle:
             logg.debug('adjusting price {} to set minimum {}'.format(gas_price, self.min_price))
             gas_price = self.min_price
         return (gas_price, fee_units)
+
+    
+    def get_gas(self, code=None, input_data=None):
+        return self.get_fee(code=code, input_data=input_data)
 
 
 class RPCPureGasOracle(RPCGasOracle):
@@ -213,14 +218,12 @@ class OverrideGasOracle(RPCGasOracle):
         super(OverrideGasOracle, self).__init__(price_conn, code_callback, id_generator=id_generator)
         
 
-    def get_gas(self, code=None):
-        """See chainlib.eth.gas.RPCGasOracle.
-        """
+    def get_fee(self, code=None, input_data=None):
         r = None
         fee_units = None
         fee_price = None
 
-        rpc_results = super(OverrideGasOracle, self).get_gas(code)
+        rpc_results = super(OverrideGasOracle, self).get_fee(code)
  
         if self.limit != None:
             fee_units = self.limit
@@ -243,6 +246,10 @@ class OverrideGasOracle(RPCGasOracle):
                 logg.debug('override gas oracle without explicit limit, setting default {}'.format(fee_units))
         
         return (fee_price, fee_units)
+
+
+    def get_gas(self, code=None, input_data=None):
+        return self.get_fee(code=code, input_data=input_data)
 
 
 DefaultGasOracle = RPCGasOracle

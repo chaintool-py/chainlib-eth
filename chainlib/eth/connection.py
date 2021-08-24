@@ -179,13 +179,13 @@ class EthUnixSignerConnection(EthUnixConnection):
     """Connects rpc signer methods to Unix socket connection interface
     """
    
-    def sign_transaction_to_rlp(self, tx):
+    def sign_transaction_to_wire(self, tx):
         """Sign transaction using unix socket rpc.
 
         :param tx: Transaction object
         :type tx: dict 
-        :rtype: See chainlin.eth.connection.sign_transaction_to_rlp
-        :returns: See chainlin.eth.connection.sign_transaction_to_rlp
+        :rtype: See chainlib.eth.connection.sign_transaction_to_rlp
+        :returns: Serialized signature
         """
         return sign_transaction_to_rlp(self.chain_spec, self.do, tx)
 
@@ -203,13 +203,13 @@ class EthUnixSignerConnection(EthUnixConnection):
 
 class EthHTTPSignerConnection(EthHTTPConnection):
    
-    def sign_transaction_to_rlp(self, tx):
+    def sign_transaction_to_wire(self, tx):
         """Sign transaction using http json-rpc.
 
         :param tx: Transaction object
         :type tx: dict 
         :rtype: See chainlin.eth.connection.sign_transaction_to_rlp
-        :returns: See chainlin.eth.connection.sign_transaction_to_rlp
+        :returns: Serialized signature
         """
         return sign_transaction_to_rlp(self.chain_spec, self.do, tx)
 
