@@ -67,7 +67,9 @@ class Block(BaseBlock):
     :type src: dict
     :todo: Add hex to number parse to normalize
     """
-    
+   
+    tx_generator = Tx
+
     def __init__(self, src):
         self.hash = src['hash']
         try:
