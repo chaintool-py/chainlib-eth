@@ -56,14 +56,26 @@ class Rpc(BaseRpc):
         super(Rpc, self).connect_by_config(config)
 
         if self.can_sign():
-            nonce = config.get('_NONCE')
+            nonce = None
+            fee_price = None
+            fee_limit = None
+            try:
+                nonce = config.get('_NONCE')
+            except KeyError:
+                pass
             if nonce != None:
                 self.nonce_oracle = OverrideNonceOracle(self.get_sender_address(), nonce, id_generator=self.id_generator)
             else:
                 self.nonce_oracle = RPCNonceOracle(self.get_sender_address(), self.conn, id_generator=self.id_generator)
-
-            fee_price = config.get('_FEE_PRICE')
-            fee_limit = config.get('_FEE_LIMIT')
+        
+            try:
+                fee_price = config.get('_FEE_PRICE')
+            except KeyError:
+                pass
+            try:
+                fee_limit = config.get('_FEE_LIMIT')
+            except KeyError:
+                pass
             if fee_price != None or fee_limit != None:
                 self.fee_oracle = OverrideGasOracle(price=fee_price, limit=fee_limit, conn=self.conn, id_generator=self.id_generator)
             else:
