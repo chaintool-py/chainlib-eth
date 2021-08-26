@@ -17,10 +17,8 @@ from hexathon import (
         )
 
 # local imports
-from .error import (
-        DefaultErrorParser,
-        RevertEthException,
-        )
+from .error import RevertEthException
+from chainlib.eth.dialect import DefaultErrorParser
 from .sign import (
         sign_transaction,
         )

@@ -24,10 +24,3 @@ class RequestMismatchException(EthException):
     """Raised when a request data parser is given unexpected input data.
     """
     pass
-
-
-class DefaultErrorParser:
-    """Generate eth specific exception for the default json-rpc query error parser.
-    """
-    def translate(self, error):
-        return EthException('default parser code {}'.format(error))

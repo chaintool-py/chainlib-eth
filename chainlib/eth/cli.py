@@ -81,6 +81,11 @@ class Rpc(BaseRpc):
             else:
                 self.fee_oracle = RPCGasOracle(self.conn, id_generator=self.id_generator)
 
+        error_parser = None
+        if config.get('RPC_DIALECT') == 'openethereum':
+            from chainlib.eth.dialect.openethereum import DialectErrorParser
+            self.error_parser = DialectErrorParser()
+
         return self.conn
 
 
@@ -93,3 +98,18 @@ class Config(BaseConfig):
     """
     default_base_config_dir = os.path.join(script_dir, 'data', 'config')
     default_fee_limit = 21000
+
+
+    @classmethod
+    def from_args(cls, args, arg_flags=0x0f, env=os.environ, extra_args={}, base_config_dir=None, default_config_dir=None, user_config_dir=None, default_fee_limit=None, logger=None, load_callback=None):
+        config = BaseConfig.from_args(args, arg_flags=arg_flags, env=env, extra_args=extra_args, base_config_dir=base_config_dir, default_config_dir=default_config_dir, user_config_dir=user_config_dir, default_fee_limit=default_fee_limit, logger=logger, load_callback=load_callback)
+
+        if not config.get('RPC_DIALECT'):
+            config.add('default', 'RPC_DIALECT', exists_ok=True)
+        elif config.get('RPC_DIALECT') not in [
+                'openethereum',
+                'default',
+                ]:
+            raise ValueError('unknown rpc dialect {}'.format(config.get('RPC_DIALECT'))) 
+
+        return config
