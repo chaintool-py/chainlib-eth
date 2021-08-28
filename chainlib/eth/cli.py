@@ -99,9 +99,10 @@ class Config(BaseConfig):
     default_base_config_dir = os.path.join(script_dir, 'data', 'config')
     default_fee_limit = 21000
 
-
     @classmethod
     def from_args(cls, args, arg_flags=0x0f, env=os.environ, extra_args={}, base_config_dir=None, default_config_dir=None, user_config_dir=None, default_fee_limit=None, logger=None, load_callback=None):
+        if default_fee_limit == None:
+            default_fee_limit = cls.default_fee_limit
         config = BaseConfig.from_args(args, arg_flags=arg_flags, env=env, extra_args=extra_args, base_config_dir=base_config_dir, default_config_dir=default_config_dir, user_config_dir=user_config_dir, default_fee_limit=default_fee_limit, logger=logger, load_callback=load_callback)
 
         if not config.get('RPC_DIALECT'):

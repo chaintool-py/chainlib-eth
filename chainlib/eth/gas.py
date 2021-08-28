@@ -244,7 +244,7 @@ class OverrideGasOracle(RPCGasOracle):
             else:
                 fee_units = MINIMUM_FEE_UNITS
                 logg.debug('override gas oracle without explicit limit, setting default {}'.format(fee_units))
-        
+
         return (fee_price, fee_units)
 
 
