@@ -110,22 +110,22 @@ def main():
             sys.exit(1)
         return
 
-    elif signer_address != None:
-        if chain_spec == None:
-            raise ValueError('chain spec must be specified')
-        g = TxFactory(chain_spec, signer=rpc.get_signer(), gas_oracle=rpc.get_gas_oracle(), nonce_oracle=rpc.get_nonce_oracle())
-        tx = g.template(signer_address, recipient, use_nonce=True)
-        if args.data != None:
-            tx = g.set_code(tx, add_0x(args.data))
+        if signer_address != None:
+            if chain_spec == None:
+                raise ValueError('chain spec must be specified')
+            g = TxFactory(chain_spec, signer=rpc.get_signer(), gas_oracle=rpc.get_gas_oracle(), nonce_oracle=rpc.get_nonce_oracle())
+            tx = g.template(signer_address, exec_address, use_nonce=True)
+            if args.data != None:
+                tx = g.set_code(tx, add_0x(args.data))
 
-        (tx_hash_hex, o) = g.finalize(tx, id_generator=rpc.id_generator)
-   
-        if send:
-            r = conn.do(o)
-            print(r)
-        else:
-            print(o)
-            print(tx_hash_hex)
+            (tx_hash_hex, o) = g.finalize(tx, id_generator=rpc.id_generator)
+       
+            if send:
+                r = conn.do(o)
+                print(r)
+            else:
+                print(o)
+                print(tx_hash_hex)
 
     else:
         o = raw(args.data, id_generator=rpc.id_generator)

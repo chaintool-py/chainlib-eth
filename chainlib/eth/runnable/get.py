@@ -133,7 +133,8 @@ def main():
         elif not is_checksum_address(address):
             raise ValueError('invalid checksum address: {}'.format(address))
         r = get_address(conn, address, rpc.id_generator, config.get('_HEIGHT'))
-    print(r)
+    if r != None:
+        print(r)
 
 
 if __name__ == '__main__':
