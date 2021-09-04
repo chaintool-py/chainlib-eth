@@ -35,7 +35,7 @@ tests:
 
   only: 
   - master 
-  - daven/* 
+  - daven/0.0.0
 
 #   rules:
 # - if: $CI_PIPELINE_SOURCE == "merge_request_event"
