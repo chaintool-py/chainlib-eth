@@ -1,7 +1,7 @@
-crypto-dev-signer>=0.4.15a3,<=0.4.15
+crypto-dev-signer>=0.4.15a4,<=0.4.15
 pysha3==1.0.2
 hexathon~=0.0.1a8
 websocket-client==0.57.0
 potaahto~=0.0.1a1
-chainlib==0.0.9a7
+chainlib==0.0.9a8
 confini>=0.4.1a1,<0.5.0
