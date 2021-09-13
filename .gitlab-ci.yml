@@ -32,6 +32,7 @@ tests:
     - python -m pip freeze
     - ls
     - export PYTHONPATH=$PYTHONPATH:.
+    - cp chainlib/tests/address.py /chainlib/
     - PYTHONPATH=. bash run_tests.sh 
 
   only: 
