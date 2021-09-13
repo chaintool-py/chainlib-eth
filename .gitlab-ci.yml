@@ -32,7 +32,7 @@ tests:
     - python -m pip freeze
     - ls
     - export PYTHONPATH=$PYTHONPATH:.
-    - PYTHONPATH=. run_tests.sh 
+    - PYTHONPATH=. bash run_tests.sh 
 
   only: 
   - master 
