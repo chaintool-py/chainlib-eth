@@ -36,7 +36,6 @@ arg_flags = chainlib.eth.cli.argflag_std_read
 argparser = chainlib.eth.cli.ArgumentParser(arg_flags)
 argparser.add_positional('address', type=str, help='Ethereum address of recipient')
 args = argparser.parse_args()
-#config = chainlib.eth.cli.Config.from_args(args, arg_flags, default_config_dir=config_dir)
 config = chainlib.eth.cli.Config.from_args(args, arg_flags)
 
 wallet = chainlib.eth.cli.Wallet()

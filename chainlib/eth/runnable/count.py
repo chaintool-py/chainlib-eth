@@ -42,6 +42,7 @@ conn = rpc.connect_by_config(config)
 
 
 def main():
+    # TODO: should tolerate if address not prefixed with 0x 
     o = count(holder_address, id_generator=rpc.id_generator)
     r = conn.do(o)
     count_result = None

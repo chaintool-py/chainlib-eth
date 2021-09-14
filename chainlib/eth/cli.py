@@ -10,8 +10,7 @@ from chainlib.cli import (
         argflag_std_base,
         Config as BaseConfig,
         Wallet as BaseWallet,
-        Rpc as BaseRpc,
-        Flag,
+        Rpc as BaseRpc, Flag,
     )
 from crypto_dev_signer.eth.signer import ReferenceSigner as EIP155Signer
 
@@ -107,6 +106,7 @@ class Config(BaseConfig):
 
     @classmethod
     def from_args(cls, args, arg_flags=0x0f, env=os.environ, extra_args={}, base_config_dir=None, default_config_dir=None, user_config_dir=None, default_fee_limit=None, logger=None, load_callback=None):
+        super(Config, cls).override_defaults(base_dir=cls.default_base_config_dir)
         if default_fee_limit == None:
             default_fee_limit = cls.default_fee_limit
         config = BaseConfig.from_args(args, arg_flags=arg_flags, env=env, extra_args=extra_args, base_config_dir=base_config_dir, default_config_dir=default_config_dir, user_config_dir=user_config_dir, default_fee_limit=default_fee_limit, logger=logger, load_callback=load_callback)
