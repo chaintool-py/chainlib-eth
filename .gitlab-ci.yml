@@ -1,0 +1,42 @@
+stages:
+- build 
+- test
+#running the bash script in test 
+
+build_and_push:
+  image: registry.gitlab.com/grassrootseconomics/cic-base-images:python-3.8.6-dev
+  stage: build
+  variables:
+    #CI_DEBUG_TRACE: "true"
+    CIC_PACKAGE_REGISTRY_PROJECT_ID: 27624814
+  script:
+    #- python -m pip install --upgrade setuptools wheel pip twine semver
+    - python -m pip install --extra-index-url https://gitlab.com/api/v4/projects/27624814/packages/pypi/simple --extra-index-url https://pip.grassrootseconomics.net:8433 install -r requirements.txt
+    - python setup.py sdist bdist_wheel
+    - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python -m twine upload --skip-existing --repository-url ${CI_API_V4_URL}/projects/${CIC_PACKAGE_REGISTRY_PROJECT_ID}/packages/pypi dist/*
+    # Below are the built dependencies
+    #- TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python -m twine upload --repository-url ${CI_API_V4_URL}/projects/${CIC_PACKAGE_REGISTRY_PROJECT_ID}/packages/pypi /tmp/wheelhouse/*
+  only: 
+  - master 
+  - daven/* 
+
+tests:
+  image: registry.gitlab.com/grassrootseconomics/cic-base-images:python-3.8.6-dev
+  stage: test
+  variables:
+    #CI_DEBUG_TRACE: "true"
+    CIC_PACKAGE_REGISTRY_PROJECT_ID: 27624814
+  script:
+    - ls
+    - python -m pip install --extra-index-url https://gitlab.com/api/v4/projects/27624814/packages/pypi/simple --extra-index-url https://pip.grassrootseconomics.net:8433 install -r requirements.txt -r test_requirements.txt
+    - python -m pip freeze
+    - ls
+    - export PYTHONPATH=$PYTHONPATH:.
+    - PYTHONPATH=. bash run_tests.sh 
+
+  only: 
+  - master 
+  - daven/0.0.0
+
+#   rules:
+# - if: $CI_PIPELINE_SOURCE == "merge_request_event"
