@@ -45,7 +45,6 @@ from chainlib.error import SignerMissingException
 from chainlib.chain import ChainSpec
 from chainlib.eth.runnable.util import decode_for_puny_humans
 from chainlib.eth.jsonrpc import to_blockheight_param
-from chainlib.eth.contract import ABIContractEncoder
 
 logging.basicConfig(level=logging.WARNING)
 logg = logging.getLogger()
@@ -96,22 +95,12 @@ def main():
         pass
 
     code = '0x'
-    cli_encoder = CLIEncoder()
-    contract_encoder = ABIContractEncoder()
-
-    if config.get('_SIGNATURE'):
-        contract_encoder.method(args.signature)
+    cli_encoder = CLIEncoder(signature=config.get('_SIGNATURE'))
 
     for arg in config.get('_CONTRACT_ARGS'):
-        logg.debug('arg {}'.format(arg))
-        (typ, val) = arg.split(':', maxsplit=1)
-        real_typ = cli_encoder.translate_type(typ)
-        if config.get('_SIGNATURE'):
-            contract_encoder.typ(real_typ)
-        fn = getattr(contract_encoder, real_typ.value)
-        fn(val)
-
-    code += contract_encoder.get()
+        cli_encoder.add_from(arg)
+    
+    code += cli_encoder.get()
 
     if not config.get('_SIGNATURE'):
         print(strip_0x(code))

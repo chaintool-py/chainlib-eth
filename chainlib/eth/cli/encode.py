@@ -3,12 +3,15 @@ import re
 import logging
 
 # external imports
-from chainlib.eth.contract import ABIContractType
+from chainlib.eth.contract import (
+        ABIContractType,
+        ABIContractEncoder,
+        )
 
 logg = logging.getLogger(__name__)
 
 
-class CLIEncoder:
+class CLIEncoder(ABIContractEncoder):
 
     __re_uint = r'^([uU])[int]*([0-9]+)?$'
     __re_bytes = r'^([bB])[ytes]*([0-9]+)?$'
@@ -18,6 +21,12 @@ class CLIEncoder:
             'to_bytes',
             'to_string',
             ]
+
+    def __init__(self, signature=None):
+        super(CLIEncoder, self).__init__()
+        self.signature = signature
+        if signature != None:
+            self.method(signature)
 
     def to_uint(self, typ):
         s = None
@@ -68,3 +77,13 @@ class CLIEncoder:
             raise ValueError('no translation for type {}'.format(typ))
         logg.debug('type {} translated to {}'.format(typ, r[0]))
         return r[1]
+
+
+    def add_from(self, arg):
+        logg.debug('arg {}'.format(arg))
+        (typ, val) = arg.split(':', maxsplit=1)
+        real_typ = self.translate_type(typ)
+        if self.signature != None:
+            self.typ(real_typ)
+        fn = getattr(self, real_typ.value)
+        fn(val)
