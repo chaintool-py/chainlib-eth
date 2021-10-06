@@ -50,6 +50,7 @@ config_dir = os.path.join(script_dir, '..', 'data', 'config')
 
 arg_flags = chainlib.eth.cli.argflag_std_write | chainlib.eth.cli.Flag.EXEC
 argparser = chainlib.eth.cli.ArgumentParser(arg_flags)
+argparser.add_argument('--deploy', action='store_true', help='Deploy data as contract')
 argparser.add_positional('data', type=str, help='Transaction data')
 args = argparser.parse_args()
 config = chainlib.eth.cli.Config.from_args(args, arg_flags, default_config_dir=config_dir)
@@ -65,8 +66,8 @@ conn = rpc.connect_by_config(config)
 
 send = config.true('_RPC_SEND')
 
-if config.get('_EXEC_ADDRESS') != None:
-    send = False
+#if config.get('_EXEC_ADDRESS') != None:
+#    send = False
 
 chain_spec = None
 try:
@@ -83,34 +84,37 @@ def main():
     except SignerMissingException:
         pass
 
-    if config.get('_EXEC_ADDRESS') != None:
-        exec_address = add_0x(to_checksum(config.get('_EXEC_ADDRESS')))
-        if not args.u and exec_address != add_0x(exec_address):
-            raise ValueError('invalid checksum address')
+    if config.get('_EXEC_ADDRESS') != None or args.deploy:
+        exec_address = None
+        if config.get('_EXEC_ADDRESS') != None:
+            exec_address = add_0x(to_checksum(config.get('_EXEC_ADDRESS')))
+        #if not args.u and exec_address != add_0x(exec_address):
+            if not args.u and exec_address != exec_address:
+                raise ValueError('invalid checksum address')
 
-        j = JSONRPCRequest(id_generator=rpc.id_generator)
-        o = j.template()
-        o['method'] = 'eth_call'
-        o['params'].append({
-            'to': exec_address,
-            'from': signer_address,
-            'value': '0x00',
-            'gas': add_0x(int.to_bytes(8000000, 8, byteorder='big').hex()), # TODO: better get of network gas limit
-            'gasPrice': '0x01',
-            'data': add_0x(args.data),
-            })
-        height = to_blockheight_param(config.get('_HEIGHT'))
-        o['params'].append(height)
-        o = j.finalize(o)
-        r = conn.do(o)
-        try:
-            print(strip_0x(r))
-        except ValueError:
-            sys.stderr.write('query returned an empty value\n')
-            sys.exit(1)
-        return
+        if signer_address == None:
+            j = JSONRPCRequest(id_generator=rpc.id_generator)
+            o = j.template()
+            o['method'] = 'eth_call'
+            o['params'].append({
+                'to': exec_address,
+                'from': signer_address,
+                'value': '0x00',
+                'gas': add_0x(int.to_bytes(8000000, 8, byteorder='big').hex()), # TODO: better get of network gas limit
+                'gasPrice': '0x01',
+                'data': add_0x(args.data),
+                })
+            height = to_blockheight_param(config.get('_HEIGHT'))
+            o['params'].append(height)
+            o = j.finalize(o)
+            r = conn.do(o)
+            try:
+                print(strip_0x(r))
+            except ValueError:
+                sys.stderr.write('query returned an empty value ({})\n'.format(r))
+                sys.exit(1)
 
-        if signer_address != None:
+        else:
             if chain_spec == None:
                 raise ValueError('chain spec must be specified')
             g = TxFactory(chain_spec, signer=rpc.get_signer(), gas_oracle=rpc.get_gas_oracle(), nonce_oracle=rpc.get_nonce_oracle())
@@ -125,7 +129,6 @@ def main():
                 print(r)
             else:
                 print(o)
-                print(tx_hash_hex)
 
     else:
         o = raw(args.data, id_generator=rpc.id_generator)
