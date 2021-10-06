@@ -8,11 +8,11 @@ import json
 import argparse
 import logging
 import urllib
-import re
 import sha3
 
 # external imports
 import chainlib.eth.cli
+from chainlib.eth.cli.encode import CLIEncoder
 from crypto_dev_signer.eth.signer import ReferenceSigner as EIP155Signer
 from crypto_dev_signer.keystore.dict import DictKeystore
 from hexathon import (
@@ -41,15 +41,11 @@ from chainlib.eth.tx import (
         TxFormat,
         raw,
         )
-from chainlib.eth.contract import (
-        ABIMethodEncoder,
-        ABIContractEncoder,
-        ABIContractType,
-        )
 from chainlib.error import SignerMissingException
 from chainlib.chain import ChainSpec
 from chainlib.eth.runnable.util import decode_for_puny_humans
 from chainlib.eth.jsonrpc import to_blockheight_param
+from chainlib.eth.contract import ABIContractEncoder
 
 logging.basicConfig(level=logging.WARNING)
 logg = logging.getLogger()
@@ -87,68 +83,6 @@ try:
     chain_spec = ChainSpec.from_chain_str(config.get('CHAIN_SPEC'))
 except AttributeError:
     pass
-
-
-class CLIEncoder:
-
-    __re_uint = r'^([uU])[int]*([0-9]+)?$'
-    __re_bytes = r'^([bB])[ytes]*([0-9]+)?$'
-    __re_string = r'^([sS])[tring]*$'
-    __translations = [
-            'to_uint',
-            'to_bytes',
-            'to_string',
-            ]
-
-    def to_uint(self, typ):
-        s = None
-        a = None
-        m = re.match(self.__re_uint, typ)
-        if m == None:
-            return None
-
-        n = m.group(2)
-        if m.group(2) == None:
-            n = 256
-        s = 'UINT256'.format(m.group(2))
-        a = getattr(ABIContractType, s)
-        return (s, a)
-
-
-    def to_bytes(self, typ):
-        s = None
-        a = None
-        m = re.match(self.__re_bytes, typ)
-        if m == None:
-            return None
-        
-        n = m.group(2)
-        if n == None:
-            n = 32
-        s = 'BYTES{}'.format(n)
-        a = getattr(ABIContractType, s)
-        return (s, a)
-
-
-    def to_string(self, typ):
-        m = re.match(self.__re_string, typ)
-        if m == None:
-            return None
-        s = 'STRING'
-        a = getattr(ABIContractType, s)
-        return (s, a)
-
-
-    def translate_type(self, typ):
-        r = None
-        for tr in self.__translations:
-            r = getattr(self, tr)(typ)
-            if r != None:
-                break
-        if r == None:
-            raise ValueError('no translation for type {}'.format(typ))
-        logg.debug('type {} translated to {}'.format(typ, r[0]))
-        return r[1]
 
 
 def main():
