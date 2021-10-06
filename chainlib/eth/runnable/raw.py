@@ -125,6 +125,8 @@ def main():
                 r = conn.do(o)
                 print(r)
             else:
+                if config.get('_RAW'):
+                    o = strip_0x(o)
                 print(o)
 
     else:

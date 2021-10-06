@@ -62,7 +62,11 @@ argparser = chainlib.eth.cli.ArgumentParser(arg_flags)
 argparser.add_argument('--signature', type=str, help='Method signature to encode')
 argparser.add_argument('contract_args', type=str, nargs='*', help='arguments to encode')
 args = argparser.parse_args()
-config = chainlib.eth.cli.Config.from_args(args, arg_flags, default_config_dir=config_dir)
+extra_args = {
+    'signature': None,
+    'contract_args': None,
+        }
+config = chainlib.eth.cli.Config.from_args(args, arg_flags, extra_args=extra_args, default_config_dir=config_dir)
 
 if not config.get('_EXEC_ADDRESS'):
     argparser.error('exec address (-e) must be defined')
@@ -161,18 +165,23 @@ def main():
     cli_encoder = CLIEncoder()
     contract_encoder = ABIContractEncoder()
 
-    if args.signature:
+    if config.get('_SIGNATURE'):
         contract_encoder.method(args.signature)
 
-    for arg in args.contract_args:
+    for arg in config.get('_CONTRACT_ARGS'):
         logg.debug('arg {}'.format(arg))
         (typ, val) = arg.split(':', maxsplit=1)
         real_typ = cli_encoder.translate_type(typ)
-        contract_encoder.typ(real_typ)
+        if config.get('_SIGNATURE'):
+            contract_encoder.typ(real_typ)
         fn = getattr(contract_encoder, real_typ.value)
         fn(val)
 
     code += contract_encoder.get()
+
+    if not config.get('_SIGNATURE'):
+        print(strip_0x(code))
+        return
 
     if signer == None:
         c = TxFactory(chain_spec)
@@ -212,6 +221,8 @@ def main():
         r = conn.do(r)
         print(r)
     else:
+        if config.get('_RAW'):
+            o = strip_0x(o)
         print(o)
 
 if __name__ == '__main__':
