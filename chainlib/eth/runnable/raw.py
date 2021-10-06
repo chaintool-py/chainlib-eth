@@ -66,9 +66,6 @@ conn = rpc.connect_by_config(config)
 
 send = config.true('_RPC_SEND')
 
-#if config.get('_EXEC_ADDRESS') != None:
-#    send = False
-
 chain_spec = None
 try:
     chain_spec = ChainSpec.from_chain_str(config.get('CHAIN_SPEC'))

@@ -8,6 +8,7 @@ from chainlib.cli import (
         argflag_std_read,
         argflag_std_write,
         argflag_std_base,
+        reset as argflag_reset,
         Config as BaseConfig,
         Wallet as BaseWallet,
         Rpc as BaseRpc, Flag,

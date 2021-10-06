@@ -59,7 +59,6 @@ config_dir = os.path.join(script_dir, '..', 'data', 'config')
 
 arg_flags = chainlib.eth.cli.argflag_std_write | chainlib.eth.cli.Flag.EXEC
 argparser = chainlib.eth.cli.ArgumentParser(arg_flags)
-argparser = chainlib.eth.cli.ArgumentParser(arg_flags)
 argparser.add_argument('--signature', type=str, help='Method signature to encode')
 argparser.add_argument('contract_args', type=str, nargs='*', help='arguments to encode')
 args = argparser.parse_args()
