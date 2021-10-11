@@ -299,7 +299,7 @@ class TxFactory:
     :param chain_spec: Chain spec to use for signer.
     :type chain_spec: chainlib.chain.ChainSpec
     :param signer: Signer middleware.
-    :type param: Object implementing interface ofchainlib.eth.connection.sign_transaction_to_wire
+    :type param: Object implementing interface of chainlib.eth.connection.sign_transaction_to_wire
     :param gas_oracle: Backend to generate gas parameters
     :type gas_oracle: Object implementing chainlib.eth.gas.GasOracle interface
     :param nonce_oracle: Backend to generate gas parameters
