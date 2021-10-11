@@ -41,6 +41,7 @@ class Wallet(BaseWallet):
         super(Wallet, self).__init__(EIP155Signer, checksummer=checksummer)
 
 
+# TODO: how is the keystore implemented in rpc here?
 class Rpc(BaseRpc):
     """Convenience constructor to set Ethereum defaults for chainlib cli Rpc object
 
