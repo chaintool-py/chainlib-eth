@@ -23,7 +23,10 @@ from chainlib.eth.contract import (
         ABIContractEncoder,
         ABIContractType,
         )
-from chainlib.eth.address import to_checksum_address
+from chainlib.eth.address import (
+        to_checksum_address,
+        is_same_address,
+        )
 from hexathon import (
         strip_0x,
         add_0x,
@@ -43,8 +46,8 @@ class TxTestCase(EthTesterCase):
         c = Gas(signer=self.signer, nonce_oracle=nonce_oracle, gas_oracle=gas_oracle, chain_spec=self.chain_spec)
         (tx_hash_hex, o) = c.create(self.accounts[0], self.accounts[1], 1024, tx_format=TxFormat.RLP_SIGNED)
         tx = unpack(bytes.fromhex(strip_0x(o)), self.chain_spec)
-        self.assertEqual(tx['from'], self.accounts[0])
-        self.assertEqual(tx['to'], self.accounts[1])
+        self.assertTrue(is_same_address(tx['from'], self.accounts[0]))
+        self.assertTrue(is_same_address(tx['to'], self.accounts[1]))
 
 
     def test_tx_pack(self):

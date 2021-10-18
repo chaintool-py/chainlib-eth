@@ -7,16 +7,19 @@ import logging
 import json
 
 # external imports
-from crypto_dev_signer.eth.transaction import EIP155Transaction
-from crypto_dev_signer.eth.signer.defaultsigner import ReferenceSigner
-from crypto_dev_signer.keystore.dict import DictKeystore
+from funga.eth.transaction import EIP155Transaction
+from funga.eth.signer.defaultsigner import EIP155Signer
+from funga.eth.keystore.dict import DictKeystore
 
 # local imports
 import chainlib
 from chainlib.eth.connection import EthUnixSignerConnection
 from chainlib.eth.sign import sign_transaction
 from chainlib.eth.tx import TxFactory
-from chainlib.eth.address import to_checksum_address
+from chainlib.eth.address import (
+        to_checksum_address,
+        is_same_address,
+        )
 from chainlib.jsonrpc import (
         jsonrpc_response,
         jsonrpc_error,
@@ -52,11 +55,13 @@ class Mocket(socket.socket):
         logg.debug('mocket received {}'.format(v))
         Mocket.req_id = o['id']
         params = o['params'][0]
-        if to_checksum_address(params.get('from')) != alice:
-            logg.error('from does not match alice {}'.format(params))
+        from_address = to_checksum_address(params.get('from'))
+        if not is_same_address(alice, from_address):
+            logg.error('from {} does not match alice {}'.format(from_address, alice)) #params))
             Mocket.error = True
-        if to_checksum_address(params.get('to')) != bob:
-            logg.error('to does not match bob {}'.format(params))
+        to_address = to_checksum_address(params.get('to'))
+        if not is_same_address(bob, to_address):
+            logg.error('to {} does not match bob {}'.format(to_address, bob)) #params))
             Mocket.error = True
         if not Mocket.error:
             Mocket.tx = EIP155Transaction(params, params['nonce'], params['chainId'])
@@ -92,7 +97,7 @@ class TestSign(TestBase):
         logg.debug('alice {}'.format(alice))
         logg.debug('bob {}'.format(bob))
 
-        self.signer = ReferenceSigner(keystore)
+        self.signer = EIP155Signer(keystore)
 
         Mocket.signer = self.signer
     
