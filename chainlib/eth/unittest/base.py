@@ -5,6 +5,7 @@ import logging
 # external imports
 import eth_tester
 import coincurve
+from chainlib.encode import TxHexNormalizer
 from chainlib.connection import (
         RPCConnection,
         error_parser,
@@ -184,7 +185,8 @@ class TestRPCConnection(RPCConnection):
         pk_bytes = self.backend.keystore.get(tx.sender)
         pk = coincurve.PrivateKey(secret=pk_bytes)
         result_address = private_key_to_address(pk)
-        assert strip_0x(result_address) == strip_0x(tx.sender)
+        tx_normalize = TxHexNormalizer()
+        assert tx_normalize.wallet_address(strip_0x(result_address)) == tx_normalize.wallet_address(strip_0x(tx.sender))
 
 
     def sign_transaction(self, tx, passphrase=''):
