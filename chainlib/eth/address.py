@@ -4,7 +4,7 @@ from hexathon import (
         strip_0x,
         uniform,
     )
-from crypto_dev_signer.encoding import (
+from funga.eth.encoding import (
         is_address,
         is_checksum_address,
         to_checksum_address,

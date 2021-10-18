@@ -15,8 +15,8 @@ from chainlib.eth.connection import EthHTTPConnection
 from chainlib.eth.tx import count
 from chainlib.chain import ChainSpec
 from chainlib.jsonrpc import IntSequenceGenerator
-from crypto_dev_signer.keystore.dict import DictKeystore
-from crypto_dev_signer.eth.signer import ReferenceSigner as EIP155Signer
+from funga.eth.keystore.dict import DictKeystore
+from funga.eth.signer import ReferenceSigner as EIP155Signer
 from hexathon import add_0x
 
 logging.basicConfig(level=logging.WARNING)

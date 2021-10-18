@@ -24,7 +24,7 @@ from chainlib.eth.gas import (
         balance,
         )
 from chainlib.chain import ChainSpec
-from crypto_dev_signer.eth.signer import ReferenceSigner as EIP155Signer
+from funga.eth.signer import EIP155Signer
 
 logging.basicConfig(level=logging.WARNING)
 logg = logging.getLogger()

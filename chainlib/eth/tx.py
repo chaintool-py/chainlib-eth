@@ -13,9 +13,11 @@ from hexathon import (
         )
 from rlp import decode as rlp_decode
 from rlp import encode as rlp_encode
-from crypto_dev_signer.eth.transaction import EIP155Transaction
-from crypto_dev_signer.encoding import public_key_to_address
-from crypto_dev_signer.eth.encoding import chain_id_to_v
+from funga.eth.transaction import EIP155Transaction
+from funga.eth.encoding import (
+        public_key_to_address,
+        chain_id_to_v,
+        )
 from potaahto.symbols import snake_and_camel
 from chainlib.hash import keccak256_hex_to_hex
 from chainlib.status import Status

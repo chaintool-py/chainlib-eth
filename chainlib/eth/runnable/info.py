@@ -16,7 +16,7 @@ from hexathon import (
         even,
         )
 import sha3
-from crypto_dev_signer.eth.signer import ReferenceSigner as EIP155Signer
+from funga.eth.signer import EIP155Signer
 
 # local imports
 from chainlib.eth.address import AddressChecksum

@@ -13,8 +13,8 @@ import sha3
 # external imports
 import chainlib.eth.cli
 from chainlib.eth.cli.encode import CLIEncoder
-from crypto_dev_signer.eth.signer import ReferenceSigner as EIP155Signer
-from crypto_dev_signer.keystore.dict import DictKeystore
+from funga.eth.signer import ReferenceSigner as EIP155Signer
+from funga.eth.keystore.dict import DictKeystore
 from hexathon import (
         add_0x,
         strip_0x,

@@ -25,8 +25,8 @@ from hexathon import (
         )
 from chainlib.eth.tx import receipt
 
-from crypto_dev_signer.eth.signer import ReferenceSigner as EIP155Signer
-from crypto_dev_signer.encoding import private_key_to_address
+from funga.eth.signer import EIP155Signer
+from funga.eth.encoding import private_key_to_address
 
 
 logg = logging.getLogger().getChild(__name__)

@@ -6,7 +6,7 @@ from hexathon import (
         add_0x,
         strip_0x,
         )
-from crypto_dev_signer.eth.transaction import EIP155Transaction
+from funga.eth.transaction import EIP155Transaction
 
 # local imports
 from chainlib.fee import FeeOracle

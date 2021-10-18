@@ -1,5 +1,5 @@
 # external imports
-from crypto_dev_signer.eth.signer import ReferenceSigner as EIP155Signer
+from funga.eth.signer import EIP155Signer
 from chainlib.cli import Wallet as BaseWallet
 
 # local imports
