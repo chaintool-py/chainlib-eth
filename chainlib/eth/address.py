@@ -42,3 +42,7 @@ class AddressChecksum:
         :returns: Checksum address
         """
         return to_checksum_address(v)
+
+
+def is_same_address(a, b):
+    return uniform(strip_0x(a)) == uniform(strip_0x(b))
