@@ -80,7 +80,7 @@ def main():
     if logg.isEnabledFor(logging.DEBUG):
         try:
             sender_balance = balance(signer_address, rpc.id_generator)
-            recipient_balance = balance(recipient, rpc.id_generator)
+            recipient_balance = balance(add_0x(recipient), rpc.id_generator)
             logg.debug('sender {} balance before: {}'.format(signer_address, sender_balance))
             logg.debug('recipient {} balance before: {}'.format(recipient, recipient_balance))
         except urllib.error.URLError:
@@ -94,7 +94,7 @@ def main():
             r = conn.wait(tx_hash_hex)
             if logg.isEnabledFor(logging.DEBUG):
                 sender_balance = balance(signer_address, rpc.id_generator)
-                recipient_balance = balance(recipient, rpc.id_generator)
+                recipient_balance = balance(add_0x(recipient), rpc.id_generator)
                 logg.debug('sender {} balance after: {}'.format(signer_address, sender_balance))
                 logg.debug('recipient {} balance after: {}'.format(recipient, recipient_balance))
             if r['status'] == 0:

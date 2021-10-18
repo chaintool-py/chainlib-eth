@@ -167,7 +167,6 @@ def __unpack_raw(tx_raw_bytes, chain_id=1):
     s[32-len(d[8]):] = d[8]
     logg.debug('vb {}'.format(vb))
     sig = b''.join([r, s, bytes([vb])])
-    #so = KeyAPI.Signature(signature_bytes=sig)
 
     h = sha3.keccak_256()
     h.update(rlp_encode(d))
