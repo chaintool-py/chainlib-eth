@@ -26,7 +26,8 @@ from chainlib.connection import (
 from chainlib.eth.address import to_checksum_address
 from chainlib.chain import ChainSpec
 
-logg = logging.getLogger(__name__)
+#logg = logging.getLogger(__name__)
+logg = logging.getLogger()
 
 test_address = bytes.fromhex('Eb3907eCad74a0013c259D5874AE7f22DcBcC95C')
 
@@ -63,6 +64,7 @@ class EthTesterCase(unittest.TestCase):
         self.helper = eth_tester_instance
         self.backend = self.helper.backend
         self.rpc = TestRPCConnection(None, eth_tester_instance, self.signer)
+
         for a in self.keystore.list():
             self.accounts.append(add_0x(to_checksum_address(a)))
 
@@ -73,7 +75,6 @@ class EthTesterCase(unittest.TestCase):
         RPCConnection.register_constructor(ConnType.CUSTOM, rpc_with_tester, tag='signer')
         RPCConnection.register_location('custom', self.chain_spec, tag='default', exist_ok=True)
         RPCConnection.register_location('custom', self.chain_spec, tag='signer', exist_ok=True)
-
         
 
     def tearDown(self):
