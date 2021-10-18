@@ -12,7 +12,7 @@ from tests.base import TestBase
 class TestChain(TestBase):
 
     def test_chain_spec(self):
-        checksum_address = '0xEb3907eCad74a0013c259D5874AE7f22DcBcC95C'
+        checksum_address = 'Eb3907eCad74a0013c259D5874AE7f22DcBcC95C'
         plain_address = checksum_address.lower()
 
         self.assertEqual(checksum_address, to_checksum(checksum_address))
