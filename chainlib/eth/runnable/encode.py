@@ -8,9 +8,11 @@ import json
 import argparse
 import logging
 import urllib
+import sha3
 
 # external imports
 import chainlib.eth.cli
+from chainlib.eth.cli.encode import CLIEncoder
 from crypto_dev_signer.eth.signer import ReferenceSigner as EIP155Signer
 from crypto_dev_signer.keystore.dict import DictKeystore
 from hexathon import (
@@ -19,6 +21,7 @@ from hexathon import (
         )
 
 # local imports
+from chainlib.eth.constant import ZERO_ADDRESS
 from chainlib.eth.address import to_checksum
 from chainlib.eth.connection import EthHTTPConnection
 from chainlib.jsonrpc import (
@@ -35,12 +38,14 @@ from chainlib.eth.gas import (
         )
 from chainlib.eth.tx import (
         TxFactory,
+        TxFormat,
         raw,
         )
 from chainlib.error import SignerMissingException
 from chainlib.chain import ChainSpec
 from chainlib.eth.runnable.util import decode_for_puny_humans
 from chainlib.eth.jsonrpc import to_blockheight_param
+from chainlib.eth.address import to_checksum_address
 
 logging.basicConfig(level=logging.WARNING)
 logg = logging.getLogger()
@@ -50,10 +55,17 @@ config_dir = os.path.join(script_dir, '..', 'data', 'config')
 
 arg_flags = chainlib.eth.cli.argflag_std_write | chainlib.eth.cli.Flag.EXEC
 argparser = chainlib.eth.cli.ArgumentParser(arg_flags)
-argparser.add_argument('--deploy', action='store_true', help='Deploy data as contract')
-argparser.add_positional('data', type=str, help='Transaction data')
+argparser.add_argument('--signature', type=str, help='Method signature to encode')
+argparser.add_argument('contract_args', type=str, nargs='*', help='arguments to encode')
 args = argparser.parse_args()
-config = chainlib.eth.cli.Config.from_args(args, arg_flags, default_config_dir=config_dir)
+extra_args = {
+    'signature': None,
+    'contract_args': None,
+        }
+config = chainlib.eth.cli.Config.from_args(args, arg_flags, extra_args=extra_args, default_config_dir=config_dir)
+
+if not config.get('_EXEC_ADDRESS'):
+    argparser.error('exec address (-e) must be defined')
 
 block_all = args.ww
 block_last = args.w or block_all
@@ -72,71 +84,72 @@ try:
 except AttributeError:
     pass
 
+
 def main():
 
-    signer_address = None
+    signer_address = ZERO_ADDRESS
+    signer = None
     try:
         signer = rpc.get_signer()
         signer_address = rpc.get_signer_address()
     except SignerMissingException:
         pass
 
-    if config.get('_EXEC_ADDRESS') != None or args.deploy:
-        exec_address = None
-        if config.get('_EXEC_ADDRESS') != None:
-            exec_address = add_0x(to_checksum(config.get('_EXEC_ADDRESS')))
-        #if not args.u and exec_address != add_0x(exec_address):
-            if not args.u and exec_address != exec_address:
-                raise ValueError('invalid checksum address')
+    code = '0x'
+    cli_encoder = CLIEncoder(signature=config.get('_SIGNATURE'))
 
-        if signer_address == None:
-            j = JSONRPCRequest(id_generator=rpc.id_generator)
-            o = j.template()
-            o['method'] = 'eth_call'
-            o['params'].append({
+    for arg in config.get('_CONTRACT_ARGS'):
+        cli_encoder.add_from(arg)
+    
+    code += cli_encoder.get()
+
+    if not config.get('_SIGNATURE'):
+        print(strip_0x(code))
+        return
+
+    exec_address = add_0x(to_checksum_address(config.get('_EXEC_ADDRESS')))
+
+    if signer == None:
+        c = TxFactory(chain_spec)
+        j = JSONRPCRequest(id_generator=rpc.id_generator)
+        o = j.template()
+        o['method'] = 'eth_call'
+        o['params'].append({
                 'to': exec_address,
                 'from': signer_address,
                 'value': '0x00',
                 'gas': add_0x(int.to_bytes(8000000, 8, byteorder='big').hex()), # TODO: better get of network gas limit
                 'gasPrice': '0x01',
-                'data': add_0x(args.data),
+                'data': add_0x(code),
                 })
-            height = to_blockheight_param(config.get('_HEIGHT'))
-            o['params'].append(height)
-            o = j.finalize(o)
-            r = conn.do(o)
-            try:
-                print(strip_0x(r))
-            except ValueError:
-                sys.stderr.write('query returned an empty value ({})\n'.format(r))
-                sys.exit(1)
+        height = to_blockheight_param(config.get('_HEIGHT'))
+        o['params'].append(height)
+        o = j.finalize(o)
+        r = conn.do(o)
+        try:
+            print(strip_0x(r))
+            return
+        except ValueError:
+            sys.stderr.write('query returned an empty value ({})\n'.format(r))
+            sys.exit(1)
 
-        else:
-            if chain_spec == None:
-                raise ValueError('chain spec must be specified')
-            g = TxFactory(chain_spec, signer=rpc.get_signer(), gas_oracle=rpc.get_gas_oracle(), nonce_oracle=rpc.get_nonce_oracle())
-            tx = g.template(signer_address, exec_address, use_nonce=True)
-            if args.data != None:
-                tx = g.set_code(tx, add_0x(args.data))
+    if chain_spec == None:
+        raise ValueError('chain spec must be specified')
 
-            (tx_hash_hex, o) = g.finalize(tx, id_generator=rpc.id_generator)
-       
-            if send:
-                r = conn.do(o)
-                print(r)
-            else:
-                if config.get('_RAW'):
-                    o = strip_0x(o)
-                print(o)
-
+    c = TxFactory(chain_spec, signer=signer, gas_oracle=rpc.get_gas_oracle(), nonce_oracle=rpc.get_nonce_oracle())
+    tx = c.template(signer_address, config.get('_EXEC_ADDRESS'), use_nonce=True)
+    tx = c.set_code(tx, code)
+    tx_format = TxFormat.JSONRPC
+    if config.get('_RAW'):
+        tx_format = TxFormat.RLP_SIGNED
+    (tx_hash_hex, o) = c.finalize(tx, tx_format=tx_format)
+    if send:
+        r = conn.do(r)
+        print(r)
     else:
-        o = raw(args.data, id_generator=rpc.id_generator)
-        if send:
-            r = conn.do(o)
-            print(r)
-        else:
-            print(o)
-
+        if config.get('_RAW'):
+            o = strip_0x(o)
+        print(o)
 
 if __name__ == '__main__':
     main()
