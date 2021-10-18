@@ -45,6 +45,7 @@ from chainlib.error import SignerMissingException
 from chainlib.chain import ChainSpec
 from chainlib.eth.runnable.util import decode_for_puny_humans
 from chainlib.eth.jsonrpc import to_blockheight_param
+from chainlib.eth.address import to_checksum_address
 
 logging.basicConfig(level=logging.WARNING)
 logg = logging.getLogger()
@@ -106,6 +107,8 @@ def main():
         print(strip_0x(code))
         return
 
+    exec_address = add_0x(to_checksum_address(config.get('_EXEC_ADDRESS')))
+
     if signer == None:
         c = TxFactory(chain_spec)
         j = JSONRPCRequest(id_generator=rpc.id_generator)
@@ -122,7 +125,7 @@ def main():
         height = to_blockheight_param(config.get('_HEIGHT'))
         o['params'].append(height)
         o = j.finalize(o)
-        r = conn.do(r)
+        r = conn.do(o)
         try:
             print(strip_0x(r))
             return
