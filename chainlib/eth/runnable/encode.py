@@ -45,7 +45,10 @@ from chainlib.error import SignerMissingException
 from chainlib.chain import ChainSpec
 from chainlib.eth.runnable.util import decode_for_puny_humans
 from chainlib.eth.jsonrpc import to_blockheight_param
+<<<<<<< HEAD
 from chainlib.eth.address import to_checksum_address
+=======
+>>>>>>> d6b258f2140f5ce555f765a90c14a65a5f3fc6de
 
 logging.basicConfig(level=logging.WARNING)
 logg = logging.getLogger()
