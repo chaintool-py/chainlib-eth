@@ -26,6 +26,7 @@ from chainlib.eth.gas import Gas
 from chainlib.eth.gas import balance as gas_balance
 from chainlib.chain import ChainSpec
 from chainlib.eth.runnable.util import decode_for_puny_humans
+from chainlib.eth.address import is_same_address
 import chainlib.eth.cli
 
 logging.basicConfig(level=logging.WARNING)
@@ -73,27 +74,27 @@ def main():
     g = Gas(chain_spec, signer=signer, gas_oracle=rpc.get_gas_oracle(), nonce_oracle=rpc.get_nonce_oracle())
 
     recipient = to_checksum_address(config.get('_RECIPIENT'))
-    if not config.true('_UNSAFE') and recipient != add_0x(config.get('_RECIPIENT')):
+    if not config.true('_UNSAFE') and is_checksum_address(recipient):
         raise ValueError('invalid checksum address')
 
     logg.info('gas transfer from {} to {} value {}'.format(signer_address, recipient, value))
     if logg.isEnabledFor(logging.DEBUG):
         try:
-            sender_balance = balance(signer_address, rpc.id_generator)
+            sender_balance = balance(add_0x(signer_address), rpc.id_generator)
             recipient_balance = balance(add_0x(recipient), rpc.id_generator)
             logg.debug('sender {} balance before: {}'.format(signer_address, sender_balance))
             logg.debug('recipient {} balance before: {}'.format(recipient, recipient_balance))
         except urllib.error.URLError:
             pass
      
-    (tx_hash_hex, o) = g.create(signer_address, recipient, value, data=config.get('_DATA'), id_generator=rpc.id_generator)
+    (tx_hash_hex, o) = g.create(signer_address, add_0x(recipient), value, data=config.get('_DATA'), id_generator=rpc.id_generator)
 
     if send:
         conn.do(o)
         if block_last:
             r = conn.wait(tx_hash_hex)
             if logg.isEnabledFor(logging.DEBUG):
-                sender_balance = balance(signer_address, rpc.id_generator)
+                sender_balance = balance(add_0x(signer_address), rpc.id_generator)
                 recipient_balance = balance(add_0x(recipient), rpc.id_generator)
                 logg.debug('sender {} balance after: {}'.format(signer_address, sender_balance))
                 logg.debug('recipient {} balance after: {}'.format(recipient, recipient_balance))
