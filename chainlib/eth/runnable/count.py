@@ -16,7 +16,7 @@ from chainlib.eth.tx import count
 from chainlib.chain import ChainSpec
 from chainlib.jsonrpc import IntSequenceGenerator
 from funga.eth.keystore.dict import DictKeystore
-from funga.eth.signer import ReferenceSigner as EIP155Signer
+from funga.eth.signer import EIP155Signer
 from hexathon import add_0x
 
 logging.basicConfig(level=logging.WARNING)
@@ -43,7 +43,7 @@ conn = rpc.connect_by_config(config)
 
 def main():
     # TODO: should tolerate if address not prefixed with 0x 
-    o = count(holder_address, id_generator=rpc.id_generator)
+    o = count(add_0x(holder_address), id_generator=rpc.id_generator)
     r = conn.do(o)
     count_result = None
     try:
