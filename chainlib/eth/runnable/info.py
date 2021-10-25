@@ -24,6 +24,7 @@ from chainlib.eth.chain import network_id
 from chainlib.eth.block import (
         block_latest,
         block_by_number,
+        syncing,
         Block,
         )
 from chainlib.eth.tx import count
@@ -43,25 +44,35 @@ logg = logging.getLogger()
 script_dir = os.path.dirname(os.path.realpath(__file__)) 
 config_dir = os.path.join(script_dir, '..', 'data', 'config')
 
+results_translation = {
+    'network_id': 'Network Id',
+    'block': 'Block',
+    'syncing': 'Syncing',
+    'gas_limit': 'Gas Limit',
+    'gas_price': 'Gas Price',
+    'block_time': 'Block time',
+        }
+
+
 arg_flags = chainlib.eth.cli.argflag_std_read
 argparser = chainlib.eth.cli.ArgumentParser(arg_flags)
-argparser.add_positional('address', type=str, help='Address to retrieve info for', required=False)
 argparser.add_argument('--long', action='store_true', help='Calculate averages through sampling of blocks and txs')
+argparser.add_argument('--local', action='store_true', help='Include local info')
+argparser.add_positional('entry', required=False, help='Output single item')
 args = argparser.parse_args()
 
-config = chainlib.eth.cli.Config.from_args(args, arg_flags, extra_args={'long': None}, default_config_dir=config_dir)
+extra_args = {
+        'local': None,
+        'long': None,
+        'entry': None,
+        }
+config = chainlib.eth.cli.Config.from_args(args, arg_flags, extra_args=extra_args, default_config_dir=config_dir)
 
-holder_address = None
-try:
-    holder_address = add_0x(args.address)
-except ValueError:
-    pass
-wallet = chainlib.eth.cli.Wallet()
-wallet.from_config(config)
-if wallet.get_signer_address() == None and holder_address != None:
-    wallet.from_address(holder_address)
+if config.get('_ENTRY') != None:
+    if config.get('_ENTRY') not in results_translation.keys():
+        raise ValueError('Unknown entry {}'.format(config.get('_ENTRY')))
 
-rpc = chainlib.eth.cli.Rpc(wallet=wallet)
+rpc = chainlib.eth.cli.Rpc()
 conn = rpc.connect_by_config(config)
 
 token_symbol = 'eth'
@@ -72,12 +83,25 @@ human = not config.true('_RAW')
 
 longmode = config.true('_LONG')
 
+def set_result(results, k, v, w=sys.stdout):
+    kt = results_translation[k]
+    if str(config.get('_ENTRY')) == k:
+        w.write('{}'.format(v))
+        return True
+    logg.info('{}: {}\n'.format(kt, v))
+    results[k] = v
+    return False
+
+
 def main():
+    results = {}
+
     o = network_id(id_generator=rpc.id_generator)
     r = conn.do(o)
     #if human:
     #    n = format(n, ',')
-    sys.stdout.write('Network id: {}\n'.format(r))
+    if set_result(results, 'network_id', r):
+        return
 
     o = block_latest(id_generator=rpc.id_generator)
     r = conn.do(o)
@@ -85,7 +109,8 @@ def main():
     first_block_number = n
     if human:
         n = format(n, ',')
-    sys.stdout.write('Block: {}\n'.format(n))
+    if set_result(results, 'block', n):
+        return
 
     o = block_by_number(first_block_number, False, id_generator=rpc.id_generator)
     r = conn.do(o)
@@ -111,22 +136,31 @@ def main():
         if human:
             n = format(n, ',')
 
-        sys.stdout.write('Gaslimit: {}\n'.format(n))
-        sys.stdout.write('Blocktime: {}\n'.format(aggr_time / BLOCK_SAMPLES))
+        if set_result(results, 'gas_limit', n):
+            return
+        if set_result(results, 'block_time', aggr_time / BLOCK_SAMPLES):
+            return
 
     o = price(id_generator=rpc.id_generator)
     r = conn.do(o)
     n = int(r, 16)
     if human:
         n = format(n, ',')
-    sys.stdout.write('Gasprice: {}\n'.format(n))
+    if set_result(results, 'gas_price', n):
+        return
 
-    if holder_address != None:
-        o = count(holder_address)
+    if config.get('_LOCAL'):
+        o = syncing()
         r = conn.do(o)
-        n = int(r, 16)
-        sys.stdout.write('Address: {}\n'.format(holder_address))
-        sys.stdout.write('Nonce: {}\n'.format(n))
+        if set_result(results, 'syncing', r):
+            return
+
+    if config.get('_ENTRY') != None:
+        raise RuntimeError('entry {} ({}) not processed, please review the flag settings'.format(config.get('_ENTRY'), results_translation[config.get('_ENTRY')]))
+
+    for k in results.keys():
+        kt = results_translation[k]
+        sys.stdout.write('{}: {}\n'.format(kt, results[k]))
 
 
 if __name__ == '__main__':

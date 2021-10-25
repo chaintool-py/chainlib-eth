@@ -36,6 +36,7 @@ from chainlib.jsonrpc import (
 from chainlib.eth.tx import (
         unpack,
         )
+from potaahto.symbols import snake_and_camel
 
 logg = logging.getLogger(__name__)
 
@@ -88,11 +89,16 @@ class EthHTTPConnection(JSONRPCHTTPConnection):
 
             e = jsonrpc_result(r, error_parser)
             if e != None:
-                logg.debug('({}) poll receipt completed {}'.format(str(self), r))
-                logg.debug('e {}'.format(strip_0x(e['status'])))
-                if strip_0x(e['status']) == '00':
-                    raise RevertEthException(tx_hash_hex)
-                return e
+                e = snake_and_camel(e)
+                # In openethereum we encounter receipts that have NONE block hashes and numbers. WTF...
+                if e['block_hash'] == None:
+                    logg.warning('poll receipt attempt {} returned receipt but with a null block hash value!'.format(i))
+                else:
+                    logg.debug('({}) poll receipt completed {}'.format(str(self), r))
+                    logg.debug('e {}'.format(strip_0x(e['status'])))
+                    if strip_0x(e['status']) == '00':
+                        raise RevertEthException(tx_hash_hex)
+                    return e
 
             if timeout > 0.0:
                 delta = (datetime.datetime.utcnow() - t) + datetime.timedelta(seconds=delay)
