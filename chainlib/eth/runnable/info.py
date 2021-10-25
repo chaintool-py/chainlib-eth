@@ -51,7 +51,11 @@ args = argparser.parse_args()
 
 config = chainlib.eth.cli.Config.from_args(args, arg_flags, extra_args={'long': None}, default_config_dir=config_dir)
 
-holder_address = args.address
+holder_address = None
+try:
+    holder_address = add_0x(args.address)
+except ValueError:
+    pass
 wallet = chainlib.eth.cli.Wallet()
 wallet.from_config(config)
 if wallet.get_signer_address() == None and holder_address != None:

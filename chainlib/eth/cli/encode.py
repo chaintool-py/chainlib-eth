@@ -16,10 +16,12 @@ class CLIEncoder(ABIContractEncoder):
     __re_uint = r'^([uU])[int]*([0-9]+)?$'
     __re_bytes = r'^([bB])[ytes]*([0-9]+)?$'
     __re_string = r'^([sS])[tring]*$'
+    __re_address = r'^([aA])[ddress]*?$'
     __translations = [
             'to_uint',
             'to_bytes',
             'to_string',
+            'to_address',
             ]
 
     def __init__(self, signature=None):
@@ -54,6 +56,18 @@ class CLIEncoder(ABIContractEncoder):
         if n == None:
             n = 32
         s = 'BYTES{}'.format(n)
+        a = getattr(ABIContractType, s)
+        return (s, a)
+
+
+    def to_address(self, typ):
+        s = None
+        a = None
+        m = re.match(self.__re_address, typ)
+        if m == None:
+            return None
+        
+        s = 'ADDRESS'
         a = getattr(ABIContractType, s)
         return (s, a)
 
