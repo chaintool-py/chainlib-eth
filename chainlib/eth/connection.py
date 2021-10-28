@@ -91,10 +91,10 @@ class EthHTTPConnection(JSONRPCHTTPConnection):
             if e != None:
                 e = snake_and_camel(e)
                 # In openethereum we encounter receipts that have NONE block hashes and numbers. WTF...
+                logg.debug('({}) poll receipt received {}'.format(str(self), r))
                 if e['block_hash'] == None:
                     logg.warning('poll receipt attempt {} returned receipt but with a null block hash value!'.format(i))
                 else:
-                    logg.debug('({}) poll receipt completed {}'.format(str(self), r))
                     logg.debug('e {}'.format(strip_0x(e['status'])))
                     if strip_0x(e['status']) == '00':
                         raise RevertEthException(tx_hash_hex)

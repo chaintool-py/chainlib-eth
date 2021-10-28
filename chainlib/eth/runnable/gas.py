@@ -63,8 +63,12 @@ send = config.true('_RPC_SEND')
 def balance(address, id_generator):
     o = gas_balance(address, id_generator=id_generator)
     r = conn.do(o)
-    hx = strip_0x(r)
-    return int(hx, 16)
+    try:
+        balance = int(r)
+    except ValueError:
+        balance = strip_0x(r)
+        balance = int(balance, 16)
+    return balance
 
 
 def main():
