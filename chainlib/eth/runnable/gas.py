@@ -26,7 +26,10 @@ from chainlib.eth.gas import Gas
 from chainlib.eth.gas import balance as gas_balance
 from chainlib.chain import ChainSpec
 from chainlib.eth.runnable.util import decode_for_puny_humans
-from chainlib.eth.address import is_same_address
+from chainlib.eth.address import (
+        is_same_address,
+        is_checksum_address,
+        )
 import chainlib.eth.cli
 
 logging.basicConfig(level=logging.WARNING)

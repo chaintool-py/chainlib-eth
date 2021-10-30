@@ -63,6 +63,7 @@ item = add_0x(args.item)
 
 
 def get_transaction(conn, tx_hash, id_generator):
+    tx_hash = add_0x(tx_hash)
     j = JSONRPCRequest(id_generator=id_generator)
     o = j.template()
     o['method'] = 'eth_getTransactionByHash'
@@ -104,6 +105,7 @@ def get_transaction(conn, tx_hash, id_generator):
 
 
 def get_address(conn, address, id_generator, height):
+    address = add_0x(address)
     j = JSONRPCRequest(id_generator=id_generator)
     o = j.template()
     o['method'] = 'eth_getCode'

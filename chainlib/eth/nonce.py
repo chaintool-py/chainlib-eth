@@ -44,7 +44,7 @@ class NonceOracle(BaseNonceOracle):
     """
     def __init__(self, address, id_generator=None):
         self.id_generator = id_generator
-        super(NonceOracle, self).__init__(address)
+        super(NonceOracle, self).__init__(add_0x(address))
 
 
     def get_nonce(self):
