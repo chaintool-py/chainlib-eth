@@ -144,7 +144,7 @@ def main():
         tx_format = TxFormat.RLP_SIGNED
     (tx_hash_hex, o) = c.finalize(tx, tx_format=tx_format)
     if send:
-        r = conn.do(r)
+        r = conn.do(o)
         print(r)
     else:
         if config.get('_RAW'):
