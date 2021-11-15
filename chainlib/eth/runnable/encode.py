@@ -55,12 +55,14 @@ config_dir = os.path.join(script_dir, '..', 'data', 'config')
 
 arg_flags = chainlib.eth.cli.argflag_std_write | chainlib.eth.cli.Flag.EXEC
 argparser = chainlib.eth.cli.ArgumentParser(arg_flags)
+argparser.add_argument('--notx', type=str, help='Network send is not a transaction')
 argparser.add_argument('--signature', type=str, help='Method signature to encode')
 argparser.add_argument('contract_args', type=str, nargs='*', help='arguments to encode')
 args = argparser.parse_args()
 extra_args = {
     'signature': None,
     'contract_args': None,
+    'notx': None,
         }
 config = chainlib.eth.cli.Config.from_args(args, arg_flags, extra_args=extra_args, default_config_dir=config_dir)
 
@@ -109,7 +111,7 @@ def main():
 
     exec_address = add_0x(to_checksum_address(config.get('_EXEC_ADDRESS')))
 
-    if signer == None:
+    if signer == None or config.true('_NOTX'):
         c = TxFactory(chain_spec)
         j = JSONRPCRequest(id_generator=rpc.id_generator)
         o = j.template()
