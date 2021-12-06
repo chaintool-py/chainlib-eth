@@ -420,6 +420,8 @@ class TxFactory:
             return self.build(tx, id_generator=id_generator)
         elif tx_format == TxFormat.RLP_SIGNED:
             return self.build_raw(tx)
+        elif tx_format == TxFormat.RAW_ARGS:
+            return strip_0x(tx['data'])
         raise NotImplementedError('tx formatting {} not implemented'.format(tx_format))
 
 
