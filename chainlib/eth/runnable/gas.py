@@ -81,7 +81,7 @@ def main():
     g = Gas(chain_spec, signer=signer, gas_oracle=rpc.get_gas_oracle(), nonce_oracle=rpc.get_nonce_oracle())
 
     recipient = to_checksum_address(config.get('_RECIPIENT'))
-    if not config.true('_UNSAFE') and is_checksum_address(recipient):
+    if not config.true('_UNSAFE') and not is_checksum_address(recipient):
         raise ValueError('invalid checksum address')
 
     logg.info('gas transfer from {} to {} value {}'.format(signer_address, recipient, value))
