@@ -98,7 +98,6 @@ def get_transaction(conn, tx_hash, id_generator):
         r = conn.do(o)
         block = Block(r)
         tx.apply_block(block)
-    logg.debug('foo {}'.format(tx_src))
     tx.generate_wire(chain_spec)
     return tx
     
