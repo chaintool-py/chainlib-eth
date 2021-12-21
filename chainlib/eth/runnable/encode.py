@@ -13,8 +13,8 @@ import sha3
 # external imports
 import chainlib.eth.cli
 from chainlib.eth.cli.encode import CLIEncoder
-from crypto_dev_signer.eth.signer import ReferenceSigner as EIP155Signer
-from crypto_dev_signer.keystore.dict import DictKeystore
+from funga.eth.signer import EIP155Signer
+from funga.eth.keystore.dict import DictKeystore
 from hexathon import (
         add_0x,
         strip_0x,
@@ -45,10 +45,7 @@ from chainlib.error import SignerMissingException
 from chainlib.chain import ChainSpec
 from chainlib.eth.runnable.util import decode_for_puny_humans
 from chainlib.eth.jsonrpc import to_blockheight_param
-<<<<<<< HEAD
 from chainlib.eth.address import to_checksum_address
-=======
->>>>>>> d6b258f2140f5ce555f765a90c14a65a5f3fc6de
 
 logging.basicConfig(level=logging.WARNING)
 logg = logging.getLogger()
@@ -58,12 +55,14 @@ config_dir = os.path.join(script_dir, '..', 'data', 'config')
 
 arg_flags = chainlib.eth.cli.argflag_std_write | chainlib.eth.cli.Flag.EXEC
 argparser = chainlib.eth.cli.ArgumentParser(arg_flags)
+argparser.add_argument('--notx', action='store_true', help='Network send is not a transaction')
 argparser.add_argument('--signature', type=str, help='Method signature to encode')
 argparser.add_argument('contract_args', type=str, nargs='*', help='arguments to encode')
 args = argparser.parse_args()
 extra_args = {
     'signature': None,
     'contract_args': None,
+    'notx': None,
         }
 config = chainlib.eth.cli.Config.from_args(args, arg_flags, extra_args=extra_args, default_config_dir=config_dir)
 
@@ -112,7 +111,7 @@ def main():
 
     exec_address = add_0x(to_checksum_address(config.get('_EXEC_ADDRESS')))
 
-    if signer == None:
+    if signer == None or config.true('_NOTX'):
         c = TxFactory(chain_spec)
         j = JSONRPCRequest(id_generator=rpc.id_generator)
         o = j.template()
@@ -147,7 +146,7 @@ def main():
         tx_format = TxFormat.RLP_SIGNED
     (tx_hash_hex, o) = c.finalize(tx, tx_format=tx_format)
     if send:
-        r = conn.do(r)
+        r = conn.do(o)
         print(r)
     else:
         if config.get('_RAW'):

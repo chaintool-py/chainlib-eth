@@ -60,6 +60,20 @@ def transaction_count(block_hash, id_generator=None):
     return j.finalize(o)
 
 
+def syncing(id_generator=None):
+    """Request the syncing state of the node
+
+    :param id_generator: JSONRPC id generator
+    :type id_generator: JSONRPCIdGenerator
+    :rtype: dict
+    :returns: rpc query object
+    """
+    j = JSONRPCRequest(id_generator)
+    o = j.template()
+    o['method'] = 'eth_syncing'
+    return j.finalize(o)
+
+
 class Block(BaseBlock):
     """Encapsulates an Ethereum block
 

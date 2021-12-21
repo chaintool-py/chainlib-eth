@@ -26,7 +26,10 @@ from chainlib.eth.gas import Gas
 from chainlib.eth.gas import balance as gas_balance
 from chainlib.chain import ChainSpec
 from chainlib.eth.runnable.util import decode_for_puny_humans
-from chainlib.eth.address import is_same_address
+from chainlib.eth.address import (
+        is_same_address,
+        is_checksum_address,
+        )
 import chainlib.eth.cli
 
 logging.basicConfig(level=logging.WARNING)
@@ -63,8 +66,12 @@ send = config.true('_RPC_SEND')
 def balance(address, id_generator):
     o = gas_balance(address, id_generator=id_generator)
     r = conn.do(o)
-    hx = strip_0x(r)
-    return int(hx, 16)
+    try:
+        balance = int(r)
+    except ValueError:
+        balance = strip_0x(r)
+        balance = int(balance, 16)
+    return balance
 
 
 def main():
@@ -74,7 +81,7 @@ def main():
     g = Gas(chain_spec, signer=signer, gas_oracle=rpc.get_gas_oracle(), nonce_oracle=rpc.get_nonce_oracle())
 
     recipient = to_checksum_address(config.get('_RECIPIENT'))
-    if not config.true('_UNSAFE') and is_checksum_address(recipient):
+    if not config.true('_UNSAFE') and not is_checksum_address(recipient):
         raise ValueError('invalid checksum address')
 
     logg.info('gas transfer from {} to {} value {}'.format(signer_address, recipient, value))

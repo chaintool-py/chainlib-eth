@@ -7,9 +7,9 @@ import logging
 import json
 
 # external imports
-from crypto_dev_signer.eth.transaction import EIP155Transaction
-from crypto_dev_signer.eth.signer.defaultsigner import ReferenceSigner
-from crypto_dev_signer.keystore.dict import DictKeystore
+from funga.eth.transaction import EIP155Transaction
+from funga.eth.signer.defaultsigner import EIP155Signer
+from funga.eth.keystore.dict import DictKeystore
 
 # local imports
 import chainlib
@@ -97,7 +97,7 @@ class TestSign(TestBase):
         logg.debug('alice {}'.format(alice))
         logg.debug('bob {}'.format(bob))
 
-        self.signer = ReferenceSigner(keystore)
+        self.signer = EIP155Signer(keystore)
 
         Mocket.signer = self.signer
     

@@ -13,6 +13,7 @@ from chainlib.eth.nonce import (
         )
 
 
+# TODO: how is the keystore implemented in rpc here?
 class Rpc(BaseRpc):
     """Convenience constructor to set Ethereum defaults for chainlib cli Rpc object
 

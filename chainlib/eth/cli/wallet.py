@@ -1,5 +1,6 @@
 # external imports
-from crypto_dev_signer.eth.signer import ReferenceSigner as EIP155Signer
+from funga.eth.signer import EIP155Signer
+from funga.eth.keystore.dict import DictKeystore
 from chainlib.cli import Wallet as BaseWallet
 
 # local imports
@@ -13,7 +14,7 @@ class Wallet(BaseWallet):
     :type checksummer: Implementation of chainlib.eth.address.AddressChecksum
     """
     def __init__(self, checksummer=AddressChecksum):
-        super(Wallet, self).__init__(EIP155Signer, checksummer=checksummer)
+        super(Wallet, self).__init__(EIP155Signer, checksummer=checksummer, keystore=DictKeystore())
 
 
 

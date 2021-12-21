@@ -6,7 +6,7 @@ from hexathon import (
         add_0x,
         strip_0x,
         )
-from crypto_dev_signer.eth.transaction import EIP155Transaction
+from funga.eth.transaction import EIP155Transaction
 
 # local imports
 from chainlib.fee import FeeOracle
@@ -55,7 +55,7 @@ def balance(address, id_generator=None, height=BlockSpec.LATEST):
     j = JSONRPCRequest(id_generator)
     o = j.template()
     o['method'] = 'eth_getBalance'
-    o['params'].append(address)
+    o['params'].append(add_0x(address))
     height = to_blockheight_param(height)
     o['params'].append(height)
     return j.finalize(o)

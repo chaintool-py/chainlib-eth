@@ -1,7 +1,7 @@
-crypto-dev-signer>=0.4.15rc2,<=0.4.15
+funga-eth~=0.5.1
 pysha3==1.0.2
-hexathon~=0.0.1a8
+hexathon~=0.1.0
 websocket-client==0.57.0
-potaahto~=0.0.1a1
-chainlib==0.0.10a2
-confini>=0.4.1a1,<0.5.0
+potaahto~=0.1.0
+chainlib~=0.0.14
+confini~=0.5.2

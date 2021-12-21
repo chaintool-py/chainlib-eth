@@ -23,9 +23,10 @@ from hexathon import (
         add_0x,
         strip_0x,
         )
+from chainlib.eth.tx import receipt
 
-from crypto_dev_signer.eth.signer import ReferenceSigner as EIP155Signer
-from crypto_dev_signer.encoding import private_key_to_address
+from funga.eth.signer import EIP155Signer
+from funga.eth.encoding import private_key_to_address
 
 
 logg = logging.getLogger().getChild(__name__)
@@ -79,6 +80,11 @@ class TestRPCConnection(RPCConnection):
             logg.exception(e)
             r = jsonrpc_error(o['id'], message=str(e))
         return jsonrpc_result(r, error_parser)
+
+
+    def wait(self, tx_hash_hex):
+        o = receipt(tx_hash_hex)
+        return self.do(o)
 
 
     def eth_blockNumber(self, p):

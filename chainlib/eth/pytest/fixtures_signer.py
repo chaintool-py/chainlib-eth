@@ -3,7 +3,6 @@
 
 # external imports
 import pytest
-#from crypto_dev_signer.eth.signer import ReferenceSigner as EIP155Signer
 
 
 @pytest.fixture(scope='function')

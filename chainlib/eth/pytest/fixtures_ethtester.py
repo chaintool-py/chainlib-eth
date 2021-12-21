@@ -5,8 +5,8 @@ import logging
 # external imports
 import eth_tester
 import pytest
-from crypto_dev_signer.eth.signer import ReferenceSigner as EIP155Signer
-from crypto_dev_signer.keystore.dict import DictKeystore
+from funga.eth.signer import EIP155Signer
+from funga.eth.keystore.dict import DictKeystore
 
 # local imports
 from chainlib.eth.unittest.base import *
