@@ -112,6 +112,9 @@ def main():
     exec_address = add_0x(to_checksum_address(config.get('_EXEC_ADDRESS')))
 
     if signer == None or config.true('_NOTX'):
+        if config.true('_RAW'):
+            print(strip_0x(code))
+            return
         c = TxFactory(chain_spec)
         j = JSONRPCRequest(id_generator=rpc.id_generator)
         o = j.template()
