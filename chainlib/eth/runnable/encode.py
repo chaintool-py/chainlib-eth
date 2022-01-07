@@ -53,7 +53,7 @@ logg = logging.getLogger()
 script_dir = os.path.dirname(os.path.realpath(__file__)) 
 config_dir = os.path.join(script_dir, '..', 'data', 'config')
 
-arg_flags = chainlib.eth.cli.argflag_std_write | chainlib.eth.cli.Flag.EXEC
+arg_flags = chainlib.eth.cli.argflag_std_write | chainlib.eth.cli.Flag.EXEC | chainlib.eth.cli.Flag.FEE
 argparser = chainlib.eth.cli.ArgumentParser(arg_flags)
 argparser.add_argument('--notx', action='store_true', help='Network send is not a transaction')
 argparser.add_argument('--signature', type=str, help='Method signature to encode')
@@ -119,12 +119,14 @@ def main():
         j = JSONRPCRequest(id_generator=rpc.id_generator)
         o = j.template()
         o['method'] = 'eth_call'
+        gas_limit = add_0x(int.to_bytes(config.get('_FEE_LIMIT'), 8, byteorder='big').hex(), compact_value=True)
+        gas_price = add_0x(int.to_bytes(config.get('_FEE_PRICE'), 8, byteorder='big').hex(), compact_value=True)
         o['params'].append({
                 'to': exec_address,
                 'from': signer_address,
-                'value': '0x00',
-                'gas': add_0x(int.to_bytes(8000000, 8, byteorder='big').hex()), # TODO: better get of network gas limit
-                'gasPrice': '0x01',
+                'value': '0x0',
+                'gas': gas_limit, # TODO: better get of network gas limit
+                'gasPrice': gas_price,
                 'data': add_0x(code),
                 })
         height = to_blockheight_param(config.get('_HEIGHT'))
