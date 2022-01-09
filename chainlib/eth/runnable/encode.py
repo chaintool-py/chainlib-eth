@@ -66,9 +66,6 @@ extra_args = {
         }
 config = chainlib.eth.cli.Config.from_args(args, arg_flags, extra_args=extra_args, default_config_dir=config_dir)
 
-if not config.get('_EXEC_ADDRESS'):
-    argparser.error('exec address (-e) must be defined')
-
 block_all = args.ww
 block_last = args.w or block_all
 
@@ -109,12 +106,18 @@ def main():
         print(strip_0x(code))
         return
 
-    exec_address = add_0x(to_checksum_address(config.get('_EXEC_ADDRESS')))
+    exec_address = config.get('_EXEC_ADDRESS')
+    if exec_address:
+        exec_address = add_0x(to_checksum_address(exec_address))
 
     if signer == None or config.true('_NOTX'):
         if config.true('_RAW'):
             print(strip_0x(code))
             return
+
+        if not exec_address:
+            argparser.error('exec address (-e) must be defined')
+
         c = TxFactory(chain_spec)
         j = JSONRPCRequest(id_generator=rpc.id_generator)
         o = j.template()
@@ -139,6 +142,9 @@ def main():
         except ValueError:
             sys.stderr.write('query returned an empty value ({})\n'.format(r))
             sys.exit(1)
+
+    if not exec_address:
+        argparser.error('exec address (-e) must be defined')
 
     if chain_spec == None:
         raise ValueError('chain spec must be specified')

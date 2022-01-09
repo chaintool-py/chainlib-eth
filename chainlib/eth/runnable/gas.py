@@ -106,7 +106,7 @@ def main():
                 logg.debug('sender {} balance after: {}'.format(signer_address, sender_balance))
                 logg.debug('recipient {} balance after: {}'.format(recipient, recipient_balance))
             if r['status'] == 0:
-                logg.critical('VM revert. Wish I could tell you more')
+                logg.critical('VM revert for {}. Wish I could tell you more'.format(tx_hash_hex))
                 sys.exit(1)
         print(tx_hash_hex)
     else:

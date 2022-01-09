@@ -133,6 +133,11 @@ def main():
         o = raw(args.data, id_generator=rpc.id_generator)
         if send:
             r = conn.do(o)
+            if block_last:
+                r = conn.wait(tx_hash_hex)
+                if r['status'] == 0:
+                    logg.critical('VM revert for {}. Wish I could tell you more'.format(tx_hash_hex))
+                    sys.exit(1)
             print(r)
         else:
             print(o)
