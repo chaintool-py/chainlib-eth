@@ -51,6 +51,7 @@ config_dir = os.path.join(script_dir, '..', 'data', 'config')
 
 arg_flags = chainlib.eth.cli.argflag_std_read
 argparser = chainlib.eth.cli.ArgumentParser(arg_flags)
+argparser.add_argument('--delay', type=float, default=0.5, help='Delay between polls')
 argparser.add_argument('--ignore', type=str, action='append', default=[], help='Ignore error from the given transaction')
 argparser.add_argument('--ignore-all', action='store_true', dest='ignore_all', help='Ignore errors from all transactions')
 argparser.add_positional('hashes', append=True, type=str, help='Transaction hashes to wait for')
@@ -59,6 +60,7 @@ extra_args = {
     'ignore': None,
     'ignore_all': None,
     'hashes': None,
+    'delay': None,
         }
 config = chainlib.eth.cli.Config.from_args(args, arg_flags, extra_args=extra_args, default_config_dir=config_dir)
 
@@ -99,7 +101,7 @@ def main():
     for hsh in hashes_ready:
         logg.debug('processing transaction hash {}'.format(hsh))
         try:
-            r = conn.wait(hsh)
+            r = conn.wait(hsh, delay=config.get('_DELAY'))
         except RevertEthException:
             if config.get('_IGNORE_ALL') or hsh in hashes_ignore:
                 logg.info('ignoring revert in transaction hash {}'.format(hsh))
