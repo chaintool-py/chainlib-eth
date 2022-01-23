@@ -162,7 +162,8 @@ def __unpack_raw(tx_raw_bytes, chain_id=1):
     vb = chain_id
     if chain_id != 0:
         v = int.from_bytes(d[6], 'big')
-        vb = v - (chain_id * 2) - 35
+        if v > 29:
+            vb = v - (chain_id * 2) - 35
     r = bytearray(32)
     r[32-len(d[7]):] = d[7]
     s = bytearray(32)

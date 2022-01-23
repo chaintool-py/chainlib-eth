@@ -1,3 +1,5 @@
+- 0.0.22:
+	* Enable unpack of pre EIP-155 transactions
 - 0.0.21:
 	* Remove warnings from cytoolz/rlp in funga-eth
 - 0.0.15:
