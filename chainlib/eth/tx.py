@@ -519,7 +519,7 @@ class Tx(BaseTx):
     #:todo: divide up constructor method
     """
 
-    def __init__(self, src, block=None, rcpt=None):
+    def __init__(self, src, block=None, rcpt=None, strict=False):
         self.__rcpt_block_hash = None
 
         src = self.src_normalize(src)
@@ -575,7 +575,7 @@ class Tx(BaseTx):
         self.logs = None
 
         if rcpt != None:
-            self.apply_receipt(rcpt)
+            self.apply_receipt(rcpt, strict=strict)
 
         self.v = src.get('v')
         self.r = src.get('r')
@@ -618,7 +618,7 @@ class Tx(BaseTx):
         return self.src()
 
 
-    def apply_receipt(self, rcpt):
+    def apply_receipt(self, rcpt, strict=False):
         """Apply receipt data to transaction object.
 
         Effect is the same as passing a receipt at construction.
@@ -642,6 +642,12 @@ class Tx(BaseTx):
             status_number = int(rcpt['status'], 16)
         except TypeError:
             status_number = int(rcpt['status'])
+        except KeyError as e:
+            if strict:
+                raise(e)
+            logg.warning('setting "sucess" status on missing status property for {}'.format(self.hash))
+            status_number = 1
+
         if rcpt['block_number'] == None:
             self.status = Status.PENDING
         else:
@@ -696,12 +702,12 @@ class Tx(BaseTx):
 
 
     @staticmethod
-    def from_src(src, block=None, rcpt=None):
+    def from_src(src, block=None, rcpt=None, strict=False):
         """Creates a new Tx object.
 
         Alias of constructor.
         """
-        return Tx(src, block=block, rcpt=rcpt)
+        return Tx(src, block=block, rcpt=rcpt, strict=strict)
 
 
     def __str__(self):

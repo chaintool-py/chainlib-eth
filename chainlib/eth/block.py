@@ -4,7 +4,7 @@ from chainlib.block import Block as BaseBlock
 from hexathon import (
         add_0x,
         strip_0x,
-        even,
+        compact,
         )
 
 # local imports
@@ -34,7 +34,8 @@ def block_by_hash(hsh, include_tx=True, id_generator=None):
 def block_by_number(n, include_tx=True, id_generator=None):
     """Implements chainlib.interface.ChainInterface method
     """
-    nhx = add_0x(even(hex(n)[2:]))
+    hx = strip_0x(hex(n))
+    nhx = add_0x(compact(hx), compact_value=True)
     j = JSONRPCRequest(id_generator)
     o = j.template()
     o['method'] = 'eth_getBlockByNumber'

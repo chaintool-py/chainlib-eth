@@ -105,7 +105,10 @@ def main():
 
     o = block_latest(id_generator=rpc.id_generator)
     r = conn.do(o)
-    n = int(r, 16)
+    try:
+        n = int(r, 16)
+    except ValueError:
+        n = int(r)
     first_block_number = n
     if human:
         n = format(n, ',')
