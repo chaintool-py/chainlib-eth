@@ -1,3 +1,7 @@
+- 0.0.25:
+	* Upgrade chainlib to get passphrase file for wallet keyfile
+- 0.0.24:
+	* Upgrade from hexathon bug breaking compact hex function
 - 0.0.23:
 	* Make get block args and responses compatible with picky golang marhaling in geth
 - 0.0.22:
