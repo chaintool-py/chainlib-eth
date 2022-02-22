@@ -1,3 +1,7 @@
+- 0.0.27:
+	* Add man pages
+- 0.0.26:
+	* Remove manual 0x handling bug in tx
 - 0.0.25:
 	* Upgrade chainlib to get passphrase file for wallet keyfile
 - 0.0.24:

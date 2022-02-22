@@ -1,0 +1,9 @@
+.TH eth-gas 1
+.SH NAME
+eth-gas - Create EVM gas token transaction
+.SH SYNOPSIS
+\fBeth-gas\fP -a RECIPIENT -y KEYFILE [ --fee-price PRICE ] [ --fee-limit LIMIT ] [ --nonce NONCE ] [ -s ] [ -u ] AMOUNT
+.SH DESCRIPTION
+\fBeth-gas\fP generates serialized gas token transactions.
+
+.SS OPTIONS

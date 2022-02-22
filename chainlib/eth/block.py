@@ -1,3 +1,4 @@
+import sys
 # external imports
 from chainlib.jsonrpc import JSONRPCRequest
 from chainlib.block import Block as BaseBlock
@@ -35,6 +36,7 @@ def block_by_number(n, include_tx=True, id_generator=None):
     """Implements chainlib.interface.ChainInterface method
     """
     hx = strip_0x(hex(n))
+    sys.stderr.write('hx {} {}\n'.format(n, hx))
     nhx = add_0x(compact(hx), compact_value=True)
     j = JSONRPCRequest(id_generator)
     o = j.template()
