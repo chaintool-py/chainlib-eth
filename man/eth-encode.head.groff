@@ -4,13 +4,13 @@
 eth-encode \- Encode arbitrary contract calls and transactions
 
 .SH SYNOPSIS
-\fBeth-encode\fP [ -p \fIrpc_provider\fP ] [ -i \fIchain_Spec\fP] [ -s ] [ -w ] [ -e \fIsmart_contract_address\fP ] --signature \fIcontract_method_name\fP [ \fIvalue_specifiers\fP ... ]
+\fBeth-encode\fP [ --mode \fImode\fP ] [ -f \fIformat\fP ] [ -p \fIrpc_provider\fP ] [ -i \fIchain_Spec\fP] [ -s ] [ -w ] [ -e \fIsmart_contract_address\fP ] --signature \fIcontract_method_name\fP [ \fIvalue_specifiers\fP ... ]
 
 .SH DESCRIPTION
 
 Generate wire-format or rpc query any EVM smart contract call or transaction by specifying method and arguments.
 
-The resulting call or transaction can either be stored offline for future use, or directly sent to the network using the \fB-s\fP flag.
+The resulting call or transaction can either be stored offline for later use, or directly sent to the network using the \fB-s\fP option.
 
 A description of value formatting is given in the \fBSPECIFYING VALUES\fP section below. Usage is demonstrated in the \fBEXAMPLES\fP section.
 

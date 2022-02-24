@@ -1,3 +1,16 @@
+.SH MODES
+
+The modes parameter specifies what kind of operaion the encoding should be generated for. There are three valid modes:
+
+.SS tx
+Generates a transaction that changes state. Used with \fB--format\fP \fIrpc\fP it will generate an \fIeth_sendRawTransaction\fP jsonrpc object. Used with \fB--format\fP \fIbin\fP it outputs signed RLP only in hexdecimal.
+
+.SS call
+Generates a query that reads state. Used with \fB--format\fP \fIrpc\fP it will generate a \fIeth_call\fP jsonrpc object with applicable fields filled out from environment, arguments and/or rpc retrieval. \fB--format\fP \fIbin\fP is not valid for this mode.
+
+.SS arg
+Encodes the argument part only, optionally with a method signature. \fB--format\fP \fIrpc\fP is not valid for this mode.
+
 .SH SPECIFYING VALUES
 Dynamic value types are not yet supported.
 

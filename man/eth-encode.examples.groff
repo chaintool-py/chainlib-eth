@@ -1,5 +1,22 @@
-.SS Build a signed ERC20 transfer
-
+.SS Build a signed ERC20 transfer in wire format, setting nonce and fee details manually.
 .EX
-$ eth-encode -y <\fIkey_file_path\fP> -e <\fItoken_address\fP> --signature transfer a:00000000000000000000000000000000DeaDBeef u:1024
+$ eth-encode -f bin -y <\fIkey_file_path\fP> -e <\fItoken_address\fP> --fee-price 1000000000 --fee-limit 100000 --nonce 42 --signature transfer a:00000000000000000000000000000000DeaDBeef u:1024
+.EE
+
+.SS Build Smart contract call with method signature, retrieving fee and nonce settings from rpc
+
+\fBeth-encode\fP --mode call -f rpc -e <\fItoken_address\fP> --signature balanceOf -p <\fIrpc_endpoint\fP> a:deadbeef
+
+.SS Build smart contract ERC20 transfer argument with signature
+.EX
+\fBeth-encode\fP --mode arg --signature transfer a:00000000000000000000000000000000DeaDBeef u:1024
+.TP Outupt
+a9059cbb00000000000000000000000000000000000000000000000000000000deadbeef0000000000000000000000000000000000000000000000000000000000000400
+.EE
+
+.SS Build smart contract ERC20 transfer argument types without signature
+.EX
+\fBeth-encode\fP --mode arg a:00000000000000000000000000000000DeaDBeef u:1024
+.TP Output
+00000000000000000000000000000000000000000000000000000000deadbeef0000000000000000000000000000000000000000000000000000000000000400
 .EE
