@@ -50,5 +50,26 @@ $ PYTHONPATH=. python chainlib/eth/runnable/gas.py -y <\fIkey_file_path\fP> -a 0
 0xf8662a85174876e8008252089400000000000000000000000000000000deadbeef8204008025a00c97432d4db724e66a56f7ced04174cf6129e2555709f206dd6d3a156b4af23aa0287862548314a59c7ca6139eee8b51400eb40a67b08b8dc13d67302abecccae0
 .EE
 
+.SS Sign transaction for a different network
+
+.EX
+$ PYTHONPATH=. python chainlib/eth/runnable/gas.py -i evm:london:3:rinkeby -y /home/lash/src/contrib/grassrootseconomics/cic-dev/UTC--2021-01-08T17-18-44.521011372Z--eb3907ecad74a0013c259d5874ae7f22dcbcc95c  -a 00000000000000000000000000000000DeaDBeef --fee-price 100000000000 --fee-limit 21000 --nonce 42 --data 0x2a 1024 
+from: Eb3907eCad74a0013c259D5874AE7f22DcBcC95C
+to: 00000000000000000000000000000000DeaDBeef
+nonce: 42
+gasPrice: 100000000000 (100 gwei)
+gas: 21000
+value: 1024 (0.000000000000001024 eth)
+data: 0x2a
+v: 41
+recovery_byte: 0
+r: 0xe522c25784111a512cbf46f883e3bdacffc2cdbd465fa1042892c28fc10ee054
+s: 0x5f84eb51a0c9871cfcedaba4e6274b300014899b3a2fec9292de6fe5919bcd07
+chainId: 3
+hash: 0x771200a20072294a6a843b89b98d5f868c9aa94da75dacf6a9f5834dfd241199
+hash_unsigned: 0xa5f9e8a5cda6985d81f4129955b7529f48ecb54728badac16ec550384e3a2bcc
+src: 0xf8662a85174876e8008252089400000000000000000000000000000000deadbeef8204002a29a0e522c25784111a512cbf46f883e3bdacffc2cdbd465fa1042892c28fc10ee054a05f84eb51a0c9871cfcedaba4e6274b300014899b3a2fec9292de6fe5919bcd07
+.EE
+
 .P
 The wire-format can in turn be decoded using the \fBeth-decode\fP tool)
