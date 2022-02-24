@@ -1,0 +1,14 @@
+.TH eth-decode 1
+
+.SH NAME
+eth-decode \- Decode a transaction in wire-format to human readable form
+
+.SH SYNOPSIS
+\fBeth-decode\fI [ -i \fIchain_spec\fP ] encoded_tx
+
+.SH DESCRIPTION
+.P
+This tool deserializes a wire-format transaction and outputs its fields in human-readable form. It does not require a node to operate, and does not apply transaction state.
+.P
+The transaction wire-format is an ordered concatenation of transaction values, which in turn is serialized using the Recurive Length Prefix (RLP) format. \fBeth-decode\fP accepts the RLP-encoded transaction as a hex string.
+.P

@@ -1,0 +1,54 @@
+.P
+In the follwing we willconsaider transactions signed by the private key for address Eb3907eCad74a0013c259D5874AE7f22DcBcC95C:
+
+.SS Offline transaction
+
+.EX
+$ PYTHONPATH=. python chainlib/eth/runnable/gas.py -y <\fIkey_file_path\fP> -a 00000000000000000000000000000000DeaDBeef --fee-price 100000000000 --fee-limit 21000 --nonce 42 1024
+from: Eb3907eCad74a0013c259D5874AE7f22DcBcC95C
+to: 00000000000000000000000000000000DeaDBeef
+nonce: 42
+gasPrice: 100000000000 (100 gwei)
+gas: 21000
+value: 1024 (0.000000000000001024 eth)
+data: 0x
+v: 37
+recovery_byte: 0
+r: 0x0c97432d4db724e66a56f7ced04174cf6129e2555709f206dd6d3a156b4af23a
+s: 0x287862548314a59c7ca6139eee8b51400eb40a67b08b8dc13d67302abecccae0
+chainId: 1
+hash: 0x003030af05460633e85b16fff7a17607818dc67e58f89396e5491ad6f5438971
+hash_unsigned: 0xa59cf9e5438b186de381892b7879ce66476d5469478c7148880da5d553ade651
+src: 0xf8662a85174876e8008252089400000000000000000000000000000000deadbeef8204008025a00c97432d4db724e66a56f7ced04174cf6129e2555709f206dd6d3a156b4af23aa0287862548314a59c7ca6139eee8b51400eb40a67b08b8dc13d67302abecccae0
+.EE
+
+.SS Offline transaction with arbitrary data
+
+.EX
+$ PYTHONPATH=. python chainlib/eth/runnable/gas.py -y <\fIkey_file_path\fP> -a 00000000000000000000000000000000DeaDBeef --fee-price 100000000000 --fee-limit 21000 --nonce 42 --data 0x2a 1024 
+from: Eb3907eCad74a0013c259D5874AE7f22DcBcC95C
+to: 00000000000000000000000000000000DeaDBeef
+nonce: 42
+gasPrice: 100000000000 (100 gwei)
+gas: 21000
+value: 1024 (0.000000000000001024 eth)
+data: 0x2a
+v: 37
+recovery_byte: 0
+r: 0x800b6982d3f178201d7e7e7693b9c90b3fbcd54d04b6fff5284c81101fad54dd
+s: 0x3b86d710d31ac74b58f0040b0f51fdb6bdbabea62a68cf99c05e765e7e81de87
+chainId: 1
+hash: 0xede30052befd80760c5ab543babdccc3d97fe90523e5710d77220155a82faa47
+hash_unsigned: 0xad82d8cf1a412541c8a94ef71c50e9172c3a37853af036adee2f55c577da9770
+src: 0xf8662a85174876e8008252089400000000000000000000000000000000deadbeef8204002a25a0800b6982d3f178201d7e7e7693b9c90b3fbcd54d04b6fff5284c81101fad54dda03b86d710d31ac74b58f0040b0f51fdb6bdbabea62a68cf99c05e765e7e81de87
+.EE
+
+.SS Offline transaction with wire-format output
+
+.EX
+$ PYTHONPATH=. python chainlib/eth/runnable/gas.py -y <\fIkey_file_path\fP> -a 00000000000000000000000000000000DeaDBeef --fee-price 100000000000 --fee-limit 21000 --nonce 42 --raw 1024
+0xf8662a85174876e8008252089400000000000000000000000000000000deadbeef8204008025a00c97432d4db724e66a56f7ced04174cf6129e2555709f206dd6d3a156b4af23aa0287862548314a59c7ca6139eee8b51400eb40a67b08b8dc13d67302abecccae0
+.EE
+
+.P
+The wire-format can in turn be decoded using the \fBeth-decode\fP tool)

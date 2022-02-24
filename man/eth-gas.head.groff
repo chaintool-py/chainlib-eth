@@ -1,0 +1,19 @@
+.TH eth-gas 1
+.SH NAME
+eth-gas - Create EVM gas token transaction
+.SH SYNOPSIS
+.P
+\fBeth-gas\fP -a RECIPIENT -y KEYFILE [ -p \fIrpc_provider ] [ -s ] [ -u ] AMOUNT
+.P
+\fBeth-gas\fP -a RECIPIENT -y KEYFILE [ --fee-price PRICE ] [ --fee-limit LIMIT ] [ --nonce NONCE ] [ -s ] [ -u ] AMOUNT
+.SH DESCRIPTION
+\fBeth-gas\fP generates serialized gas token transactions in various output formats.
+
+If an \fIrpc_provider\fP is available, the valuess \fIfee_price\fP and \fInonce\fP will be automatically retrieved if they are not explicitly specified. If missing values cannot be retrieved, an error will occur.
+
+Providing all arguments enables fully offline creation of the transaction.
+
+See \fBEXAMPLES\fP for more details on inputs and outputs.
+
+
+.SS OPTIONS
