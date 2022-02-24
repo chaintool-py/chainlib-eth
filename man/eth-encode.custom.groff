@@ -1,0 +1,18 @@
+.SH SPECIFYING VALUES
+Dynamic value types are not yet supported.
+
+.SS Specifying an unsigned integer:
+.IP u:1024
+
+.SS Specifying an address:
+.IP a:19062190B1925b5b6689D7073fDfC8c2976EF8Cb
+
+.SS Specifying bytes values:
+
+.IP b:deadbeef 
+.IP b4:deadbeef
+.IP b32:deadbeef
+
+.SS Specifying a string value:
+
+.IP s:foobar

@@ -1,0 +1,17 @@
+.TH eth-encode 1
+
+.SH NAME
+eth-encode \- Encode arbitrary contract calls and transactions
+
+.SH SYNOPSIS
+\fBeth-encode\fP [ -p \fIrpc_provider\fP ] [ -i \fIchain_Spec\fP] [ -s ] [ -w ] [ -e \fIsmart_contract_address\fP ] --signature \fIcontract_method_name\fP [ \fIvalue_specifiers\fP ... ]
+
+.SH DESCRIPTION
+
+Generate wire-format or rpc query any EVM smart contract call or transaction by specifying method and arguments.
+
+The resulting call or transaction can either be stored offline for future use, or directly sent to the network using the \fB-s\fP flag.
+
+A description of value formatting is given in the \fBSPECIFYING VALUES\fP section below. Usage is demonstrated in the \fBEXAMPLES\fP section.
+
+.SS OPTIONS

@@ -1,0 +1,5 @@
+.SS Build a signed ERC20 transfer
+
+.EX
+$ eth-encode -y <\fIkey_file_path\fP> -e <\fItoken_address\fP> --signature transfer a:00000000000000000000000000000000DeaDBeef u:1024
+.EE
