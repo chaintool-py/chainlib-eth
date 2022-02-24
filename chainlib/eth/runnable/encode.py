@@ -28,14 +28,6 @@ from chainlib.jsonrpc import (
         JSONRPCRequest,
         IntSequenceGenerator,
         )
-from chainlib.eth.nonce import (
-        RPCNonceOracle,
-        OverrideNonceOracle,
-        )
-from chainlib.eth.gas import (
-        RPCGasOracle,
-        OverrideGasOracle,
-        )
 from chainlib.eth.tx import (
         TxFactory,
         TxFormat,
@@ -53,18 +45,19 @@ logg = logging.getLogger()
 script_dir = os.path.dirname(os.path.realpath(__file__)) 
 config_dir = os.path.join(script_dir, '..', 'data', 'config')
 
-arg_flags = chainlib.eth.cli.argflag_std_write | chainlib.eth.cli.Flag.EXEC | chainlib.eth.cli.Flag.FEE
+
+arg_flags = chainlib.eth.cli.argflag_std_write | chainlib.eth.cli.Flag.EXEC | chainlib.eth.cli.Flag.FEE | chainlib.eth.cli.Flag.FMT_HUMAN | chainlib.eth.cli.Flag.FMT_WIRE | chainlib.eth.cli.Flag.FMT_RPC
 argparser = chainlib.eth.cli.ArgumentParser(arg_flags)
-argparser.add_argument('--notx', action='store_true', help='Network send is not a transaction')
+argparser.add_argument('--mode', type=str, choices=['tx', 'call', 'arg'], help='Mode of operation')
 argparser.add_argument('--signature', type=str, help='Method signature to encode')
 argparser.add_argument('contract_args', type=str, nargs='*', help='arguments to encode')
 args = argparser.parse_args()
 extra_args = {
     'signature': None,
     'contract_args': None,
-    'notx': None,
         }
 config = chainlib.eth.cli.Config.from_args(args, arg_flags, extra_args=extra_args, default_config_dir=config_dir)
+logg.debug('config loaded:\n{}'.format(config))
 
 block_all = args.ww
 block_last = args.w or block_all
@@ -102,28 +95,63 @@ def main():
     
     code += cli_encoder.get()
 
-    if not config.get('_SIGNATURE'):
-        print(strip_0x(code))
-        return
-
     exec_address = config.get('_EXEC_ADDRESS')
     if exec_address:
         exec_address = add_0x(to_checksum_address(exec_address))
 
-    if signer == None or config.true('_NOTX'):
-        if config.true('_RAW'):
-            print(strip_0x(code))
-            return
+    mode = args.mode
+    if mode == None:
+        if signer == None:
+            mode = 'call'
+        else:
+            mode = 'tx'
 
-        if not exec_address:
-            argparser.error('exec address (-e) must be defined')
+    if not config.get('_SIGNATURE'):
+        if mode != 'arg':
+            logg.error('mode tx without contract method signature makes no sense. Use eth-get with --data instead.')
+            sys.exit(1)
+        if args.format == 'rpc':
+            logg.error('rpc format with arg put does not make sense')
+            sys.exit(1)
 
+    if mode == 'arg':
+        print(strip_0x(code))
+        return
+    elif not exec_address:
+        logg.error('exec address (-e) must be defined with mode "{}"'.format(args.mode))
+        sys.exit(1)
+
+    if config.get('RPC_PROVIDER'):
+        logg.debug('provider {}'.format(config.get('RPC_PROVIDER')))
+        if not config.get('_FEE_LIMIT') or not config.get('_FEE_PRICE'):
+            gas_oracle = rpc.get_gas_oracle()
+            (price, limit) = gas_oracle.get_gas()
+        if not config.get('_FEE_PRICE'):
+            config.add(price, '_FEE_PRICE')
+        if not config.get('_FEE_LIMIT'):
+            config.add(limit, '_FEE_LIMIT')
+
+        if not config.get('_NONCE'):
+            nonce_oracle = rpc.get_nonce_oracle()
+            config.add(nonce_oracle.get_nonce(), '_NONCE')
+    else: 
+        for arg in [
+                '_FEE_PRICE',
+                '_FEE_LIMIT',
+                '_NONCE',
+                ]:
+            if not config.get(arg):
+                logg.error('--{} must be specified when no rpc provider has been set.'.format(arg.replace('_', '-').lower()))
+                sys.exit(1)
+
+
+    if mode == 'call': #signer == None or config.true('_NOTX'):
         c = TxFactory(chain_spec)
         j = JSONRPCRequest(id_generator=rpc.id_generator)
         o = j.template()
-        o['method'] = 'eth_call'
         gas_limit = add_0x(int.to_bytes(config.get('_FEE_LIMIT'), 8, byteorder='big').hex(), compact_value=True)
         gas_price = add_0x(int.to_bytes(config.get('_FEE_PRICE'), 8, byteorder='big').hex(), compact_value=True)
+        o['method'] = 'eth_call'
         o['params'].append({
                 'to': exec_address,
                 'from': signer_address,
@@ -135,16 +163,22 @@ def main():
         height = to_blockheight_param(config.get('_HEIGHT'))
         o['params'].append(height)
         o = j.finalize(o)
-        r = conn.do(o)
-        try:
-            print(strip_0x(r))
-            return
-        except ValueError:
-            sys.stderr.write('query returned an empty value ({})\n'.format(r))
-            sys.exit(1)
 
-    if not exec_address:
-        argparser.error('exec address (-e) must be defined')
+        if config.get('_RPC_SEND'):
+            r = conn.do(o)
+            try:
+                print(strip_0x(r))
+                return
+            except ValueError:
+                sys.stderr.write('query returned an empty value ({})\n'.format(r))
+                sys.exit(1)
+        else:
+            print(o)
+            return
+
+    if signer == None:
+        logg.error('mode "tx" without signer does not make sense. Please specify a key file with -y.')
+        sys.exit(1)
 
     if chain_spec == None:
         raise ValueError('chain spec must be specified')
