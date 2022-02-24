@@ -1,0 +1,27 @@
+.TH eth-info 1
+
+.SH NAME
+eth-info - Return key metrics from the current state of the EVM network.
+
+.SH SYNOPSIS
+\fBeth-info\fP [ -p \fIrpc_provider\fP ] [ \fIkey\fP ]
+
+.SH DESCRIPTION
+\fBeth-info\fP reports statistics from the current state of the EVM network:
+
+.EX
+$ eth-info
+Block: 1024478
+Gas price: 1000000000
+.EE
+
+An individual data item may be specified using the \fIkey\fP positional argument:
+
+.EX
+$ eth-info block
+Block: 1024478
+$ eth-info --raw gas_price
+1000000000
+.EE
+
+.SS OPTIONS

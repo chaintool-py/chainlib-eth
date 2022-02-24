@@ -1,5 +1,6 @@
 - 0.0.27:
-	* Add man pages
+	* Add man pages with chainlib man page generator helper
+	* Remove redundant arg flags from runnables: get
 - 0.0.26:
 	* Remove manual 0x handling bug in tx
 - 0.0.25:

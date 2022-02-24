@@ -48,7 +48,8 @@ logg = logging.getLogger()
 script_dir = os.path.dirname(os.path.realpath(__file__)) 
 config_dir = os.path.join(script_dir, '..', 'data', 'config')
 
-arg_flags = chainlib.eth.cli.argflag_std_read
+arg_flags = chainlib.eth.cli.argflag_std_base_read 
+arg_flags = chainlib.eth.cli.argflag_reset(arg_flags, chainlib.eth.cli.Flag.CHAIN_SPEC)
 argparser = chainlib.eth.cli.ArgumentParser(arg_flags)
 argparser.add_positional('item', type=str, help='Address or transaction to retrieve data for')
 args = argparser.parse_args()
