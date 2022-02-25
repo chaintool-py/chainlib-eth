@@ -1,0 +1,17 @@
+.TH eth-wait 1
+
+.SH NAE
+eth-wait \- Wait for a transaction to be confirmed on network
+
+.SH SYNOPSIS
+\fBeth-wait\fP [ -p \fIrpc_provider\fP ] \fItransaction_hash\fP ... 
+
+.SH DESCRIPTION
+.P
+Blocks until network confirmation for the transactions are returned from \fIrpc_provider\fP.
+.P
+By default, if execution of the transaction failed on the network, the command will cause an error. This behavior can be adjusted using the \fB--ignore\fP or \fB--ignore-all\fP option.
+.P
+A transaction hash unknown to the \fIrpc_provider\fP will also cause an error.
+
+.SS OPTIONS

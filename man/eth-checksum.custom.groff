@@ -1,0 +1,7 @@
+.SH ABOUT THE CHECKSUM
+.P
+Checksum protection may be used as protection against address typos.
+.P
+It uses the value of the address itself as input to an algorithm, which results in altering the case of the letters in the hexadecimal address.
+.P
+A checksum address consisting of only numbers will always pass checksum.

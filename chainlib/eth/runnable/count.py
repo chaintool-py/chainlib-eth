@@ -25,7 +25,7 @@ logg = logging.getLogger()
 script_dir = os.path.dirname(os.path.realpath(__file__)) 
 config_dir = os.path.join(script_dir, '..', 'data', 'config')
 
-arg_flags = chainlib.eth.cli.argflag_std_read
+arg_flags = chainlib.eth.cli.argflag_std_base_read | chainlib.eth.cli.Flag.WALLET
 argparser = chainlib.eth.cli.ArgumentParser(arg_flags)
 argparser.add_positional('address', type=str, help='Ethereum address of recipient')
 args = argparser.parse_args()

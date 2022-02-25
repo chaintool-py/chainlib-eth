@@ -4,14 +4,16 @@
 eth-get \- Retrieve transaction and transaction state from network
 
 .SH SYNOPSIS
+.PP
 \fBeth-get\fP [ -p \fIrpc_provider\fP] \fItx_hash\fP
+.PP
+\fBeth-get\fP [ -p \fIrpc_provider\fP] \fIaddress\fP
 
 .SH DESCRIPTION
 .P
-Retrieve a transaction by its transaction hash.
+Retrieve a transaction by its transaction hash, or contract code by its address.
 .P
-\fBeth-get\fP retrieves the state of the transaction (the "receipt") and applies it to the output.
-.P
-It also re-serializes the transaction wire format for reference. 
+In the context of transaction, \fBeth-get\fP retrieves the state of the transaction (the "receipt") and applies it to the output. It also re-serializes the transaction wire format for reference. 
+
 
 .SS OPTIONS

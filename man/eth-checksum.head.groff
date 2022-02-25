@@ -1,0 +1,11 @@
+.TH eth-checksum 1
+
+.SH NAME
+eth-checksum \- Calculate checksum address
+
+.SH SYNOPSIS
+\fBeth-checksum\fP \fIaddress\fP
+
+.SH DESCRIPTION
+.P
+Converts \fIaddress\fP into a checksum-protected address.

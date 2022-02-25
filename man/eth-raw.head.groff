@@ -1,0 +1,26 @@
+.TH eth-raw 1
+
+.SH NAME
+eth-raw \- Create and send a jsonrpc transaction from signed rlp transaction
+
+.SH SYNOPSIS
+.P
+\fBeth-raw\fP [ --deploy ] \fItransaction_data\fP
+.P
+\fBeth-raw\fP [ -p \fIrpc_provider\fP ] [ --deploy ] -s \fItransaction_data\fP
+
+
+.SH DESCRIPTION
+.P
+Creates a jsonrpc object from serialized data.
+.P
+If \fB-y\fP is defined, and \fB--mode\fP is not set, or set to "tx", a \fIeth_sendRawTransaction\fP object will be created.
+.P
+Otherwise, an \fIeth_call\fP object will be created. The recipient of the call will be the contract specified with \fB-e\fP. If \fB-y\fP has been set, the sender of the query will be the address corresponding to the key file.
+.P
+If the \fB-s\fP option is added, the jsonrpc object will be sent to the rpc provider. \fBNote\fP If the jsonrpc object is a transaction, this may incur real costs.
+.P
+See the \fBEXAMPLES\fP section for details on how to use \fBeth-raw\fP with the outputs from \fBeth-gas\fP and \fBeth-encode\fP
+
+
+.SS OPTIONS

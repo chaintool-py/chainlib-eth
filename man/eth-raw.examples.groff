@@ -1,0 +1,8 @@
+.SH EXAMPLES
+
+Outputs of \fBeth-gas\fP and \fBeth-encode\fP map directly to inputs for \fBeth-raw\fP.
+
+.SS Encapsulate a gas transaction
+
+.EX
+$ eth-gas -y <\fIkey_file_path\fP> -a 00000000000000000000000000000000DeaDBeef --fee-price 100000000000 --fee-limit 21000 --nonce 42 --raw 1024 | eth-raw 

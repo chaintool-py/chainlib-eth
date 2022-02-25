@@ -1,0 +1,16 @@
+.TH eth-balance 1
+
+.SH NAME
+eth-balance \- Get network gas token balance for an address
+
+.SH SYNOPSIS
+\fBeth-balance\fP [ -p \fIrpc_provider\fP ] \fIaddress\fP
+
+.SH DESCRIPTION
+.P
+Query the network for the gas token balance of an account.
+.P
+The balance will be returned as an integer value denominated in the gas unit.
+
+
+.SS OPTION

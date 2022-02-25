@@ -1,0 +1,2 @@
+ignore	Ignore error from the specified transaction. May be defined more than once.	--ignore	tx_hash
+ignoreall	Ignore errors from all transactions.	--ignore-all	

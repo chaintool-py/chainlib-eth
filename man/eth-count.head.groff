@@ -1,0 +1,15 @@
+.TH eth-count 1
+
+.SH NAME
+eth-count \- Get transaction count for an address
+
+.SH SYNOPSIS
+\fBeth-count\fP [ -p \fIrpc_provider\fP ] \fIaddress\fP
+
+
+.SH DESCRIPTION
+.P
+Query the network for the number of transactions known for an account. The result can be used as the \fInonce\fP value for a consecutive transaction.
+
+
+.SS OPTIONS

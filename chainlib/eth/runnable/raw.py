@@ -51,6 +51,7 @@ config_dir = os.path.join(script_dir, '..', 'data', 'config')
 arg_flags = chainlib.eth.cli.argflag_std_write | chainlib.eth.cli.Flag.EXEC
 argparser = chainlib.eth.cli.ArgumentParser(arg_flags)
 argparser.add_argument('--deploy', action='store_true', help='Deploy data as contract')
+argparser.add_argument('--mode', choices=['tx', 'call'], type=str, help='Mode of operation')
 argparser.add_positional('data', type=str, help='Transaction data')
 args = argparser.parse_args()
 config = chainlib.eth.cli.Config.from_args(args, arg_flags, default_config_dir=config_dir)

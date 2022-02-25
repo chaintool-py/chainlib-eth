@@ -4,7 +4,7 @@ In the follwing we willconsaider transactions signed by the private key for addr
 .SS Offline transaction
 
 .EX
-$ PYTHONPATH=. python chainlib/eth/runnable/gas.py -y <\fIkey_file_path\fP> -a 00000000000000000000000000000000DeaDBeef --fee-price 100000000000 --fee-limit 21000 --nonce 42 1024
+$ eth-gas -y <\fIkey_file_path\fP> -a 00000000000000000000000000000000DeaDBeef --fee-price 100000000000 --fee-limit 21000 --nonce 42 1024
 from: Eb3907eCad74a0013c259D5874AE7f22DcBcC95C
 to: 00000000000000000000000000000000DeaDBeef
 nonce: 42
@@ -25,7 +25,7 @@ src: 0xf8662a85174876e8008252089400000000000000000000000000000000deadbeef8204008
 .SS Offline transaction with arbitrary data
 
 .EX
-$ PYTHONPATH=. python chainlib/eth/runnable/gas.py -y <\fIkey_file_path\fP> -a 00000000000000000000000000000000DeaDBeef --fee-price 100000000000 --fee-limit 21000 --nonce 42 --data 0x2a 1024 
+$ eth-gas -y <\fIkey_file_path\fP> -a 00000000000000000000000000000000DeaDBeef --fee-price 100000000000 --fee-limit 21000 --nonce 42 --data 0x2a 1024 
 from: Eb3907eCad74a0013c259D5874AE7f22DcBcC95C
 to: 00000000000000000000000000000000DeaDBeef
 nonce: 42
@@ -46,14 +46,14 @@ src: 0xf8662a85174876e8008252089400000000000000000000000000000000deadbeef8204002
 .SS Offline transaction with wire-format output
 
 .EX
-$ PYTHONPATH=. python chainlib/eth/runnable/gas.py -y <\fIkey_file_path\fP> -a 00000000000000000000000000000000DeaDBeef --fee-price 100000000000 --fee-limit 21000 --nonce 42 --raw 1024
+$ eth-gas -y <\fIkey_file_path\fP> -a 00000000000000000000000000000000DeaDBeef --fee-price 100000000000 --fee-limit 21000 --nonce 42 --raw 1024
 0xf8662a85174876e8008252089400000000000000000000000000000000deadbeef8204008025a00c97432d4db724e66a56f7ced04174cf6129e2555709f206dd6d3a156b4af23aa0287862548314a59c7ca6139eee8b51400eb40a67b08b8dc13d67302abecccae0
 .EE
 
 .SS Sign transaction for a different network
 
 .EX
-$ PYTHONPATH=. python chainlib/eth/runnable/gas.py -i evm:london:3:rinkeby -y /home/lash/src/contrib/grassrootseconomics/cic-dev/UTC--2021-01-08T17-18-44.521011372Z--eb3907ecad74a0013c259d5874ae7f22dcbcc95c  -a 00000000000000000000000000000000DeaDBeef --fee-price 100000000000 --fee-limit 21000 --nonce 42 --data 0x2a 1024 
+$ eth-gas -i evm:london:3:rinkeby -y /home/lash/src/contrib/grassrootseconomics/cic-dev/UTC--2021-01-08T17-18-44.521011372Z--eb3907ecad74a0013c259d5874ae7f22dcbcc95c  -a 00000000000000000000000000000000DeaDBeef --fee-price 100000000000 --fee-limit 21000 --nonce 42 --data 0x2a 1024 
 from: Eb3907eCad74a0013c259D5874AE7f22DcBcC95C
 to: 00000000000000000000000000000000DeaDBeef
 nonce: 42
