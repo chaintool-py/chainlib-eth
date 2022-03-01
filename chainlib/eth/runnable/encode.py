@@ -11,8 +11,7 @@ import urllib
 import sha3
 
 # external imports
-import chainlib.eth.cli
-from chainlib.eth.cli.encode import CLIEncoder
+from chainlib.cli import flag_reset
 from funga.eth.signer import EIP155Signer
 from funga.eth.keystore.dict import DictKeystore
 from hexathon import (
@@ -21,6 +20,8 @@ from hexathon import (
         )
 
 # local imports
+import chainlib.eth.cli
+from chainlib.eth.cli.encode import CLIEncoder
 from chainlib.eth.constant import ZERO_ADDRESS
 from chainlib.eth.address import to_checksum
 from chainlib.eth.connection import EthHTTPConnection
@@ -47,6 +48,7 @@ config_dir = os.path.join(script_dir, '..', 'data', 'config')
 
 
 arg_flags = chainlib.eth.cli.argflag_std_write | chainlib.eth.cli.Flag.EXEC | chainlib.eth.cli.Flag.FEE | chainlib.eth.cli.Flag.FMT_HUMAN | chainlib.eth.cli.Flag.FMT_WIRE | chainlib.eth.cli.Flag.FMT_RPC
+arg_flags = flag_reset(arg_flags, chainlib.cli.Flag.NO_TARGET)
 argparser = chainlib.eth.cli.ArgumentParser(arg_flags)
 argparser.add_argument('--mode', type=str, choices=['tx', 'call', 'arg'], help='Mode of operation')
 argparser.add_argument('--signature', type=str, help='Method signature to encode')
@@ -131,9 +133,10 @@ def main():
         if not config.get('_FEE_LIMIT'):
             config.add(limit, '_FEE_LIMIT')
 
-        if not config.get('_NONCE'):
-            nonce_oracle = rpc.get_nonce_oracle()
-            config.add(nonce_oracle.get_nonce(), '_NONCE')
+        if mode == 'tx':
+            if not config.get('_NONCE'):
+                nonce_oracle = rpc.get_nonce_oracle()
+                config.add(nonce_oracle.get_nonce(), '_NONCE')
     else: 
         for arg in [
                 '_FEE_PRICE',

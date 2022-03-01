@@ -571,11 +571,12 @@ class Tx(BaseTx):
         try:
             self.wire = src['raw']
         except KeyError:
-            logg.warning('no inline raw tx src, and no raw rendering implemented, field will be "None"')
+            logg.debug('no inline raw tx src, and no raw rendering implemented, field will be "None"')
 
         self.status = Status.PENDING
         self.logs = None
 
+        self.tx_rcpt_src = None
         if rcpt != None:
             self.apply_receipt(rcpt, strict=strict)
 
@@ -620,6 +621,10 @@ class Tx(BaseTx):
         return self.src()
 
 
+    def rcpt_src(self):
+        return self.tx_rcpt_src
+
+
     def apply_receipt(self, rcpt, strict=False):
         """Apply receipt data to transaction object.
 
@@ -630,6 +635,7 @@ class Tx(BaseTx):
         """
         rcpt = self.src_normalize(rcpt)
         logg.debug('rcpt {}'.format(rcpt))
+        self.tx_rcpt_src = rcpt
 
         tx_hash = add_0x(rcpt['transaction_hash'])
         if rcpt['transaction_hash'] != add_0x(self.hash):
@@ -647,7 +653,7 @@ class Tx(BaseTx):
         except KeyError as e:
             if strict:
                 raise(e)
-            logg.warning('setting "sucess" status on missing status property for {}'.format(self.hash))
+            logg.debug('setting "success" status on missing status property for {}'.format(self.hash))
             status_number = 1
 
         if rcpt['block_number'] == None:
