@@ -50,6 +50,19 @@ class TxTestCase(EthTesterCase):
         self.assertTrue(is_same_address(tx['to'], self.accounts[1]))
 
 
+    def test_tx_repack(self):
+        nonce_oracle = RPCNonceOracle(self.accounts[0], self.rpc)
+        gas_oracle = RPCGasOracle(self.rpc)
+        c = Gas(signer=self.signer, nonce_oracle=nonce_oracle, gas_oracle=gas_oracle, chain_spec=self.chain_spec)
+        (tx_hash_hex, o) = c.create(self.accounts[0], self.accounts[1], 1024)
+        self.rpc.do(o)
+
+        o = transaction(tx_hash_hex)
+        tx_src = self.rpc.do(o)
+        tx = Tx(tx_src) 
+        tx_bin = pack(tx.src(), self.chain_spec)
+
+
     def test_tx_pack(self):
         nonce_oracle = RPCNonceOracle(self.accounts[0], self.rpc)
         gas_oracle = RPCGasOracle(self.rpc)

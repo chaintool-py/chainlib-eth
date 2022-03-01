@@ -95,7 +95,11 @@ def pack(tx_src, chain_spec):
             tx_src['r'],
             tx_src['s'],
             ]:
-        for b in bytes.fromhex(strip_0x(a)):
+        try:
+            a = strip_0x(a)
+        except TypeError:
+            a = strip_0x(hex(a)) # believe it or not, eth_tester returns signatures as ints not hex
+        for b in bytes.fromhex(a):
             signature[cursor] = b
             cursor += 1
 
