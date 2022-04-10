@@ -429,6 +429,8 @@ class TxFactory:
             return self.build_raw(tx)
         elif tx_format == TxFormat.RAW_ARGS:
             return strip_0x(tx['data'])
+        elif tx_format == TxFormat.DICT:
+            return tx
         raise NotImplementedError('tx formatting {} not implemented'.format(tx_format))
 
 
