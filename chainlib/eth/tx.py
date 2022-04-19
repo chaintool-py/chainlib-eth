@@ -556,6 +556,9 @@ class Tx(BaseTx):
         self.outputs = [to_checksum(address_from)]
         self.contract = None
 
+        self.fee_limit = self.gas_limit
+        self.fee_price = self.gas_price
+
         try:
             inpt = src['input']
         except KeyError:
