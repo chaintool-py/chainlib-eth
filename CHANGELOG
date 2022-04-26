@@ -1,3 +1,5 @@
+- 0.1.1
+	* Add fee_limit, fee_price alias to Tx object
 - 0.1.0:
 	* Allow nonce ommission in encode when not tx mode
 	* Add rcpt src to tx object
