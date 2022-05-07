@@ -98,6 +98,7 @@ class Block(BaseBlock):
             self.timestamp = int(strip_0x(src['timestamp']), 16)
         except TypeError:
             self.timestamp = int(src['timestamp'])
+        self.author = src['author']
 
 
     def get_tx(self, tx_hash):
