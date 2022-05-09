@@ -684,9 +684,6 @@ class Tx(BaseTx, Src):
         :param block: Block object
         :type block: chainlib.block.Block
         """
-        #if self.__rcpt_block_hash != None:
-        #    if block.hash != self.__rcpt_block_hash:
-        #        raise ValueError('block hash {} does not match already applied receipt block hash {}'.format(block.hash, self.__rcpt_block_hash))
         self.index = block.get_tx(self.hash)
         self.block = block
 
