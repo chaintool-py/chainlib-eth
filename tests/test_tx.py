@@ -30,6 +30,7 @@ from chainlib.eth.address import (
 from hexathon import (
         strip_0x,
         add_0x,
+        same as hex_same,
         )
 from chainlib.eth.block import Block
 
@@ -58,6 +59,7 @@ class TxTestCase(EthTesterCase):
         self.assertTrue(is_same_address(tx.inputs[0], tx_src['to']))
         self.assertEqual(tx.value, tx_src['value'])
         self.assertEqual(tx.nonce, tx_src['nonce'])
+        self.assertTrue(hex_same(tx.payload, tx_src['data']))
 
 
     def test_tx_reciprocal(self):
@@ -127,6 +129,7 @@ class TxTestCase(EthTesterCase):
             'number': 42,
             'timestamp': 13241324,
             'transactions': [],
+            'author': os.urandom(20).hex(),
             })
         with self.assertRaises(AttributeError):
             tx = Tx(tx_data, block=block)
@@ -169,7 +172,9 @@ class TxTestCase(EthTesterCase):
             'number': 42,
             'timestamp': 13241324,
             'transactions': [],
+            'author': os.urandom(20).hex(),
             })
+
         block.txs = [add_0x(tx_data['hash'])]
         with self.assertRaises(ValueError): 
             tx = Tx(tx_data, rcpt=rcpt, block=block)

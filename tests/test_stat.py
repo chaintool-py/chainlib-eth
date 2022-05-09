@@ -1,6 +1,7 @@
 # standard imports
 import unittest
 import datetime
+import os
 
 # external imports
 from chainlib.stat import ChainStat
@@ -19,6 +20,7 @@ class TestStat(unittest.TestCase):
             'hash': None,
             'transactions': [],
             'number': 41,
+            'author': os.urandom(20).hex(),
             })
 
         d = datetime.datetime.utcnow()
@@ -27,6 +29,7 @@ class TestStat(unittest.TestCase):
             'hash': None,
             'transactions': [],
             'number': 42,
+            'author': os.urandom(20).hex(),
             })
 
         s.block_apply(block_a)
@@ -39,6 +42,7 @@ class TestStat(unittest.TestCase):
             'hash': None,
             'transactions': [],
             'number': 43,
+            'author': os.urandom(20).hex(),
             })
 
         s.block_apply(block_c)

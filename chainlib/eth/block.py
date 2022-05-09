@@ -10,6 +10,7 @@ from hexathon import (
 
 # local imports
 from chainlib.eth.tx import Tx
+from .src import Src
 
 
 def block_latest(id_generator=None):
@@ -76,7 +77,7 @@ def syncing(id_generator=None):
     return j.finalize(o)
 
 
-class Block(BaseBlock):
+class Block(BaseBlock, Src):
     """Encapsulates an Ethereum block
 
     :param src: Block representation data
@@ -88,7 +89,8 @@ class Block(BaseBlock):
 
     def __init__(self, src):
         super(Block, self).__init__(src)
-        self.hash = src['hash']
+        import sys
+        self.set_hash(src['hash'])
         try:
             self.number = int(strip_0x(src['number']), 16)
         except TypeError:

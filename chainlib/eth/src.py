@@ -1,3 +1,6 @@
+# standard imports
+import logging
+
 # external imports
 from potaahto.symbols import snake_and_camel
 from hexathon import (
@@ -11,12 +14,15 @@ from chainlib.src import (
         SrcItem,
         )
 
+logg = logging.getLogger(__name__)
+
 
 class Src(BaseSrc):
 
     @classmethod
     def src_normalize(self, v):
         src = snake_and_camel(v)
+        logg.debug('normalize has {}'.format(src))
         if isinstance(src.get('v'), str):
             try:
                 src['v'] = int(src['v'])

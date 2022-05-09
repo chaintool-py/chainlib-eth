@@ -11,6 +11,7 @@ from hexathon import (
         add_0x,
         compact,
         to_int as hex_to_int,
+        same as hex_same,
         )
 from rlp import decode as rlp_decode
 from rlp import encode as rlp_encode
@@ -31,6 +32,7 @@ from chainlib.eth.nonce import (
         nonce as nonce_query,
         nonce_confirmed as nonce_query_confirmed,
         )
+from chainlib.eth.address import is_same_address
 from chainlib.block import BlockSpec
 from chainlib.src import SrcItem
 
@@ -516,6 +518,50 @@ class TxFactory:
         return o
 
 
+class TxResult(BaseTxResult, Src):
+
+    def apply_src(self, v):
+        self.contract = None
+
+        super(TxResult, self).apply_src(v)
+
+        self.set_hash(v['transaction_hash'])
+        try:
+            status_number = int(v['status'], 16)
+        except TypeError:
+            status_number = int(v['status'])
+        except KeyError as e:
+            if strict:
+                raise(e)
+            logg.debug('setting "success" status on missing status property for {}'.format(self.hash))
+            status_number = 1
+
+        if v['block_number'] == None:
+            self.status = Status.PENDING
+        else:
+            if status_number == 1:
+                self.status = Status.SUCCESS
+            elif status_number == 0:
+                self.status = Status.ERROR
+            try:
+                self.tx_index = hex_to_int(v['transaction_index'])
+            except TypeError:
+                self.tx_index = int(v['transaction_index'])
+            self.block_hash = v['block_hash']
+
+        
+        # TODO: replace with rpc receipt/transaction translator when available
+        contract_address = v.get('contract_address')
+        if contract_address != None:
+            self.contract = contract_address
+
+        self.logs = v['logs']
+        try:
+            self.fee_cost = hex_to_int(v['gas_used'])
+        except TypeError:
+            self.fee_cost = int(v['gas_used'])
+
+
 class Tx(BaseTx, Src):
     """Wraps transaction data, transaction receipt data and block data, enforces local standardization of fields, and provides useful output formats for viewing transaction contents.
 
@@ -534,9 +580,6 @@ class Tx(BaseTx, Src):
     """
 
     def __init__(self, src, block=None, result=None, strict=False, rcpt=None):
-        if result == None:
-            result = rcpt 
-
         # backwards compat
         self.gas_price = None
         self.gas_limit = None
@@ -546,75 +589,9 @@ class Tx(BaseTx, Src):
         self.s = None
 
         super(Tx, self).__init__(src, block=block, result=result, strict=strict)
-        #self.__rcpt_block_hash = None
 
-        #src = self.src_normalize(src)
-        #self.index = -1
-        #tx_hash = add_0x(src['hash'])
-#        self.hash = strip_0x(tx_hash)
-#        if block != None:
-#            self.apply_block(block)
-#        try:
-#            self.value = int(strip_0x(src['value']), 16)
-#        except TypeError:
-#            self.value = int(src['value'])
-#        try:
-#            self.nonce = int(strip_0x(src['nonce']), 16)
-#        except TypeError:
-#            self.nonce = int(src['nonce'])
-#        address_from = strip_0x(src['from'])
-#        try:
-#            self.gas_price = int(strip_0x(src['gasPrice']), 16)
-#        except TypeError:
-#            self.gas_price = int(src['gasPrice'])
-#        try:
-#            self.gas_limit = int(strip_0x(src['gas']), 16)
-#        except TypeError:
-#            self.gas_limit = int(src['gas'])
-#        self.outputs = [to_checksum(address_from)]
-
-#        self.fee_limit = self.gas_limit
-#        self.fee_price = self.gas_price
-
-#        try:
-#            inpt = src['input']
-#        except KeyError:
-#            inpt = src['data']
-#            src['input'] = src['data']
-
-#        if inpt != '0x':
-#            inpt = strip_0x(inpt)
-#        else:
-#            inpt = ''
-#        self.payload = inpt
-
-#        to = src['to']
-#        if to == None:
-#            to = ZERO_ADDRESS
-#        self.inputs = [to_checksum(strip_0x(to))]
-
-#        self.block = block
-#        try:
-#            self.wire = src['raw']
-#        except KeyError:
-#            logg.debug('no inline raw tx src, and no raw rendering implemented, field will be "None"')
-
-#        self.status = Status.PENDING
-#        self.logs = None
-
-        #self.tx_rcpt_src = None
-        #if rcpt != None:
-        #    self.apply_receipt(rcpt, strict=strict)
-        #self.outputs = [to_checksum(address_from)]
-
-#        self.v = src.get('v')
-#        self.r = src.get('r')
-#        self.s = src.get('s')
-
-#        self.wire = None
- 
-#        self.tx_src = src
-
+        if result == None and rcpt != None:
+            self.apply_receipt(rcpt)
 
 
     def apply_src(self, src):
@@ -626,7 +603,8 @@ class Tx(BaseTx, Src):
 
         src = super(Tx, self).apply_src(src)
 
-        self.hash = self.normal(src['hash'], SrcItem.HASH)
+        hsh = self.normal(src['hash'], SrcItem.HASH)
+        self.set_hash(hsh)
 
         try:
             self.value = hex_to_int(src['value'])
@@ -673,34 +651,16 @@ class Tx(BaseTx, Src):
         self.status = Status.PENDING
 
 
-#    @classmethod
-#    def src_normalize(self, src):
-#        """Normalizes transaction representation source data.
-#
-#        :param src: Transaction representation
-#        :type src: dict
-#        :rtype: dict
-#        :returns: Transaction representation, normalized
-#        """
-#        src = snake_and_camel(src)
-#
-#        if isinstance(src.get('v'), str):
-#            try:
-#                src['v'] = int(src['v'])
-#            except ValueError:
-#                src['v'] = int(src['v'], 16)
-#        return src
-
-
     def as_dict(self):
         return self.src()
 
 
-    def rcpt_src(self):
-        return self.tx_rcpt_src
-
-
     def apply_receipt(self, rcpt, strict=False):
+        result = TxResult(rcpt)
+        self.apply_result(result)
+
+
+    def apply_result(self, result, strict=False):
         """Apply receipt data to transaction object.
 
         Effect is the same as passing a receipt at construction.
@@ -708,53 +668,14 @@ class Tx(BaseTx, Src):
         :param rcpt: Receipt data
         :type rcpt: dict
         """
-        rcpt = self.src_normalize(rcpt)
-        logg.debug('rcpt {}'.format(rcpt))
-        self.tx_rcpt_src = rcpt
+        if not hex_same(result.hash, self.hash):
+            raise ValueError('result hash {} does not match transaction hash {}'.format(result.hash, self.hash))
 
-        tx_hash = add_0x(rcpt['transaction_hash'])
-        if rcpt['transaction_hash'] != add_0x(self.hash):
-            raise ValueError('rcpt hash {} does not match transaction hash {}'.format(rcpt['transaction_hash'], self.hash))
-
-        block_hash = add_0x(rcpt['block_hash'])
         if self.block != None:
-            if block_hash != add_0x(self.block.hash):
-                raise ValueError('rcpt block hash {} does not match transaction block hash {}'.format(rcpt['block_hash'], self.block.hash))
+            if not hex_same(result.block_hash, self.block.hash):
+                raise ValueError('result block hash {} does not match transaction block hash {}'.format(result.block_hash, self.block.hash))
 
-        try:
-            status_number = int(rcpt['status'], 16)
-        except TypeError:
-            status_number = int(rcpt['status'])
-        except KeyError as e:
-            if strict:
-                raise(e)
-            logg.debug('setting "success" status on missing status property for {}'.format(self.hash))
-            status_number = 1
-
-        if rcpt['block_number'] == None:
-            self.status = Status.PENDING
-        else:
-            if status_number == 1:
-                self.status = Status.SUCCESS
-            elif status_number == 0:
-                self.status = Status.ERROR
-            try:
-                self.tx_index = int(rcpt['transaction_index'], 16)
-            except TypeError:
-                self.tx_index = int(rcpt['transaction_index'])
-        # TODO: replace with rpc receipt/transaction translator when available
-        contract_address = rcpt.get('contractAddress')
-        if contract_address == None:
-            contract_address = rcpt.get('contract_address')
-        if contract_address != None:
-            self.contract = contract_address
-        self.logs = rcpt['logs']
-        try:
-            self.gas_used = int(rcpt['gasUsed'], 16)
-        except TypeError:
-            self.gas_used = int(rcpt['gasUsed'])
-
-        #self.__rcpt_block_hash = rcpt['block_hash']
+        super(Tx, self).apply_result(result)
 
 
     def apply_block(self, block):
@@ -861,3 +782,5 @@ tx_index {}
         )
 
         return s
+
+
