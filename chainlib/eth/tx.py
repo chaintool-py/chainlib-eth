@@ -648,11 +648,11 @@ class Tx(BaseTx, Src):
         self.r = src.get('r')
         self.s = src.get('s')
 
-        self.status = Status.PENDING
+        #self.status = Status.PENDING
 
 
     def as_dict(self):
-        return self.src()
+        return self.src
 
 
     def apply_receipt(self, rcpt, strict=False):

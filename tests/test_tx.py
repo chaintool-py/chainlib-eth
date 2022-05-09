@@ -82,7 +82,7 @@ class TxTestCase(EthTesterCase):
         o = transaction(tx_hash_hex)
         tx_src = self.rpc.do(o)
         tx = Tx(tx_src) 
-        tx_bin = pack(tx.src(), self.chain_spec)
+        tx_bin = pack(tx.src, self.chain_spec)
 
 
     def test_tx_pack(self):
