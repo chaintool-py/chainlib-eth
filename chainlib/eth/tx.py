@@ -10,6 +10,7 @@ from hexathon import (
         strip_0x,
         add_0x,
         compact,
+        to_int as hex_to_int,
         )
 from rlp import decode as rlp_decode
 from rlp import encode as rlp_encode
@@ -22,12 +23,16 @@ from potaahto.symbols import snake_and_camel
 from chainlib.hash import keccak256_hex_to_hex
 from chainlib.status import Status
 from chainlib.jsonrpc import JSONRPCRequest
-from chainlib.tx import Tx as BaseTx
+from chainlib.tx import (
+        Tx as BaseTx,
+        TxResult as BaseTxResult,
+        )
 from chainlib.eth.nonce import (
         nonce as nonce_query,
         nonce_confirmed as nonce_query_confirmed,
         )
 from chainlib.block import BlockSpec
+from chainlib.src import SrcItem
 
 # local imports
 from .address import to_checksum
@@ -39,6 +44,7 @@ from .constant import (
         )
 from .contract import ABIContractEncoder
 from .jsonrpc import to_blockheight_param
+from .src import Src
 
 logg = logging.getLogger(__name__)
 
@@ -510,7 +516,7 @@ class TxFactory:
         return o
 
 
-class Tx(BaseTx):
+class Tx(BaseTx, Src):
     """Wraps transaction data, transaction receipt data and block data, enforces local standardization of fields, and provides useful output formats for viewing transaction contents.
 
     If block is applied, the transaction data or transaction hash must exist in its transactions array.
@@ -527,103 +533,163 @@ class Tx(BaseTx):
     #:todo: divide up constructor method
     """
 
-    def __init__(self, src, block=None, rcpt=None, strict=False):
-        self.__rcpt_block_hash = None
+    def __init__(self, src, block=None, result=None, strict=False, rcpt=None):
+        if result == None:
+            result = rcpt 
 
-        src = self.src_normalize(src)
-        self.index = -1
-        tx_hash = add_0x(src['hash'])
-        self.hash = strip_0x(tx_hash)
-        if block != None:
-            self.apply_block(block)
-        try:
-            self.value = int(strip_0x(src['value']), 16)
-        except TypeError:
-            self.value = int(src['value'])
-        try:
-            self.nonce = int(strip_0x(src['nonce']), 16)
-        except TypeError:
-            self.nonce = int(src['nonce'])
-        address_from = strip_0x(src['from'])
-        try:
-            self.gas_price = int(strip_0x(src['gasPrice']), 16)
-        except TypeError:
-            self.gas_price = int(src['gasPrice'])
-        try:
-            self.gas_limit = int(strip_0x(src['gas']), 16)
-        except TypeError:
-            self.gas_limit = int(src['gas'])
-        self.outputs = [to_checksum(address_from)]
+        # backwards compat
+        self.gas_price = None
+        self.gas_limit = None
         self.contract = None
+        self.v = None
+        self.r = None
+        self.s = None
 
-        self.fee_limit = self.gas_limit
-        self.fee_price = self.gas_price
+        super(Tx, self).__init__(src, block=block, result=result, strict=strict)
+        #self.__rcpt_block_hash = None
 
+        #src = self.src_normalize(src)
+        #self.index = -1
+        #tx_hash = add_0x(src['hash'])
+#        self.hash = strip_0x(tx_hash)
+#        if block != None:
+#            self.apply_block(block)
+#        try:
+#            self.value = int(strip_0x(src['value']), 16)
+#        except TypeError:
+#            self.value = int(src['value'])
+#        try:
+#            self.nonce = int(strip_0x(src['nonce']), 16)
+#        except TypeError:
+#            self.nonce = int(src['nonce'])
+#        address_from = strip_0x(src['from'])
+#        try:
+#            self.gas_price = int(strip_0x(src['gasPrice']), 16)
+#        except TypeError:
+#            self.gas_price = int(src['gasPrice'])
+#        try:
+#            self.gas_limit = int(strip_0x(src['gas']), 16)
+#        except TypeError:
+#            self.gas_limit = int(src['gas'])
+#        self.outputs = [to_checksum(address_from)]
+
+#        self.fee_limit = self.gas_limit
+#        self.fee_price = self.gas_price
+
+#        try:
+#            inpt = src['input']
+#        except KeyError:
+#            inpt = src['data']
+#            src['input'] = src['data']
+
+#        if inpt != '0x':
+#            inpt = strip_0x(inpt)
+#        else:
+#            inpt = ''
+#        self.payload = inpt
+
+#        to = src['to']
+#        if to == None:
+#            to = ZERO_ADDRESS
+#        self.inputs = [to_checksum(strip_0x(to))]
+
+#        self.block = block
+#        try:
+#            self.wire = src['raw']
+#        except KeyError:
+#            logg.debug('no inline raw tx src, and no raw rendering implemented, field will be "None"')
+
+#        self.status = Status.PENDING
+#        self.logs = None
+
+        #self.tx_rcpt_src = None
+        #if rcpt != None:
+        #    self.apply_receipt(rcpt, strict=strict)
+        #self.outputs = [to_checksum(address_from)]
+
+#        self.v = src.get('v')
+#        self.r = src.get('r')
+#        self.s = src.get('s')
+
+#        self.wire = None
+ 
+#        self.tx_src = src
+
+
+
+    def apply_src(self, src):
         try:
             inpt = src['input']
         except KeyError:
             inpt = src['data']
             src['input'] = src['data']
 
-        if inpt != '0x':
-            inpt = strip_0x(inpt)
-        else:
-            inpt = ''
-        self.payload = inpt
+        src = super(Tx, self).apply_src(src)
+
+        self.hash = self.normal(src['hash'], SrcItem.HASH)
+
+        try:
+            self.value = hex_to_int(src['value'])
+        except TypeError:
+            self.value = int(src['value'])
+
+        try:
+            self.nonce = hex_to_int(src['nonce'])
+        except TypeError:
+            self.nonce = int(src['nonce'])
+
+        try:
+            self.fee_limit = hex_to_int(src['gas'])
+        except TypeError:
+            self.fee_limit = int(src['gas'])
+
+        try:
+            self.fee_price = hex_to_int(src['gas_price'])
+        except TypeError:
+            self.fee_price = int(src['gas_price'])
+
+        self.gas_price = self.fee_price
+        self.gas_limit = self.fee_limit
+
+        address_from = self.normal(src['from'], SrcItem.ADDRESS)
+        self.outputs = [to_checksum(address_from)]
 
         to = src['to']
         if to == None:
             to = ZERO_ADDRESS
         self.inputs = [to_checksum(strip_0x(to))]
 
-        self.block = block
+        self.payload = self.normal(src['input'], SrcItem.PAYLOAD)
+
         try:
-            self.wire = src['raw']
+            self.set_wire(src['raw'])
         except KeyError:
             logg.debug('no inline raw tx src, and no raw rendering implemented, field will be "None"')
-
-        self.status = Status.PENDING
-        self.logs = None
-
-        self.tx_rcpt_src = None
-        if rcpt != None:
-            self.apply_receipt(rcpt, strict=strict)
 
         self.v = src.get('v')
         self.r = src.get('r')
         self.s = src.get('s')
 
-        self.wire = None
- 
-        self.tx_src = src
+        self.status = Status.PENDING
 
 
-    def src(self):
-        """Retrieve normalized representation source used to construct transaction object.
-
-        :rtype: dict
-        :returns: Transaction representation
-        """
-        return self.tx_src
-   
-
-    @classmethod
-    def src_normalize(self, src):
-        """Normalizes transaction representation source data.
-
-        :param src: Transaction representation
-        :type src: dict
-        :rtype: dict
-        :returns: Transaction representation, normalized
-        """
-        src = snake_and_camel(src)
-
-        if isinstance(src.get('v'), str):
-            try:
-                src['v'] = int(src['v'])
-            except ValueError:
-                src['v'] = int(src['v'], 16)
-        return src
+#    @classmethod
+#    def src_normalize(self, src):
+#        """Normalizes transaction representation source data.
+#
+#        :param src: Transaction representation
+#        :type src: dict
+#        :rtype: dict
+#        :returns: Transaction representation, normalized
+#        """
+#        src = snake_and_camel(src)
+#
+#        if isinstance(src.get('v'), str):
+#            try:
+#                src['v'] = int(src['v'])
+#            except ValueError:
+#                src['v'] = int(src['v'], 16)
+#        return src
 
 
     def as_dict(self):
@@ -688,7 +754,7 @@ class Tx(BaseTx):
         except TypeError:
             self.gas_used = int(rcpt['gasUsed'])
 
-        self.__rcpt_block_hash = rcpt['block_hash']
+        #self.__rcpt_block_hash = rcpt['block_hash']
 
 
     def apply_block(self, block):
@@ -697,9 +763,9 @@ class Tx(BaseTx):
         :param block: Block object
         :type block: chainlib.block.Block
         """
-        if self.__rcpt_block_hash != None:
-            if block.hash != self.__rcpt_block_hash:
-                raise ValueError('block hash {} does not match already applied receipt block hash {}'.format(block.hash, self.__rcpt_block_hash))
+        #if self.__rcpt_block_hash != None:
+        #    if block.hash != self.__rcpt_block_hash:
+        #        raise ValueError('block hash {} does not match already applied receipt block hash {}'.format(block.hash, self.__rcpt_block_hash))
         self.index = block.get_tx(self.hash)
         self.block = block
 

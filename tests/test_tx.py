@@ -39,6 +39,26 @@ logg = logging.getLogger()
 
 class TxTestCase(EthTesterCase):
 
+    def test_tx_basic(self):
+        tx_src = {
+            'hash': os.urandom(32).hex(),
+            'from': os.urandom(20).hex(),
+            'to': os.urandom(20).hex(),
+            'value': 13,
+            'data': '0xdeadbeef',
+            'nonce': 666,
+            'gasPrice': 100,
+            'gas': 21000,
+                }
+
+        tx = Tx(tx_src)
+
+        self.assertEqual(tx.hash, tx_src['hash'])
+        self.assertTrue(is_same_address(tx.outputs[0], tx_src['from']))
+        self.assertTrue(is_same_address(tx.inputs[0], tx_src['to']))
+        self.assertEqual(tx.value, tx_src['value'])
+        self.assertEqual(tx.nonce, tx_src['nonce'])
+
 
     def test_tx_reciprocal(self):
         nonce_oracle = RPCNonceOracle(self.accounts[0], self.rpc)

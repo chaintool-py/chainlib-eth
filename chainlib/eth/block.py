@@ -87,6 +87,7 @@ class Block(BaseBlock):
     tx_generator = Tx
 
     def __init__(self, src):
+        super(Block, self).__init__(src)
         self.hash = src['hash']
         try:
             self.number = int(strip_0x(src['number']), 16)
@@ -101,7 +102,7 @@ class Block(BaseBlock):
         self.author = src['author']
 
 
-    def get_tx(self, tx_hash):
+    def tx_index_by_hash(self, tx_hash):
         i = 0
         idx = -1
         tx_hash = add_0x(tx_hash)
@@ -118,4 +119,3 @@ class Block(BaseBlock):
         if idx == -1:
             raise AttributeError('tx {} not found in block {}'.format(tx_hash, self.hash))
         return idx
-
