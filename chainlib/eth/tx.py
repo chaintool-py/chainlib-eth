@@ -523,7 +523,7 @@ class TxResult(BaseTxResult, Src):
     def apply_src(self, v):
         self.contract = None
 
-        super(TxResult, self).apply_src(v)
+        v = super(TxResult, self).apply_src(v)
 
         self.set_hash(v['transaction_hash'])
         try:
@@ -697,8 +697,8 @@ class Tx(BaseTx, Src):
         :returns: Wire format, in hex
         """
         if self.wire == None:
-            b = pack(self.src(), chain_spec)
-            self.wire = add_0x(b.hex())
+            b = pack(self.src, chain_spec)
+            self.set_wire(add_0x(b.hex()))
         return self.wire
 
 
@@ -750,7 +750,7 @@ input {}
         if self.status != Status.PENDING:
             s += """gas_used {}
 """.format(
-        self.gas_used,
+        self.result.fee_cost,
         )
 
         s += 'status ' + self.status.name + '\n'
@@ -762,7 +762,7 @@ tx_index {}
 """.format(
         self.block.number,
         self.block.hash,
-        self.tx_index,
+        self.result.tx_index,
         )
 
 
@@ -775,7 +775,7 @@ tx_index {}
         if self.wire != None:
             s += """src {}
 """.format(
-        self.wire,
+        str(self.wire),
         )
 
         return s

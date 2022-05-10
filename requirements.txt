@@ -1,7 +1,7 @@
 funga-eth~=0.6.1
 pysha3==1.0.2
-hexathon~=0.1.6
+hexathon~=0.1.7
 websocket-client==0.57.0
 potaahto~=0.1.1
-chainlib~=0.1.2
+chainlib~=0.2.0
 confini~=0.6.0
