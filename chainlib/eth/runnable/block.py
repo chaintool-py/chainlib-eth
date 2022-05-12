@@ -23,6 +23,7 @@ from chainlib.jsonrpc import (
         )
 from chainlib.chain import ChainSpec
 from chainlib.status import Status
+from chainlib.settings import ChainSettings
 
 # local imports
 from chainlib.eth.connection import EthHTTPConnection
@@ -52,11 +53,17 @@ from chainlib.eth.cli.config import (
         process_config,
         )
 from chainlib.eth.cli.log import process_log
+from chainlib.eth.settings import process_settings
 
 logg = logging.getLogger()
 
 script_dir = os.path.dirname(os.path.realpath(__file__)) 
 config_dir = os.path.join(script_dir, '..', 'data', 'config')
+
+def process_config_local(config, arg, args, flags):
+    config.add(args.block, '_BLOCK', False)
+    return config
+
 
 argparser = chainlib.eth.cli.ArgumentParser()
 arg_flags = ArgFlag()
@@ -71,17 +78,16 @@ logg = process_log(args, logg)
 
 config = Config()
 config = process_config(config, arg, args, flags)
+config = process_config_local(config, arg, args, flags)
 logg.debug('config loaded:\n{}'.format(config))
 
-rpc = chainlib.eth.cli.Rpc()
-conn = rpc.connect_by_config(config)
-
-chain_spec = ChainSpec.from_chain_str(config.get('CHAIN_SPEC'))
-
-item = add_0x(args.block)
+settings = ChainSettings()
+settings = process_settings(settings, config)
+logg.debug('settings loaded:\n{}'.format(settings))
 
 
 def get_block(conn, block_identifier, id_generator):
+
     maybe_hex = None
     r = None
     try:
@@ -89,11 +95,11 @@ def get_block(conn, block_identifier, id_generator):
     except ValueError:
         r = get_block_number(conn, block_identifier, id_generator)
 
-    if len(maybe_hex) != 64:
-        r = get_block_number(conn, block_identifier, id_generator)
-
-    if maybe_hex != block_identifier:
-        r = get_block_hash(conn, block_identifier, id_generator)
+    if maybe_hex != None:
+        if len(maybe_hex) != 64:
+            r = get_block_number(conn, block_identifier, id_generator)
+        elif maybe_hex != block_identifier:
+            r = get_block_hash(conn, block_identifier, id_generator)
     else:
         r = get_block_number(conn, block_identifier, id_generator)
 
@@ -108,6 +114,7 @@ def get_block_number(conn, block_number, id_generator):
         logg.error('Block number {} not found'.format(block_number))
         sys.exit(1)
     return block_src
+
 
 def get_block_hash(conn, block_hash, id_generator):
     block_hash = add_0x(block_hash)
@@ -124,8 +131,12 @@ def block_process(block_src):
 
 
 def main():
-    block_identifier = item
-    r = get_block(conn, block_identifier, rpc.id_generator)
+    r = get_block(
+            settings.get('CONN'),
+            config.get('_BLOCK'),
+            settings.get('RPC_ID_GENERATOR'),
+        )
+
     if not config.true('_RAW'):
         r = r.to_human()
     else:
