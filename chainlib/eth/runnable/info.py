@@ -49,7 +49,6 @@ from chainlib.eth.cli.log import process_log
 
 BLOCK_SAMPLES = 10
 
-logging.basicConfig(level=logging.WARNING)
 logg = logging.getLogger()
 
 script_dir = os.path.dirname(os.path.realpath(__file__)) 
@@ -82,11 +81,12 @@ argparser.add_argument('--local', action='store_true', help='Include local info'
 argparser.add_argument('entry', nargs='?', help='Output single item')
 args = argparser.parse_args()
 
+logg = process_log(args, logg)
+
 config = Config()
 config = process_config(config, arg, args, flags)
 config = process_config_local(config, arg, args, flags)
 logg.debug('config loaded:\n{}'.format(config))
-#config = chainlib.eth.cli.Config.from_args(args, arg_flags, extra_args=extra_args, default_config_dir=config_dir)
 
 if config.get('_ENTRY') != None:
     if config.get('_ENTRY') not in results_translation.keys():

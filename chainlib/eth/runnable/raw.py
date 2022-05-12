@@ -41,23 +41,41 @@ from chainlib.error import SignerMissingException
 from chainlib.chain import ChainSpec
 from chainlib.eth.runnable.util import decode_for_puny_humans
 from chainlib.eth.jsonrpc import to_blockheight_param
+import chainlib.eth.cli
+from chainlib.eth.cli.arg import (
+        Arg,
+        ArgFlag,
+        process_args,
+        )
+from chainlib.eth.cli.config import (
+        Config,
+        process_config,
+        )
+from chainlib.eth.cli.log import process_log
 
-logging.basicConfig(level=logging.WARNING)
+
 logg = logging.getLogger()
 
 script_dir = os.path.dirname(os.path.realpath(__file__)) 
 config_dir = os.path.join(script_dir, '..', 'data', 'config')
 
-arg_flags = chainlib.eth.cli.argflag_std_write | chainlib.eth.cli.Flag.EXEC
-argparser = chainlib.eth.cli.ArgumentParser(arg_flags)
+arg_flags = ArgFlag()
+arg = Arg(arg_flags)
+flags = arg_flags.STD_WRITE | arg_flags.EXEC
+
+argparser = chainlib.eth.cli.ArgumentParser()
+argparser = process_args(argparser, arg, flags)
 argparser.add_argument('--deploy', action='store_true', help='Deploy data as contract')
 argparser.add_argument('--mode', choices=['tx', 'call'], type=str, help='Mode of operation')
-argparser.add_positional('data', type=str, help='Transaction data')
+argparser.add_argument('data', type=str, help='Transaction data')
 args = argparser.parse_args()
-config = chainlib.eth.cli.Config.from_args(args, arg_flags, default_config_dir=config_dir)
 
-block_all = args.ww
-block_last = args.w or block_all
+logg = process_log(args, logg)
+
+config = Config()
+config = process_config(config, arg, args, flags)
+logg.debug('config loaded:\n{}'.format(config))
+
 
 wallet = chainlib.eth.cli.Wallet(EIP155Signer)
 wallet.from_config(config)
@@ -74,7 +92,6 @@ except AttributeError:
     pass
 
 def main():
-
     signer_address = None
     try:
         signer = rpc.get_signer()
@@ -134,7 +151,7 @@ def main():
         o = raw(args.data, id_generator=rpc.id_generator)
         if send:
             r = conn.do(o)
-            if block_last:
+            if config.true('_WAIT'):
                 r = conn.wait(tx_hash_hex)
                 if r['status'] == 0:
                     logg.critical('VM revert for {}. Wish I could tell you more'.format(tx_hash_hex))
