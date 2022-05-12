@@ -42,6 +42,7 @@ from chainlib.eth.cli.config import (
         process_config,
         )
 from chainlib.eth.cli.log import process_log
+from chainlib.eth.settings import process_settings
 
 logg = logging.getLogger()
 
@@ -71,14 +72,13 @@ config = process_config_local(config, arg, args, flags)
 logg.debug('config loaded:\n{}'.format(config))
 
 settings = ChainSettings()
-settings = settings.process_settings(settings, config)
+settings = process_settings(settings, config)
+logg.debug('settings loaded:\n{}'.format(settings))
 
 value = config.get('_AMOUNT')
 
-send = config.true('_RPC_SEND')
 
-
-def balance(address, id_generator):
+def balance(conn, address, id_generator):
     o = gas_balance(address, id_generator=id_generator)
     r = conn.do(o)
     try:
@@ -92,33 +92,58 @@ def balance(address, id_generator):
 def main():
     g = Gas(
             settings.get('CHAIN_SPEC'),
-            signer=settings.get('SIGNER'), gas_oracle=rpc.get_gas_oracle(), nonce_oracle=rpc.get_nonce_oracle())
+            signer=settings.get('SIGNER'),
+            gas_oracle=settings.get('GAS_ORACLE'),
+            nonce_oracle=settings.get('NONCE_ORACLE'),
+            )
 
     recipient = to_checksum_address(config.get('_RECIPIENT'))
     if not config.true('_UNSAFE') and not is_checksum_address(recipient):
         raise ValueError('invalid checksum address')
 
-    logg.info('gas transfer from {} to {} value {}'.format(signer_address, recipient, value))
+    logg.info('gas transfer from {} to {} value {}'.format(settings.get('SENDER_ADDRESS'), settings.get('RECIPIENT'), value))
     if logg.isEnabledFor(logging.DEBUG):
         try:
-            sender_balance = balance(add_0x(signer_address), rpc.id_generator)
-            recipient_balance = balance(add_0x(recipient), rpc.id_generator)
-            logg.debug('sender {} balance before: {}'.format(signer_address, sender_balance))
-            logg.debug('recipient {} balance before: {}'.format(recipient, recipient_balance))
+            sender_balance = balance(
+                    settings.get('CONN'),
+                    settings.get('SENDER_ADDRESS'),
+                    settings.get('RPC_ID_GENERATOR'),
+                    )
+            recipient_balance = balance(
+                    settings.get('CONN'),
+                    settings.get('RECIPIENT'),
+                    settings.get('RPC_ID_GENERATOR'),
+                    )
+            logg.debug('sender {} balance before: {}'.format(settings.get('SENDER_ADDRESS'), sender_balance))
+            logg.debug('recipient {} balance before: {}'.format(settings.get('RECIPIENT'), recipient_balance))
         except urllib.error.URLError:
             pass
      
-    (tx_hash_hex, o) = g.create(signer_address, add_0x(recipient), value, data=config.get('_DATA'), id_generator=rpc.id_generator)
+    (tx_hash_hex, o) = g.create(
+            settings.get('SENDER_ADDRESS'),
+            settings.get('RECIPIENT'),
+            value,
+            data=config.get('_DATA'),
+            id_generator=settings.get('RPC_ID_GENERATOR'),
+        )
 
-    if send:
-        conn.do(o)
+    if settings.get('RPC_SEND'):
+        settings.get('CONN').do(o)
         if config.true('_WAIT'):
-            r = conn.wait(tx_hash_hex)
+            r = settings.get('CONN').wait(tx_hash_hex)
             if logg.isEnabledFor(logging.DEBUG):
-                sender_balance = balance(add_0x(signer_address), rpc.id_generator)
-                recipient_balance = balance(add_0x(recipient), rpc.id_generator)
-                logg.debug('sender {} balance after: {}'.format(signer_address, sender_balance))
-                logg.debug('recipient {} balance after: {}'.format(recipient, recipient_balance))
+                sender_balance = balance(
+                        settings.get('CONN'),
+                        settings.get('SENDER_ADDRESS'),
+                        settings.get('RPC_ID_GENERATOR'),
+                        )
+                recipient_balance = balance(
+                        settings.get('CONN'),
+                        settings.get('RECIPIENT'),
+                        settings.get('RPC_ID_GENERATOR'),
+                        )
+                logg.debug('sender {} balance before: {}'.format(settings.get('SENDER_ADDRESS'), sender_balance))
+                logg.debug('recipient {} balance before: {}'.format(settings.get('RECIPIENT'), recipient_balance))
             if r['status'] == 0:
                 logg.critical('VM revert for {}. Wish I could tell you more'.format(tx_hash_hex))
                 sys.exit(1)
@@ -128,7 +153,7 @@ def main():
             print(o['params'][0])
         else:
             io_str = io.StringIO()
-            decode_for_puny_humans(o['params'][0], chain_spec, io_str)
+            decode_for_puny_humans(o['params'][0], settings.get('CHAIN_SPEC'), io_str)
             print(io_str.getvalue())
  
 
