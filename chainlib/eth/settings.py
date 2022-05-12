@@ -111,19 +111,25 @@ def process_settings_data(settings, config):
 
 
 def process_settings_hash(settings, config):
-    hsh = None
+    hshs = None
     try:
-        hsh = config.get('_HASH')
+        hshs = config.get('_HASH')
     except KeyError:
         return settings
 
-    hsh = strip_0x(hsh)
-    l = len(hsh)
-    if l != 64:
-        raise ValueError('invalid hash length {} for {}'.format(l, hsh))
+    if isinstance(hshs, str):
+        hshs = [hshs]
 
-    hsh = add_0x(hsh)
-    settings.set('HASH', hsh)
+    r = []
+    for hsh in hshs:
+        hsh = strip_0x(hsh)
+        l = len(hsh)
+        if l != 64:
+            raise ValueError('invalid hash length {} for {}'.format(l, hsh))
+        hsh = add_0x(hsh)
+        r.append(hsh)
+
+    settings.set('HASH', r)
     
     return settings
 

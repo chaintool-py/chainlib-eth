@@ -112,7 +112,7 @@ logg.debug('settings loaded:\n{}'.format(settings))
 
 
 def get_block(settings):
-    hsh = settings.get('HASH')
+    hsh = settings.get('HASH')[0]
     r = None
     if hsh == None:
         r = get_block_number(

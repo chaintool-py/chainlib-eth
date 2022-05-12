@@ -64,8 +64,14 @@ config_dir = os.path.join(script_dir, '..', 'data', 'config')
 def process_config_local(config, arg, args, flags):
     config.add(args.ignore, '_IGNORE', False)
     config.add(args.ignore_all, '_IGNORE_ALL', False)
-    config.add(args.hashes, '_HASHES', False)
+    config.add(args.hashes, '_HASH', False)
     return config
+
+
+def process_settings_local(settings, config):
+    settings.set('HASH', config.get('_HASH'))
+    return settings
+
 
 arg_flags = ArgFlag()
 arg = Arg(arg_flags)
@@ -98,29 +104,30 @@ def main():
     for hsh in config.get('_IGNORE'):
         hashes_ignore.append(add_0x(hex_uniform(strip_0x(hsh))))
 
-    if len(config.get('_HASHES')) == 1:
+    if len(settings.get('HASH')) == 1:
+        hsh = settings.get('HASH')[0]
         try:
-            hsh = add_0x(hex_uniform(strip_0x(config.get('_HASHES')[0])))
             hashes_ready = [hsh]
         except ValueError:
             logg.debug('hash argument not a hash, will try it as a file name')
-            f = open(config.get('_HASHES')[0])
+            f = open(hsh)
             for hsh in f:
-                logg.debug('hshs {}'.format(hsh))
-                hashes_ready.append(add_0x(hex_uniform(strip_0x(hsh.rstrip()))))
+                hashes_ready.append(hsh)
             f.close()
     else:
-        for hsh in config.get('_HASHES'):
-            logg.debug('hsh {}'.format(hsh))
-            hashes_ready.append(add_0x(hex_uniform(strip_0x(hsh))))
+        for hsh in settings.get('HASH'):
+            if hsh in hashes_ready:
+                logg.debug('skipping duplicate hash {}'.format(hsh))
+                continue
+            hashes_ready.append(hsh)
             
     for hsh in hashes_ready:
-        logg.debug('processing transaction hash {}'.format(hsh))
+        logg.info('processing transaction hash {}'.format(hsh))
         try:
             r = settings.get('CONN').wait(hsh)
         except RevertEthException:
             if config.get('_IGNORE_ALL') or hsh in hashes_ignore:
-                logg.info('ignoring revert in transaction hash {}'.format(hsh))
+                logg.debug('ignoring revert in transaction hash {}'.format(hsh))
                 continue
             sys.stderr.write('revert in transaction hash {}\n'.format(hsh))
             sys.exit(1)
@@ -128,5 +135,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-

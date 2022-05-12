@@ -103,7 +103,6 @@ settings = process_settings_local(settings, config)
 logg.debug('settings loaded:\n{}'.format(settings))
 
 
-
 def get_transaction(conn, chain_spec, tx_hash, id_generator):
     o = transaction(tx_hash, id_generator=id_generator)
     tx_src = conn.do(o)
@@ -150,10 +149,11 @@ def get_address(conn, address, id_generator, height):
 def main():
     r = None
     if settings.get('HASH') != None:
+        hsh = settings.get('HASH')[0]
         r = get_transaction(
                 settings.get('CONN'),
                 settings.get('CHAIN_SPEC'),
-                settings.get('HASH'),
+                hsh,
                 settings.get('RPC_ID_GENERATOR'),
                 )
         if not config.true('_RAW'):
