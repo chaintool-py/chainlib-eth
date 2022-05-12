@@ -71,6 +71,7 @@ def process_settings_wallet(settings, config):
     if wallet.get_signer_address() == None and recipient_in != None:
         recipient_in = wallet.from_address(recipient_in)
 
+    recipient_in = strip_0x(recipient_in)
     recipient = to_checksum_address(recipient_in)
     if not config.true('_UNSAFE') and recipient != recipient_in:
         raise ValueError('invalid checksum address: {}'.format(recipient_in))
@@ -104,7 +105,10 @@ def process_settings_data(settings, config):
     except KeyError:
         return settings
 
-    data = add_0x(config.get('_DATA'))
+    if data == None:
+        return settings
+
+    data = add_0x(data)
     settings.set('DATA', data)
     
     return settings
