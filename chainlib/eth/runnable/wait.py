@@ -10,7 +10,6 @@ import logging
 import urllib
 
 # external imports
-import chainlib.eth.cli
 from funga.eth.signer import EIP155Signer
 from funga.eth.keystore.dict import DictKeystore
 from hexathon import (
@@ -42,25 +41,47 @@ from chainlib.eth.error import RevertEthException
 from chainlib.chain import ChainSpec
 from chainlib.eth.runnable.util import decode_for_puny_humans
 from chainlib.eth.jsonrpc import to_blockheight_param
+import chainlib.eth.cli
+from chainlib.eth.cli.arg import (
+        Arg,
+        ArgFlag,
+        process_args,
+        )
+from chainlib.eth.cli.config import (
+        Config,
+        process_config,
+        )
+from chainlib.eth.cli.log import process_log
 
-logging.basicConfig(level=logging.WARNING)
 logg = logging.getLogger()
 
 script_dir = os.path.dirname(os.path.realpath(__file__)) 
 config_dir = os.path.join(script_dir, '..', 'data', 'config')
 
-arg_flags = chainlib.eth.cli.argflag_std_read
-argparser = chainlib.eth.cli.ArgumentParser(arg_flags)
+
+def process_config_local(config, arg, args, flags):
+    config.add(args.ignore, '_IGNORE', False)
+    config.add(args.ignore_all, '_IGNORE_ALL', False)
+    config.add(args.hashes, '_HASHES', False)
+    return config
+
+arg_flags = ArgFlag()
+arg = Arg(arg_flags)
+flags = arg_flags.STD_READ
+
+argparser = chainlib.eth.cli.ArgumentParser()
+argparser = process_args(argparser, arg, flags)
 argparser.add_argument('--ignore', type=str, action='append', default=[], help='Ignore error from the given transaction')
 argparser.add_argument('--ignore-all', action='store_true', dest='ignore_all', help='Ignore errors from all transactions')
-argparser.add_positional('hashes', append=True, type=str, help='Transaction hashes to wait for')
+argparser.add_argument('hashes', nargs='*', type=str, help='Transaction hashes to wait for')
 args = argparser.parse_args()
-extra_args = {
-    'ignore': None,
-    'ignore_all': None,
-    'hashes': None,
-        }
-config = chainlib.eth.cli.Config.from_args(args, arg_flags, extra_args=extra_args, default_config_dir=config_dir)
+
+logg = process_log(args, logg)
+
+config = Config()
+config = process_config(config, arg, args, flags)
+config = process_config_local(config, arg, args, flags)
+logg.debug('config loaded:\n{}'.format(config))
 
 rpc = chainlib.eth.cli.Rpc()
 conn = rpc.connect_by_config(config)
