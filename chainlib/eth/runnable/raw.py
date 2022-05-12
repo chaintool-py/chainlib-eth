@@ -10,13 +10,15 @@ import logging
 import urllib
 
 # external imports
-import chainlib.eth.cli
+from chainlib.settings import ChainSettings
 from funga.eth.signer import EIP155Signer
 from funga.eth.keystore.dict import DictKeystore
 from hexathon import (
         add_0x,
         strip_0x,
         )
+from chainlib.error import SignerMissingException
+from chainlib.chain import ChainSpec
 
 # local imports
 from chainlib.eth.address import to_checksum
@@ -37,8 +39,6 @@ from chainlib.eth.tx import (
         TxFactory,
         raw,
         )
-from chainlib.error import SignerMissingException
-from chainlib.chain import ChainSpec
 from chainlib.eth.runnable.util import decode_for_puny_humans
 from chainlib.eth.jsonrpc import to_blockheight_param
 import chainlib.eth.cli
@@ -52,12 +52,21 @@ from chainlib.eth.cli.config import (
         process_config,
         )
 from chainlib.eth.cli.log import process_log
+from chainlib.eth.settings import process_settings
 
 
 logg = logging.getLogger()
 
 script_dir = os.path.dirname(os.path.realpath(__file__)) 
 config_dir = os.path.join(script_dir, '..', 'data', 'config')
+
+
+def process_config_local(config, arg, args, flags):
+    config.add(args.deploy, '_DEPLOY', False)
+    config.add(args.mode, '_MODE', False)
+    config.add(args.data, '_DATA', False)
+    return config
+
 
 arg_flags = ArgFlag()
 arg = Arg(arg_flags)
@@ -74,55 +83,35 @@ logg = process_log(args, logg)
 
 config = Config()
 config = process_config(config, arg, args, flags)
+config = process_config_local(config, arg, args, flags)
 logg.debug('config loaded:\n{}'.format(config))
 
+settings = ChainSettings()
+settings = process_settings(settings, config)
+logg.debug('settings loaded:\n{}'.format(settings))
 
-wallet = chainlib.eth.cli.Wallet(EIP155Signer)
-wallet.from_config(config)
-
-rpc = chainlib.eth.cli.Rpc(wallet=wallet)
-conn = rpc.connect_by_config(config)
-
-send = config.true('_RPC_SEND')
-
-chain_spec = None
-try:
-    chain_spec = ChainSpec.from_chain_str(config.get('CHAIN_SPEC'))
-except AttributeError:
-    pass
 
 def main():
-    signer_address = None
-    try:
-        signer = rpc.get_signer()
-        signer_address = rpc.get_signer_address()
-    except SignerMissingException:
-        pass
+    if config.get('_EXEC_ADDRESS') != None or config.true('_DEPLOY'):
+        if not args.u and exec_address != exec_address:
+            raise ValueError('invalid checksum address')
 
-    if config.get('_EXEC_ADDRESS') != None or args.deploy:
-        exec_address = None
-        if config.get('_EXEC_ADDRESS') != None:
-            exec_address = add_0x(to_checksum(config.get('_EXEC_ADDRESS')))
-        #if not args.u and exec_address != add_0x(exec_address):
-            if not args.u and exec_address != exec_address:
-                raise ValueError('invalid checksum address')
-
-        if signer_address == None:
-            j = JSONRPCRequest(id_generator=rpc.id_generator)
+        if settings.get('SENDER_ADDRESS'):
+            j = JSONRPCRequest(id_generator=settings.get('RPC_ID_GENERATOR'))
             o = j.template()
             o['method'] = 'eth_call'
             o['params'].append({
-                'to': exec_address,
-                'from': signer_address,
+                'to': settings.get('EXEC'),
+                'from': settings.get('SENDER_ADDRESS'),
                 'value': '0x00',
                 'gas': add_0x(int.to_bytes(8000000, 8, byteorder='big').hex()), # TODO: better get of network gas limit
                 'gasPrice': '0x01',
-                'data': add_0x(args.data),
+                'data': add_0x(config.get('_DATA')),
                 })
             height = to_blockheight_param(config.get('_HEIGHT'))
             o['params'].append(height)
             o = j.finalize(o)
-            r = conn.do(o)
+            r = settings.get('CONN').do(o)
             try:
                 print(strip_0x(r))
             except ValueError:
@@ -130,17 +119,26 @@ def main():
                 sys.exit(1)
 
         else:
-            if chain_spec == None:
+            if settings.get('CHAIN_SPEC') == None:
                 raise ValueError('chain spec must be specified')
-            g = TxFactory(chain_spec, signer=rpc.get_signer(), gas_oracle=rpc.get_gas_oracle(), nonce_oracle=rpc.get_nonce_oracle())
-            tx = g.template(signer_address, exec_address, use_nonce=True)
-            if args.data != None:
-                tx = g.set_code(tx, add_0x(args.data))
+            g = TxFactory(
+                    settings.get('CHAIN_SPEC'),
+                    signer=settings.get('SIGNER'),
+                    gas_oracle=settings.get('GAS_ORACLE'),
+                    nonce_oracle=settings.get('NONCE_ORACLE'),
+                )
+            tx = g.template(
+                    settings.get('SENDER_ADDRESS'),
+                    settings.get('EXEC'),
+                    use_nonce=True,
+                    )
+            if config.get('_DATA') != None:
+                tx = g.set_code(tx, add_0x(config.get('_DATA')))
 
             (tx_hash_hex, o) = g.finalize(tx, id_generator=rpc.id_generator)
        
             if send:
-                r = conn.do(o)
+                r = settings.get('CONN').do(o)
                 print(r)
             else:
                 if config.get('_RAW'):
@@ -148,11 +146,11 @@ def main():
                 print(o)
 
     else:
-        o = raw(args.data, id_generator=rpc.id_generator)
-        if send:
-            r = conn.do(o)
+        o = raw(config.get('_DATA'), id_generator=settings.get('RPC_ID_GENERATOR'))
+        if settings.get('RPC_SEND'):
+            r = settings.get('CONN').do(o)
             if config.true('_WAIT'):
-                r = conn.wait(tx_hash_hex)
+                r = settings.get('CONN').wait(tx_hash_hex)
                 if r['status'] == 0:
                     logg.critical('VM revert for {}. Wish I could tell you more'.format(tx_hash_hex))
                     sys.exit(1)

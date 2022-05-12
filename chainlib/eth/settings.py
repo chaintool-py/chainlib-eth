@@ -36,16 +36,39 @@ def process_settings_wallet(settings, config):
     wallet = chainlib.eth.cli.Wallet()
     wallet.from_config(config)
 
+    recipient_in = None
     try:
-        recipient = config.get('_RECIPIENT')
+        recipient_in = config.get('_RECIPIENT')
     except KeyError:
         return settings
 
-    if wallet.get_signer_address() == None and recipient != None:
-        recipient = wallet.from_address(recipient)
+    if wallet.get_signer_address() == None and recipient_in != None:
+        recipient_in = wallet.from_address(recipient_in)
+
+    recipient = add_0x(recipient_in)
+
+    if not config.true('_UNSAFE') and recipient != recipient_in:
+        raise ValueError('invalid checksum address: {}'.format(recipient_in))
+
 
     settings.set('WALLET', wallet)
-    settings.set('RECIPIENT', add_0x(recipient))
+    settings.set('RECIPIENT', recipient)
+    return settings
+
+
+def process_settings_contract(settings, config):
+    exec_address_in = None
+    try:
+        exec_address_in = config.get('_EXEC_ADDRESS')
+    except KeyError:
+        return settings
+
+    exec_address = add_0x(exec_address_in)
+
+    if not config.true('_UNSAFE') and exec_address != exec_address_in:
+        raise ValueError('invalid checksum address: {}'.format(exec_address_in))
+
+    settings.set('EXEC', exec_address)
     return settings
 
 
