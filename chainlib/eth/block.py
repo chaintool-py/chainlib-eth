@@ -9,6 +9,7 @@ from hexathon import (
         add_0x,
         strip_0x,
         compact,
+        to_int as hex_to_int,
         )
 
 # local imports
@@ -153,8 +154,8 @@ txs: {}
     self.timestamp,
     datetime.datetime.fromtimestamp(self.timestamp),
     self.author,
-    self.fee_limit,
-    self.fee_cost,
+    hex_to_int(self.fee_limit),
+    hex_to_int(self.fee_cost),
     len(self.txs),
         )
 

@@ -6,6 +6,7 @@ import logging
 # external imports
 from hexathon import (
         strip_0x,
+        add_0x,
         pad,
         )
 
@@ -502,6 +503,8 @@ def code(address, block_spec=BlockSpec.LATEST, id_generator=None):
         block_height = 'pending'
     else:
         block_height = int(block_spec)
+        block_height = block_height.to_bytes(8, byteorder='big')
+        block_height = add_0x(block_height.hex())
     j = JSONRPCRequest(id_generator)
     o = j.template()
     o['method'] = 'eth_getCode'

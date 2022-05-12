@@ -65,6 +65,30 @@ def process_config_local(config, arg, args, flags):
     return config
 
 
+def process_settings_local(settings, config):
+    block_identifier = config.get('_BLOCK')
+    maybe_hex = None
+    is_number = False
+    try:
+        maybe_hex = strip_0x(block_identifier)
+    except ValueError:
+        is_number = True
+
+    if maybe_hex != None:
+        if len(maybe_hex) != 64:
+            is_number = True
+    else:
+        is_number = True
+
+    r = None
+    if not is_number:
+        config.add(block_identifier, '_HASH', False)
+    else:
+        settings.set('_BLOCK', int(block_identifier))
+
+    return process_settings(settings, config)
+
+
 argparser = chainlib.eth.cli.ArgumentParser()
 arg_flags = ArgFlag()
 arg = Arg(arg_flags)
@@ -82,32 +106,31 @@ config = process_config_local(config, arg, args, flags)
 logg.debug('config loaded:\n{}'.format(config))
 
 settings = ChainSettings()
-settings = process_settings(settings, config)
+settings = process_settings_local(settings, config)
 logg.debug('settings loaded:\n{}'.format(settings))
 
 
-def get_block(conn, block_identifier, id_generator):
 
-    maybe_hex = None
+def get_block(settings):
+    hsh = settings.get('HASH')
     r = None
-    try:
-        maybe_hex = strip_0x(block_identifier)
-    except ValueError:
-        r = get_block_number(conn, block_identifier, id_generator)
-
-    if maybe_hex != None:
-        if len(maybe_hex) != 64:
-            r = get_block_number(conn, block_identifier, id_generator)
-        elif maybe_hex != block_identifier:
-            r = get_block_hash(conn, block_identifier, id_generator)
+    if hsh == None:
+        r = get_block_number(
+                settings.get('CONN'),
+                settings.get('_BLOCK'),
+                settings.get('RPC_ID_GENERATOR'),
+                )
     else:
-        r = get_block_number(conn, block_identifier, id_generator)
+        r = get_block_hash(
+                settings.get('CONN'),
+                hsh,
+                settings.get('RPC_ID_GENERATOR'),
+                )
 
     return block_process(r)
 
 
 def get_block_number(conn, block_number, id_generator):
-    block_number = int(block_number)
     o = block_by_number(block_number, include_tx=False)
     block_src = conn.do(o)
     if block_src == None:
@@ -131,11 +154,7 @@ def block_process(block_src):
 
 
 def main():
-    r = get_block(
-            settings.get('CONN'),
-            config.get('_BLOCK'),
-            settings.get('RPC_ID_GENERATOR'),
-        )
+    r = get_block(settings)
 
     if not config.true('_RAW'):
         r = r.to_human()

@@ -10,8 +10,14 @@ import logging
 import urllib
 
 # external imports
+from chainlib.settings import ChainSettings
 from funga.eth.signer import EIP155Signer
 from funga.eth.keystore.dict import DictKeystore
+from chainlib.chain import ChainSpec
+from chainlib.jsonrpc import (
+        JSONRPCRequest,
+        IntSequenceGenerator,
+        )
 from hexathon import (
         add_0x,
         strip_0x,
@@ -21,10 +27,6 @@ from hexathon import (
 # local imports
 from chainlib.eth.address import to_checksum
 from chainlib.eth.connection import EthHTTPConnection
-from chainlib.jsonrpc import (
-        JSONRPCRequest,
-        IntSequenceGenerator,
-        )
 from chainlib.eth.nonce import (
         RPCNonceOracle,
         OverrideNonceOracle,
@@ -38,7 +40,6 @@ from chainlib.eth.tx import (
         raw,
         )
 from chainlib.eth.error import RevertEthException
-from chainlib.chain import ChainSpec
 from chainlib.eth.runnable.util import decode_for_puny_humans
 from chainlib.eth.jsonrpc import to_blockheight_param
 import chainlib.eth.cli
@@ -52,6 +53,7 @@ from chainlib.eth.cli.config import (
         process_config,
         )
 from chainlib.eth.cli.log import process_log
+from chainlib.eth.settings import process_settings
 
 logg = logging.getLogger()
 

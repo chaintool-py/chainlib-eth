@@ -1,10 +1,15 @@
 # external imports
 from chainlib.settings import process_settings as base_process_settings
 from chainlib.error import SignerMissingException
-from hexathon import add_0x
+from hexathon import (
+        add_0x,
+        strip_0x,
+        )
+from chainlib.block import BlockSpec
 
 # local imports
 import chainlib.eth.cli
+from chainlib.eth.address import to_checksum_address
 
 
 def process_settings_rpc(settings, config):
@@ -29,6 +34,27 @@ def process_settings_rpc(settings, config):
     settings.set('CONN', conn)
     settings.set('RPC_ID_GENERATOR', rpc.id_generator)
     settings.set('RPC_SEND', config.true('_RPC_SEND'))
+    
+    return settings
+
+
+def process_settings_blockspec(settings, config):
+    blockspec_in = None
+    try:
+        blockspec_in = config.get('_HEIGHT')
+    except KeyError:
+        return settings
+
+    blockspec = None
+    if blockspec_in == 'latest':
+        blockspec = BlockSpec.LATEST
+    elif blockspec_in == 'pending':
+        blockspec = BlockSpec.PENDING
+    else:
+        blockspec = int(blockspec_in)
+
+    settings.set('HEIGHT', blockspec)
+
     return settings
 
 
@@ -45,11 +71,10 @@ def process_settings_wallet(settings, config):
     if wallet.get_signer_address() == None and recipient_in != None:
         recipient_in = wallet.from_address(recipient_in)
 
-    recipient = add_0x(recipient_in)
-
+    recipient = to_checksum_address(recipient_in)
     if not config.true('_UNSAFE') and recipient != recipient_in:
         raise ValueError('invalid checksum address: {}'.format(recipient_in))
-
+    recipient = add_0x(recipient)
 
     settings.set('WALLET', wallet)
     settings.set('RECIPIENT', recipient)
@@ -63,12 +88,43 @@ def process_settings_contract(settings, config):
     except KeyError:
         return settings
 
-    exec_address = add_0x(exec_address_in)
-
+    exec_address = to_checksum_address(exec_address_in)
     if not config.true('_UNSAFE') and exec_address != exec_address_in:
         raise ValueError('invalid checksum address: {}'.format(exec_address_in))
+    exec_address = add_0x(exec_address)
 
     settings.set('EXEC', exec_address)
+    return settings
+
+
+def process_settings_data(settings, config):
+    data = None
+    try:
+        data = config.get('_DATA')
+    except KeyError:
+        return settings
+
+    data = add_0x(config.get('_DATA'))
+    settings.set('DATA', data)
+    
+    return settings
+
+
+def process_settings_hash(settings, config):
+    hsh = None
+    try:
+        hsh = config.get('_HASH')
+    except KeyError:
+        return settings
+
+    hsh = strip_0x(hsh)
+    l = len(hsh)
+    if l != 64:
+        raise ValueError('invalid hash length {} for {}'.format(l, hsh))
+
+    hsh = add_0x(hsh)
+    settings.set('HASH', hsh)
+    
     return settings
 
 
@@ -76,4 +132,7 @@ def process_settings(settings, config):
     settings = base_process_settings(settings, config)
     settings = process_settings_wallet(settings, config)
     settings = process_settings_rpc(settings, config)
+    settings = process_settings_blockspec(settings, config)
+    settings = process_settings_data(settings, config)
+    settings = process_settings_hash(settings, config)
     return settings
