@@ -58,11 +58,12 @@ logg = logging.getLogger()
 script_dir = os.path.dirname(os.path.realpath(__file__)) 
 config_dir = os.path.join(script_dir, '..', 'data', 'config')
 
-argparser = chainlib.eth.cli.ArgumentParser()
 arg_flags = ArgFlag()
 arg = Arg(arg_flags)
 flags = arg_flags.STD_BASE_READ
 flags = arg_flags.less(flags, arg_flags.CHAIN_SPEC)
+
+argparser = chainlib.eth.cli.ArgumentParser()
 argparser = process_args(argparser, arg, flags)
 argparser.add_argument('item', type=str, help='Address or transaction to retrieve data for')
 args = argparser.parse_args()
