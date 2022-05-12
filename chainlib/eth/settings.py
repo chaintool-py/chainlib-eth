@@ -1,5 +1,6 @@
 # external imports
 from chainlib.settings import process_settings as base_process_settings
+from chainlib.error import SignerMissingException
 from hexathon import add_0x
 
 # local imports
@@ -15,6 +16,8 @@ def process_settings_rpc(settings, config):
         sender_address = rpc.get_sender_address()
         settings.set('SENDER_ADDRESS', add_0x(sender_address))
     except AttributeError:
+        pass
+    except SignerMissingException:
         pass
 
     gas_oracle = rpc.get_gas_oracle()

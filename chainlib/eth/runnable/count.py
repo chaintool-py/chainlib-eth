@@ -8,6 +8,14 @@ import json
 import logging
 import select
 
+# external imports
+from chainlib.settings import ChainSettings
+from chainlib.chain import ChainSpec
+from chainlib.jsonrpc import IntSequenceGenerator
+from funga.eth.keystore.dict import DictKeystore
+from funga.eth.signer import EIP155Signer
+from hexathon import add_0x
+
 # local imports
 import chainlib.eth.cli
 from chainlib.eth.cli.arg import (
@@ -23,16 +31,17 @@ from chainlib.eth.cli.log import process_log
 from chainlib.eth.address import AddressChecksum
 from chainlib.eth.connection import EthHTTPConnection
 from chainlib.eth.tx import count
-from chainlib.chain import ChainSpec
-from chainlib.jsonrpc import IntSequenceGenerator
-from funga.eth.keystore.dict import DictKeystore
-from funga.eth.signer import EIP155Signer
-from hexathon import add_0x
+from chainlib.eth.settings import process_settings
 
 logg = logging.getLogger()
 
 script_dir = os.path.dirname(os.path.realpath(__file__)) 
 config_dir = os.path.join(script_dir, '..', 'data', 'config')
+
+
+def process_config_local(config, arg, args, flags):
+    config.add(args.address, '_RECIPIENT', False)
+    return config
 
 argparser = chainlib.eth.cli.ArgumentParser()
 arg_flags = ArgFlag()
@@ -48,22 +57,21 @@ logg.debug('flags {} {} {}'.format(flags, arg_flags.SEQ, flags & arg_flags.SEQ))
 
 config = Config()
 config = process_config(config, arg, args, flags)
+config = process_config_local(config, arg, args, flags)
 logg.debug('config loaded:\n{}'.format(config))
 
-holder_address = args.address
-wallet = chainlib.eth.cli.Wallet()
-wallet.from_config(config)
-if wallet.get_signer_address() == None and holder_address != None:
-    wallet.from_address(holder_address)
-
-rpc = chainlib.eth.cli.Rpc(wallet=wallet)
-conn = rpc.connect_by_config(config)
+settings = ChainSettings()
+settings = process_settings(settings, config)
+logg.debug('settings loaded:\n{}'.format(settings))
 
 
 def main():
     # TODO: should tolerate if address not prefixed with 0x 
-    o = count(add_0x(holder_address), id_generator=rpc.id_generator)
-    r = conn.do(o)
+    o = count(
+            settings.get('RECIPIENT'),
+            id_generator=settings.get('RPC_ID_GENERATOR'),
+            )
+    r = settings.get('CONN').do(o)
     count_result = None
     try:
         count_result = int(r, 16)
