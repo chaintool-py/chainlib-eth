@@ -10,6 +10,13 @@ from hexathon import (
         strip_0x,
         even,
         )
+from chainlib.settings import ChainSettings
+from chainlib.chain import ChainSpec
+from funga.eth.signer import EIP155Signer
+from chainlib.jsonrpc import (
+        jsonrpc_result,
+        IntSequenceGenerator,
+        )
 
 # local imports
 import chainlib.eth.cli
@@ -24,21 +31,23 @@ from chainlib.eth.cli.config import (
         )
 from chainlib.eth.cli.log import process_log
 from chainlib.eth.address import AddressChecksum
-from chainlib.jsonrpc import (
-        jsonrpc_result,
-        IntSequenceGenerator,
-        )
 from chainlib.eth.connection import EthHTTPConnection
 from chainlib.eth.gas import (
         OverrideGasOracle,
         balance,
         )
-from chainlib.chain import ChainSpec
-from funga.eth.signer import EIP155Signer
+from chainlib.eth.settings import process_settings
+
 
 logg = logging.getLogger()
 
 script_dir = os.path.dirname(os.path.realpath(__file__)) 
+
+
+def process_config_local(config, arg, args, flags):
+    config.add(args.address, '_RECIPIENT', False)
+    return config
+
 
 arg_flags = ArgFlag()
 arg = Arg(arg_flags)
@@ -55,25 +64,19 @@ logg.debug('flags {} {} {}'.format(flags, arg_flags.SEQ, flags & arg_flags.SEQ))
 
 config = Config()
 config = process_config(config, arg, args, flags)
+config = process_config_local(config, arg, args, flags)
 logg.debug('config loaded:\n{}'.format(config))
 
-wallet = chainlib.eth.cli.Wallet()
-wallet.from_config(config)
-holder_address = args.address
-if wallet.get_signer_address() == None and holder_address != None:
-    holder_address = wallet.from_address(holder_address)
+settings = ChainSettings()
+settings = process_settings(settings, config)
 
-rpc = chainlib.eth.cli.Rpc()
-conn = rpc.connect_by_config(config)
-
-chain_spec = ChainSpec.from_chain_str(config.get('CHAIN_SPEC'))
 
 def main():
     r = None
     decimals = 18
 
-    o = balance(holder_address, id_generator=rpc.id_generator)
-    r = conn.do(o)
+    o = balance(settings.get('RECIPIENT'), id_generator=settings.get('RPC_ID_GENERATOR'))
+    r = settings.get('CONN').do(o)
    
     hx = strip_0x(r)
     balance_value = int(hx, 16)

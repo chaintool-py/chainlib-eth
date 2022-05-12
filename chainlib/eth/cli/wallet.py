@@ -15,6 +15,3 @@ class Wallet(BaseWallet):
     """
     def __init__(self, checksummer=AddressChecksum):
         super(Wallet, self).__init__(EIP155Signer, checksummer=checksummer, keystore=DictKeystore())
-
-
-
