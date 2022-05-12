@@ -115,7 +115,7 @@ def main():
     for hsh in hashes_ready:
         logg.debug('processing transaction hash {}'.format(hsh))
         try:
-            r = conn.wait(hsh)
+            r = settings.get('CONN').wait(hsh)
         except RevertEthException:
             if config.get('_IGNORE_ALL') or hsh in hashes_ignore:
                 logg.info('ignoring revert in transaction hash {}'.format(hsh))
