@@ -106,11 +106,6 @@ logg.debug('settings loaded:\n{}'.format(settings))
 
 def get_transaction(conn, chain_spec, tx_hash, id_generator):
     o = transaction(tx_hash, id_generator=id_generator)
-#    j = JSONRPCRequest(id_generator=id_generator)
-#    o = j.template()
-#    o['method'] = 'eth_getTransactionByHash'
-#    o['params'].append(tx_hash)
-#    o = j.finalize(o)
     tx_src = conn.do(o)
     if tx_src == None:
         logg.error('Transaction {} not found'.format(tx_hash))
@@ -125,10 +120,6 @@ def get_transaction(conn, chain_spec, tx_hash, id_generator):
     rcpt = None
 
     o = receipt(tx_hash, id_generator=id_generator)
-#    o = j.template()
-#    o['method'] = 'eth_getTransactionReceipt'
-#    o['params'].append(tx_hash)
-#    o = j.finalize(o)
     rcpt = conn.do(o)
 
     if tx == None:
@@ -147,13 +138,6 @@ def get_transaction(conn, chain_spec, tx_hash, id_generator):
 
 def get_address(conn, address, id_generator, height):
     o = code(address, height, id_generator=id_generator)
-#    j = JSONRPCRequest(id_generator=id_generator)
-#    o = j.template()
-#    o['method'] = 'eth_getCode'
-#    o['params'].append(address)
-#    height = to_blockheight_param(height)
-#    o['params'].append(height)
-#    o = j.finalize(o)
     r = conn.do(o)
     
     content = strip_0x(r, allow_empty=True)
