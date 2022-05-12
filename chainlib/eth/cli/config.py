@@ -2,7 +2,11 @@
 import os
 
 # external imports
-from chainlib.cli import Config as BaseConfig
+from chainlib.cli.config import (
+        Config as BaseConfig,
+        process_config as base_process_config,
+        )
+
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
 data_dir = os.path.join(script_dir, '..')
@@ -14,14 +18,12 @@ class Config(BaseConfig):
     default_base_config_dir = os.path.join(data_dir, 'data', 'config')
     default_fee_limit = 21000
 
-    @classmethod
-    def from_args(cls, args, arg_flags=0x0f, env=os.environ, extra_args={}, base_config_dir=None, default_config_dir=None, user_config_dir=None, default_fee_limit=None, logger=None, load_callback=None):
-        super(Config, cls).override_defaults(base_dir=cls.default_base_config_dir)
-        if default_fee_limit == None:
-            default_fee_limit = cls.default_fee_limit
-        config = BaseConfig.from_args(args, arg_flags=arg_flags, env=env, extra_args=extra_args, base_config_dir=base_config_dir, default_config_dir=default_config_dir, user_config_dir=user_config_dir, default_fee_limit=default_fee_limit, logger=logger, load_callback=load_callback)
 
-        if not config.get('RPC_DIALECT'):
+def process_config(config, arg, args, flags):
+    config = base_process_config(config, arg, args, flags)
+    if arg.match('provider', flags):
+
+        if not bool(config.get('RPC_DIALECT')):
             config.add('default', 'RPC_DIALECT', exists_ok=True)
         elif config.get('RPC_DIALECT') not in [
                 'openethereum',
@@ -29,5 +31,4 @@ class Config(BaseConfig):
                 ]:
             raise ValueError('unknown rpc dialect {}'.format(config.get('RPC_DIALECT'))) 
 
-        return config
-
+    return config
