@@ -1,5 +1,6 @@
 # standard imports
 import logging
+import json
 
 # external imports
 from potaahto.symbols import snake_and_camel
@@ -46,3 +47,7 @@ class Src(BaseSrc):
             v = uniform(v, compact_value=False, allow_empty=True)
 
         return v
+
+
+    def __repr__(self):
+        return json.dumps(self.src)

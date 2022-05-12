@@ -1,4 +1,7 @@
-import sys
+# standard imports
+import logging
+import datetime
+
 # external imports
 from chainlib.jsonrpc import JSONRPCRequest
 from chainlib.block import Block as BaseBlock
@@ -11,6 +14,8 @@ from hexathon import (
 # local imports
 from chainlib.eth.tx import Tx
 from .src import Src
+
+logg = logging.getLogger(__name__)
 
 
 def block_latest(id_generator=None):
@@ -87,21 +92,29 @@ class Block(BaseBlock, Src):
    
     tx_generator = Tx
 
-    def __init__(self, src):
-        super(Block, self).__init__(src)
-        import sys
-        self.set_hash(src['hash'])
+    def __init__(self, src=None):
+        super(Block, self).__init__(src=src)
+
+        self.set_hash(self.src['hash'])
         try:
-            self.number = int(strip_0x(src['number']), 16)
+            self.number = int(strip_0x(self.src['number']), 16)
         except TypeError:
-            self.number = int(src['number'])
-        self.txs = src['transactions']
-        self.block_src = src
+            self.number = int(self.src['number'])
+        self.txs = self.src['transactions']
+        self.block_src = self.src
         try:
-            self.timestamp = int(strip_0x(src['timestamp']), 16)
+            self.timestamp = int(strip_0x(self.src['timestamp']), 16)
         except TypeError:
-            self.timestamp = int(src['timestamp'])
-        self.author = src['author']
+            self.timestamp = int(self.src['timestamp'])
+
+        try:
+            self.author = self.src['author']
+        except KeyError:
+            self.author = self.src['miner']
+
+        self.fee_limit = self.src['gas_limit']
+        self.fee_cost = self.src['gas_used']
+        self.parent_hash = self.src['parent_hash']
 
 
     def tx_index_by_hash(self, tx_hash):
@@ -121,3 +134,29 @@ class Block(BaseBlock, Src):
         if idx == -1:
             raise AttributeError('tx {} not found in block {}'.format(tx_hash, self.hash))
         return idx
+
+
+    def to_human(self):
+        s = """hash: {}
+number: {}
+parent: {}
+timestamp: {}
+time: {}
+author: {}
+gas_limit: {}
+gas_used: {}
+txs: {}
+""".format(
+    self.hash,
+    self.number,
+    self.parent_hash,
+    self.timestamp,
+    datetime.datetime.fromtimestamp(self.timestamp),
+    self.author,
+    self.fee_limit,
+    self.fee_cost,
+    len(self.txs),
+        )
+
+        return s
+

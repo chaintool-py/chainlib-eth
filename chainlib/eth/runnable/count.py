@@ -10,6 +10,16 @@ import select
 
 # local imports
 import chainlib.eth.cli
+from chainlib.eth.cli.arg import (
+        Arg,
+        ArgFlag,
+        process_args,
+        )
+from chainlib.eth.cli.config import (
+        Config,
+        process_config,
+        )
+from chainlib.eth.cli.log import process_log
 from chainlib.eth.address import AddressChecksum
 from chainlib.eth.connection import EthHTTPConnection
 from chainlib.eth.tx import count
@@ -25,11 +35,21 @@ logg = logging.getLogger()
 script_dir = os.path.dirname(os.path.realpath(__file__)) 
 config_dir = os.path.join(script_dir, '..', 'data', 'config')
 
-arg_flags = chainlib.eth.cli.argflag_std_base_read | chainlib.eth.cli.Flag.WALLET
-argparser = chainlib.eth.cli.ArgumentParser(arg_flags)
-argparser.add_positional('address', type=str, help='Ethereum address of recipient')
+argparser = chainlib.eth.cli.ArgumentParser()
+arg_flags = ArgFlag()
+arg = Arg(arg_flags)
+flags = arg_flags.STD_BASE_READ | arg_flags.WALLET | arg_flags.UNSAFE
+argparser = process_args(argparser, arg, flags)
+
+argparser.add_argument('address', type=str, help='Ethereum address of recipient')
 args = argparser.parse_args()
-config = chainlib.eth.cli.Config.from_args(args, arg_flags, default_config_dir=config_dir)
+
+logg = process_log(args, logg)
+logg.debug('flags {} {} {}'.format(flags, arg_flags.SEQ, flags & arg_flags.SEQ))
+
+config = Config()
+config = process_config(config, arg, args, flags)
+logg.debug('config loaded:\n{}'.format(config))
 
 holder_address = args.address
 wallet = chainlib.eth.cli.Wallet()

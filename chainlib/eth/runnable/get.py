@@ -41,6 +41,16 @@ from chainlib.eth.block import (
 from chainlib.eth.runnable.util import decode_for_puny_humans
 from chainlib.eth.jsonrpc import to_blockheight_param
 import chainlib.eth.cli
+from chainlib.eth.cli.arg import (
+        Arg,
+        ArgFlag,
+        process_args,
+        )
+from chainlib.eth.cli.config import (
+        Config,
+        process_config,
+        )
+from chainlib.eth.cli.log import process_log
 
 logging.basicConfig(level=logging.WARNING, format='%(asctime)s %(levelname)s %(filename)s:%(lineno)d %(message)s')
 logg = logging.getLogger()
@@ -48,12 +58,20 @@ logg = logging.getLogger()
 script_dir = os.path.dirname(os.path.realpath(__file__)) 
 config_dir = os.path.join(script_dir, '..', 'data', 'config')
 
-arg_flags = chainlib.eth.cli.argflag_std_base_read 
-arg_flags = chainlib.eth.cli.argflag_reset(arg_flags, chainlib.eth.cli.Flag.CHAIN_SPEC)
-argparser = chainlib.eth.cli.ArgumentParser(arg_flags)
-argparser.add_positional('item', type=str, help='Address or transaction to retrieve data for')
+argparser = chainlib.eth.cli.ArgumentParser()
+arg_flags = ArgFlag()
+arg = Arg(arg_flags)
+flags = arg_flags.STD_BASE_READ
+flags = arg_flags.less(flags, arg_flags.CHAIN_SPEC)
+argparser = process_args(argparser, arg, flags)
+argparser.add_argument('item', type=str, help='Address or transaction to retrieve data for')
 args = argparser.parse_args()
-config = chainlib.eth.cli.Config.from_args(args, arg_flags, default_config_dir=config_dir)
+
+logg = process_log(args, logg)
+
+config = Config()
+config = process_config(config, arg, args, flags)
+logg.debug('config loaded:\n{}'.format(config))
 
 rpc = chainlib.eth.cli.Rpc()
 conn = rpc.connect_by_config(config)

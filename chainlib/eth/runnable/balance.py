@@ -40,7 +40,7 @@ logg = logging.getLogger()
 
 script_dir = os.path.dirname(os.path.realpath(__file__)) 
 
-argparser = chainlib.eth.cli.ArgumentParser() #arg_flags)
+argparser = chainlib.eth.cli.ArgumentParser()
 arg_flags = ArgFlag()
 arg = Arg(arg_flags)
 flags = arg_flags.STD_READ
