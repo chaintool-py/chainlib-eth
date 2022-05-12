@@ -21,6 +21,9 @@ class TestStat(unittest.TestCase):
             'transactions': [],
             'number': 41,
             'author': os.urandom(20).hex(),
+            'gas_used': '0x1234',
+            'gas_limit': '0x2345',
+            'parent_hash': None,
             })
 
         d = datetime.datetime.utcnow()
@@ -30,6 +33,9 @@ class TestStat(unittest.TestCase):
             'transactions': [],
             'number': 42,
             'author': os.urandom(20).hex(),
+            'gas_used': '0x1234',
+            'gas_limit': '0x2345',
+            'parent_hash': None,
             })
 
         s.block_apply(block_a)
@@ -43,6 +49,9 @@ class TestStat(unittest.TestCase):
             'transactions': [],
             'number': 43,
             'author': os.urandom(20).hex(),
+            'gas_used': '0x1234',
+            'gas_limit': '0x2345',
+            'parent_hash': None,
             })
 
         s.block_apply(block_c)

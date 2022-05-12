@@ -1,5 +1,6 @@
 - 0.3.0
 	* Implement chainlib with new arg and config handling
+	* Implement cli tools on settings module
 - 0.2.0
 	* Implement chainlib generic tx, block and tx result objects
 - 0.1.3

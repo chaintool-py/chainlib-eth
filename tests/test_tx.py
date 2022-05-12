@@ -130,6 +130,9 @@ class TxTestCase(EthTesterCase):
             'timestamp': 13241324,
             'transactions': [],
             'author': os.urandom(20).hex(),
+            'gas_used': 21000,
+            'gas_limit': '0x2345',
+            'parent_hash': None,
             })
         with self.assertRaises(AttributeError):
             tx = Tx(tx_data, block=block)
@@ -173,6 +176,9 @@ class TxTestCase(EthTesterCase):
             'timestamp': 13241324,
             'transactions': [],
             'author': os.urandom(20).hex(),
+            'gas_used': 21000,
+            'gas_limit': '0x2345',
+            'parent_hash': None,
             })
 
         block.txs = [add_0x(tx_data['hash'])]

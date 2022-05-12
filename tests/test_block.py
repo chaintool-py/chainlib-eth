@@ -29,6 +29,7 @@ class TestBlock(unittest.TestCase):
         tx_two_src_hash = os.urandom(32).hex()
 
         block_hash = os.urandom(32).hex()
+        parent_hash = os.urandom(32).hex()
         block_author = os.urandom(20).hex()
         block_time = datetime.datetime.utcnow().timestamp()
         block_src = {
@@ -40,6 +41,9 @@ class TestBlock(unittest.TestCase):
                 tx_two_src_hash,
                 ],
             'timestamp': block_time,
+            'gas_used': '0x1234',
+            'gas_limit': '0x2345',
+            'parent_hash': parent_hash 
                 }
         block = Block(block_src)
 
