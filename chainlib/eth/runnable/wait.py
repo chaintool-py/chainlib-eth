@@ -83,14 +83,9 @@ config = process_config(config, arg, args, flags)
 config = process_config_local(config, arg, args, flags)
 logg.debug('config loaded:\n{}'.format(config))
 
-rpc = chainlib.eth.cli.Rpc()
-conn = rpc.connect_by_config(config)
-
-chain_spec = None
-try:
-    chain_spec = ChainSpec.from_chain_str(config.get('CHAIN_SPEC'))
-except AttributeError:
-    pass
+settings = ChainSettings()
+settings = process_settings(settings, config)
+logg.debug('settings loaded:\n{}'.format(settings))
 
 
 def main():
