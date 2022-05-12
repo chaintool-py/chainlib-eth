@@ -17,6 +17,7 @@ from hexathon import (
         )
 import sha3
 from funga.eth.signer import EIP155Signer
+from chainlib.settings import ChainSettings
 
 # local imports
 from chainlib.eth.address import AddressChecksum
@@ -45,7 +46,7 @@ from chainlib.eth.cli.config import (
         process_config,
         )
 from chainlib.eth.cli.log import process_log
-
+from chainlib.eth.settings import process_settings
 
 BLOCK_SAMPLES = 10
 
@@ -68,6 +69,9 @@ def process_config_local(config, arg, args, flags):
     config.add(args.local, '_LOCAL', False)
     config.add(args.long, '_LONG', False)
     config.add(args.entry, '_ENTRY', False)
+    if config.get('_ENTRY') != None:
+        if config.get('_ENTRY') not in results_translation.keys():
+            raise ValueError('Unknown entry {}'.format(config.get('_ENTRY')))
     return config
 
 arg_flags = ArgFlag()
@@ -88,20 +92,10 @@ config = process_config(config, arg, args, flags)
 config = process_config_local(config, arg, args, flags)
 logg.debug('config loaded:\n{}'.format(config))
 
-if config.get('_ENTRY') != None:
-    if config.get('_ENTRY') not in results_translation.keys():
-        raise ValueError('Unknown entry {}'.format(config.get('_ENTRY')))
+settings = ChainSettings()
+settings = process_settings(settings, config)
+logg.debug('settings loaded:\n{}'.format(settings))
 
-rpc = chainlib.eth.cli.Rpc()
-conn = rpc.connect_by_config(config)
-
-token_symbol = 'eth'
-
-chain_spec = ChainSpec.from_chain_str(config.get('CHAIN_SPEC'))
-
-human = not config.true('_RAW')
-
-longmode = config.true('_LONG')
 
 def set_result(results, k, v, w=sys.stdout):
     kt = results_translation[k]
@@ -114,17 +108,16 @@ def set_result(results, k, v, w=sys.stdout):
 
 
 def main():
+    human = not config.true('_RAW')
     results = {}
 
-    o = network_id(id_generator=rpc.id_generator)
-    r = conn.do(o)
-    #if human:
-    #    n = format(n, ',')
+    o = network_id(id_generator=settings.get('RPC_ID_GENERATOR'))
+    r = settings.get('CONN').do(o)
     if set_result(results, 'network_id', r):
         return
 
-    o = block_latest(id_generator=rpc.id_generator)
-    r = conn.do(o)
+    o = block_latest(id_generator=settings.get('RPC_ID_GENERATOR'))
+    r = settings.get('CONN').do(o)
     try:
         n = int(r, 16)
     except ValueError:
@@ -135,17 +128,17 @@ def main():
     if set_result(results, 'block', n):
         return
 
-    o = block_by_number(first_block_number, False, id_generator=rpc.id_generator)
-    r = conn.do(o)
+    o = block_by_number(first_block_number, False, id_generator=settings.get('RPC_ID_GENERATOR'))
+    r = settings.get('CONN').do(o)
     last_block = Block(r)
     last_timestamp = last_block.timestamp
 
-    if longmode:
+    if config.true('_LONG'):
         aggr_time = 0.0
         aggr_gas = 0
         for i in range(BLOCK_SAMPLES): 
-            o = block_by_number(first_block_number-i, False, id_generator=rpc.id_generator)
-            r = conn.do(o)
+            o = block_by_number(first_block_number-i, False, id_generator=settings.get('RPC_ID_GENERATOR'))
+            r = settings.get('CONN').do(o)
             block = Block(r)
             aggr_time += last_block.timestamp - block.timestamp
         
@@ -164,8 +157,8 @@ def main():
         if set_result(results, 'block_time', aggr_time / BLOCK_SAMPLES):
             return
 
-    o = price(id_generator=rpc.id_generator)
-    r = conn.do(o)
+    o = price(id_generator=settings.get('RPC_ID_GENERATOR'))
+    r = settings.get('CONN').do(o)
     n = int(r, 16)
     if human:
         n = format(n, ',')
@@ -174,7 +167,7 @@ def main():
 
     if config.get('_LOCAL'):
         o = syncing()
-        r = conn.do(o)
+        r = settings.get('CONN').do(o)
         if set_result(results, 'syncing', r):
             return
 

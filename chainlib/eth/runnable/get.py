@@ -23,6 +23,7 @@ from chainlib.jsonrpc import (
         )
 from chainlib.chain import ChainSpec
 from chainlib.status import Status
+from chainlib.settings import ChainSettings
 
 # local imports
 from chainlib.eth.connection import EthHTTPConnection
@@ -51,16 +52,23 @@ from chainlib.eth.cli.config import (
         process_config,
         )
 from chainlib.eth.cli.log import process_log
+from chainlib.eth.settings import process_settings
 
-logging.basicConfig(level=logging.WARNING, format='%(asctime)s %(levelname)s %(filename)s:%(lineno)d %(message)s')
+
 logg = logging.getLogger()
 
 script_dir = os.path.dirname(os.path.realpath(__file__)) 
 config_dir = os.path.join(script_dir, '..', 'data', 'config')
 
+
+def process_config_local(config, arg, args, flags):
+    config.add(args.item, '_ITEM', False)
+    return config
+
+
 arg_flags = ArgFlag()
 arg = Arg(arg_flags)
-flags = arg_flags.STD_BASE_READ
+flags = arg_flags.STD_BASE_READ | arg_flags.TARGET
 flags = arg_flags.less(flags, arg_flags.CHAIN_SPEC)
 
 argparser = chainlib.eth.cli.ArgumentParser()
@@ -72,17 +80,16 @@ logg = process_log(args, logg)
 
 config = Config()
 config = process_config(config, arg, args, flags)
+config = process_config_local(config, arg, args, flags)
 logg.debug('config loaded:\n{}'.format(config))
 
-rpc = chainlib.eth.cli.Rpc()
-conn = rpc.connect_by_config(config)
-
-chain_spec = ChainSpec.from_chain_str(config.get('CHAIN_SPEC'))
-
-item = add_0x(args.item)
+settings = ChainSettings()
+settings = process_settings(settings, config)
+logg.debug('settings loaded:\n{}'.format(settings))
 
 
-def get_transaction(conn, tx_hash, id_generator):
+
+def get_transaction(conn, chain_spec, tx_hash, id_generator):
     tx_hash = add_0x(tx_hash)
     j = JSONRPCRequest(id_generator=id_generator)
     o = j.template()
@@ -107,7 +114,6 @@ def get_transaction(conn, tx_hash, id_generator):
     o['params'].append(tx_hash)
     o = j.finalize(o)
     rcpt = conn.do(o)
-    #status = int(strip_0x(rcpt['status']), 16)
 
     if tx == None:
         tx = Tx(tx_src)
@@ -142,18 +148,27 @@ def get_address(conn, address, id_generator, height):
 
 
 def main():
-    address = item
     r = None
-    if len(address) > 42:
-        r = get_transaction(conn, address, rpc.id_generator)
+    if len(config.get('_ITEM')) > 42:
+        r = get_transaction(
+                settings.get('CONN'),
+                settings.get('CHAIN_SPEC'),
+                config.get('_ITEM'),
+                settings.get('RPC_ID_GENERATOR'),
+                )
         if not config.true('_RAW'):
             r = r.to_human()
     else:
-        if config.get('_UNSAFE'):
-            address = to_checksum_address(address)
-        elif not is_checksum_address(address):
-            raise ValueError('invalid checksum address: {}'.format(address))
-        r = get_address(conn, address, rpc.id_generator, config.get('_HEIGHT'))
+        if config.true('_UNSAFE'):
+            address = to_checksum_address(config.get('_ITEM'))
+        elif not is_checksum_address(config.get('_ITEM')):
+            raise ValueError('invalid checksum address: {}'.format(config.get('_ITEM')))
+        r = get_address(
+            settings.get('CONN'),
+            config.get('_ITEM'),
+            settings.get('RPC_ID_GENERATOR'),
+            config.get('_HEIGHT'),
+            )
     if r != None:
         print(r)
 

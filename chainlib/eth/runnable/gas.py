@@ -75,8 +75,6 @@ settings = ChainSettings()
 settings = process_settings(settings, config)
 logg.debug('settings loaded:\n{}'.format(settings))
 
-value = config.get('_AMOUNT')
-
 
 def balance(conn, address, id_generator):
     o = gas_balance(address, id_generator=id_generator)
@@ -101,7 +99,7 @@ def main():
     if not config.true('_UNSAFE') and not is_checksum_address(recipient):
         raise ValueError('invalid checksum address')
 
-    logg.info('gas transfer from {} to {} value {}'.format(settings.get('SENDER_ADDRESS'), settings.get('RECIPIENT'), value))
+    logg.info('gas transfer from {} to {} value {}'.format(settings.get('SENDER_ADDRESS'), settings.get('RECIPIENT'), config.get('_AMOUNT')))
     if logg.isEnabledFor(logging.DEBUG):
         try:
             sender_balance = balance(
@@ -122,7 +120,7 @@ def main():
     (tx_hash_hex, o) = g.create(
             settings.get('SENDER_ADDRESS'),
             settings.get('RECIPIENT'),
-            value,
+            config.get('_AMOUNT'),
             data=config.get('_DATA'),
             id_generator=settings.get('RPC_ID_GENERATOR'),
         )
