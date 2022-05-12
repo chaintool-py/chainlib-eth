@@ -11,6 +11,7 @@ def process_settings_rpc(settings, config):
 
     try:
         settings.set('SIGNER', rpc.get_signer())
+        settings.set('SENDER_ADDRESS', rpc.get_sender_address())
     except AttributeError:
         pass
 
@@ -33,6 +34,15 @@ def process_settings_wallet(settings, config):
 
     settings.set('RECIPIENT', recipient)
     return settings
+
+
+def process_settings_chain(settings, config):
+    gas_oracle = rpc.get_gas_oracle()
+    settings.set('GAS_ORACLE', gas_oracle)
+
+    nonce_oracle = rpc.get_nonce_oracle()
+    settings.set('NONCE_ORACLE', nonce_oracle)
+    return settings 
 
 
 def process_settings(settings, config):

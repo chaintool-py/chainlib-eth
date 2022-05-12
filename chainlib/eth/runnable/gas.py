@@ -14,17 +14,18 @@ from hexathon import (
         add_0x,
         strip_0x,
         )
-
-# local imports
-from chainlib.eth.address import to_checksum_address
-from chainlib.eth.connection import EthHTTPConnection
+from chainlib.settings import ChainSettings
 from chainlib.jsonrpc import (
         JSONRPCRequest,
         IntSequenceGenerator,
         )
+from chainlib.chain import ChainSpec
+
+# local imports
+from chainlib.eth.address import to_checksum_address
+from chainlib.eth.connection import EthHTTPConnection
 from chainlib.eth.gas import Gas
 from chainlib.eth.gas import balance as gas_balance
-from chainlib.chain import ChainSpec
 from chainlib.eth.runnable.util import decode_for_puny_humans
 from chainlib.eth.address import (
         is_same_address,
@@ -69,13 +70,8 @@ config = process_config(config, arg, args, flags)
 config = process_config_local(config, arg, args, flags)
 logg.debug('config loaded:\n{}'.format(config))
 
-wallet = chainlib.eth.cli.Wallet()
-wallet.from_config(config)
-
-rpc = chainlib.eth.cli.Rpc(wallet=wallet)
-conn = rpc.connect_by_config(config)
-
-chain_spec = ChainSpec.from_chain_str(config.get('CHAIN_SPEC'))
+settings = ChainSettings()
+settings = settings.process_settings(settings, config)
 
 value = config.get('_AMOUNT')
 
@@ -94,10 +90,9 @@ def balance(address, id_generator):
 
 
 def main():
-    signer = rpc.get_signer()
-    signer_address = rpc.get_sender_address()
-
-    g = Gas(chain_spec, signer=signer, gas_oracle=rpc.get_gas_oracle(), nonce_oracle=rpc.get_nonce_oracle())
+    g = Gas(
+            settings.get('CHAIN_SPEC'),
+            signer=settings.get('SIGNER'), gas_oracle=rpc.get_gas_oracle(), nonce_oracle=rpc.get_nonce_oracle())
 
     recipient = to_checksum_address(config.get('_RECIPIENT'))
     if not config.true('_UNSAFE') and not is_checksum_address(recipient):
