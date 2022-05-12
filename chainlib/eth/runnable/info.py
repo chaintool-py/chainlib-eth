@@ -35,6 +35,17 @@ from chainlib.eth.gas import (
         price,
         )
 import chainlib.eth.cli
+from chainlib.eth.cli.arg import (
+        Arg,
+        ArgFlag,
+        process_args,
+        )
+from chainlib.eth.cli.config import (
+        Config,
+        process_config,
+        )
+from chainlib.eth.cli.log import process_log
+
 
 BLOCK_SAMPLES = 10
 
@@ -54,19 +65,28 @@ results_translation = {
         }
 
 
-arg_flags = chainlib.eth.cli.argflag_std_read
-argparser = chainlib.eth.cli.ArgumentParser(arg_flags)
+def process_config_local(config, arg, args, flags):
+    config.add(args.local, '_LOCAL', False)
+    config.add(args.long, '_LONG', False)
+    config.add(args.entry, '_ENTRY', False)
+    return config
+
+arg_flags = ArgFlag()
+arg = Arg(arg_flags)
+flags = arg_flags.STD_READ | arg_flags.ENV
+
+argparser = chainlib.eth.cli.ArgumentParser()
+argparser = process_args(argparser, arg, flags)
 argparser.add_argument('--long', action='store_true', help='Calculate averages through sampling of blocks and txs')
 argparser.add_argument('--local', action='store_true', help='Include local info')
-argparser.add_positional('entry', required=False, help='Output single item')
+argparser.add_argument('entry', nargs='?', help='Output single item')
 args = argparser.parse_args()
 
-extra_args = {
-        'local': None,
-        'long': None,
-        'entry': None,
-        }
-config = chainlib.eth.cli.Config.from_args(args, arg_flags, extra_args=extra_args, default_config_dir=config_dir)
+config = Config()
+config = process_config(config, arg, args, flags)
+config = process_config_local(config, arg, args, flags)
+logg.debug('config loaded:\n{}'.format(config))
+#config = chainlib.eth.cli.Config.from_args(args, arg_flags, extra_args=extra_args, default_config_dir=config_dir)
 
 if config.get('_ENTRY') != None:
     if config.get('_ENTRY') not in results_translation.keys():
