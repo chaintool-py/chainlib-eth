@@ -21,6 +21,16 @@ from hexathon import (
 
 # local imports
 import chainlib.eth.cli
+from chainlib.eth.cli.arg import (
+        Arg,
+        ArgFlag,
+        process_args,
+        )
+from chainlib.eth.cli.config import (
+        Config,
+        process_config,
+        )
+from chainlib.eth.cli.log import process_log
 from chainlib.eth.cli.encode import CLIEncoder
 from chainlib.eth.constant import ZERO_ADDRESS
 from chainlib.eth.address import to_checksum
@@ -47,22 +57,28 @@ script_dir = os.path.dirname(os.path.realpath(__file__))
 config_dir = os.path.join(script_dir, '..', 'data', 'config')
 
 
-arg_flags = chainlib.eth.cli.argflag_std_write | chainlib.eth.cli.Flag.EXEC | chainlib.eth.cli.Flag.FEE | chainlib.eth.cli.Flag.FMT_HUMAN | chainlib.eth.cli.Flag.FMT_WIRE | chainlib.eth.cli.Flag.FMT_RPC
-arg_flags = flag_reset(arg_flags, chainlib.cli.Flag.NO_TARGET)
-argparser = chainlib.eth.cli.ArgumentParser(arg_flags)
+def process_config_local(config, arg, args, flags):
+    config.add(args.signature, '_SIGNATURE', False)
+    config.add(args.contract_args, '_CONTRACT_ARGS', False)
+    return config
+
+arg_flags = ArgFlag()
+arg = Arg(arg_flags)
+flags = arg_flags.STD_WRITE | arg_flags.EXEC | arg_flags.FEE | arg_flags.FMT_HUMAN | arg_flags.FMT_WIRE | arg_flags.FMT_RPC 
+
+argparser = chainlib.eth.cli.ArgumentParser()
+argparser = process_args(argparser, arg, flags)
 argparser.add_argument('--mode', type=str, choices=['tx', 'call', 'arg'], help='Mode of operation')
 argparser.add_argument('--signature', type=str, help='Method signature to encode')
 argparser.add_argument('contract_args', type=str, nargs='*', help='arguments to encode')
 args = argparser.parse_args()
-extra_args = {
-    'signature': None,
-    'contract_args': None,
-        }
-config = chainlib.eth.cli.Config.from_args(args, arg_flags, extra_args=extra_args, default_config_dir=config_dir)
-logg.debug('config loaded:\n{}'.format(config))
 
-block_all = args.ww
-block_last = args.w or block_all
+logg = process_log(args, logg)
+
+config = Config()
+config = process_config(config, arg, args, flags)
+config = process_config_local(config, arg, args, flags)
+logg.debug('config loaded:\n{}'.format(config))
 
 wallet = chainlib.eth.cli.Wallet(EIP155Signer)
 wallet.from_config(config)
