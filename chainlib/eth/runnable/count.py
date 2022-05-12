@@ -29,7 +29,6 @@ from funga.eth.keystore.dict import DictKeystore
 from funga.eth.signer import EIP155Signer
 from hexathon import add_0x
 
-logging.basicConfig(level=logging.WARNING)
 logg = logging.getLogger()
 
 script_dir = os.path.dirname(os.path.realpath(__file__)) 

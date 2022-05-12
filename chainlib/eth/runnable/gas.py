@@ -31,24 +31,43 @@ from chainlib.eth.address import (
         is_checksum_address,
         )
 import chainlib.eth.cli
+from chainlib.eth.cli.arg import (
+        Arg,
+        ArgFlag,
+        process_args,
+        )
+from chainlib.eth.cli.config import (
+        Config,
+        process_config,
+        )
+from chainlib.eth.cli.log import process_log
 
-logging.basicConfig(level=logging.WARNING)
 logg = logging.getLogger()
 
-arg_flags = chainlib.eth.cli.argflag_std_write | chainlib.eth.cli.Flag.WALLET
-argparser = chainlib.eth.cli.ArgumentParser(arg_flags)
-argparser.add_argument('--data', type=str, help='Transaction data')
-argparser.add_positional('amount', type=int, help='Token amount to send')
-args = argparser.parse_args()
-extra_args = {
-    'data': None,
-    'amount': None,
-        }
-#config = chainlib.eth.cli.Config.from_args(args, arg_flags, extra_args=extra_args, default_config_dir=config_dir)
-config = chainlib.eth.cli.Config.from_args(args, arg_flags, extra_args=extra_args)
 
-block_all = args.ww
-block_last = args.w or block_all
+def process_config_local(config, arg, args, flags):
+    config.add(args.data, '_DATA', False)
+    config.add(args.amount, '_AMOUNT', False)
+    return config
+
+
+arg_flags = ArgFlag()
+arg = Arg(arg_flags)
+flags = arg_flags.STD_WRITE | arg_flags.WALLET
+
+argparser = chainlib.eth.cli.ArgumentParser()
+argparser = process_args(argparser, arg, flags)
+argparser.add_argument('--data', type=str, help='Transaction data')
+argparser.add_argument('amount', type=int, help='Token amount to send')
+args = argparser.parse_args()
+
+logg = process_log(args, logg)
+logg.debug('flags {} {} {}'.format(flags, arg_flags.SEQ, flags & arg_flags.SEQ))
+
+config = Config()
+config = process_config(config, arg, args, flags)
+config = process_config_local(config, arg, args, flags)
+logg.debug('config loaded:\n{}'.format(config))
 
 wallet = chainlib.eth.cli.Wallet()
 wallet.from_config(config)
@@ -98,7 +117,7 @@ def main():
 
     if send:
         conn.do(o)
-        if block_last:
+        if config.true('_WAIT'):
             r = conn.wait(tx_hash_hex)
             if logg.isEnabledFor(logging.DEBUG):
                 sender_balance = balance(add_0x(signer_address), rpc.id_generator)
@@ -110,7 +129,6 @@ def main():
                 sys.exit(1)
         print(tx_hash_hex)
     else:
-        #if logg.isEnabledFor(logging.INFO):
         if config.true('_RAW'):
             print(o['params'][0])
         else:

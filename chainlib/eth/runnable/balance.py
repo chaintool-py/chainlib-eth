@@ -40,10 +40,11 @@ logg = logging.getLogger()
 
 script_dir = os.path.dirname(os.path.realpath(__file__)) 
 
-argparser = chainlib.eth.cli.ArgumentParser()
 arg_flags = ArgFlag()
 arg = Arg(arg_flags)
 flags = arg_flags.STD_READ
+
+argparser = chainlib.eth.cli.ArgumentParser()
 argparser = process_args(argparser, arg, flags)
 
 argparser.add_argument('address', type=str, help='Ethereum address of recipient')
