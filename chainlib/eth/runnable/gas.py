@@ -64,7 +64,6 @@ argparser.add_argument('amount', type=str, help='Token amount to send')
 args = argparser.parse_args()
 
 logg = process_log(args, logg)
-logg.debug('flags {} {} {}'.format(flags, arg_flags.SEQ, flags & arg_flags.SEQ))
 
 config = Config()
 config = process_config(config, arg, args, flags)
@@ -99,7 +98,6 @@ def main():
     if not config.true('_UNSAFE') and not is_checksum_address(recipient):
         raise ValueError('invalid checksum address')
 
-    logg.info('gas transfer from {} to {} value {}'.format(settings.get('SENDER_ADDRESS'), settings.get('RECIPIENT'), settings.get('VALUE')))
     if logg.isEnabledFor(logging.DEBUG):
         try:
             sender_balance = balance(
@@ -124,6 +122,8 @@ def main():
             data=config.get('_DATA'),
             id_generator=settings.get('RPC_ID_GENERATOR'),
         )
+
+    logg.info('gas transfer from {} to {} value {} hash {} nonce {}'.format(settings.get('SENDER_ADDRESS'), settings.get('RECIPIENT'), settings.get('VALUE'), tx_hash_hex, o['nonce']))
 
     if settings.get('RPC_SEND'):
         settings.get('CONN').do(o)

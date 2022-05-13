@@ -145,4 +145,5 @@ def process_settings(settings, config):
     settings = process_settings_blockspec(settings, config)
     settings = process_settings_data(settings, config)
     settings = process_settings_hash(settings, config)
+    settings = process_settings_contract(settings, config)
     return settings
