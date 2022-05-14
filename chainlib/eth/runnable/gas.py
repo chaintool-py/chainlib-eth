@@ -122,8 +122,8 @@ def main():
             data=config.get('_DATA'),
             id_generator=settings.get('RPC_ID_GENERATOR'),
         )
-
-    logg.info('gas transfer from {} to {} value {} hash {} nonce {}'.format(settings.get('SENDER_ADDRESS'), settings.get('RECIPIENT'), settings.get('VALUE'), tx_hash_hex, o['nonce']))
+    
+    logg.info('gas transfer from {} to {} value {} hash {}'.format(settings.get('SENDER_ADDRESS'), settings.get('RECIPIENT'), settings.get('VALUE'), tx_hash_hex))
 
     if settings.get('RPC_SEND'):
         settings.get('CONN').do(o)
