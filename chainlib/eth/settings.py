@@ -16,6 +16,13 @@ def process_settings_rpc(settings, config):
     rpc = chainlib.eth.cli.Rpc(settings.get('WALLET'))
     conn = rpc.connect_by_config(config)
 
+    settings.set('CONN', conn)
+    settings.set('RPC_ID_GENERATOR', rpc.id_generator)
+    settings.set('RPC_SEND', config.true('_RPC_SEND'))
+
+    gas_oracle = rpc.get_gas_oracle()
+    settings.set('GAS_ORACLE', gas_oracle)
+
     try:
         settings.set('SIGNER', rpc.get_signer())
         sender_address = rpc.get_sender_address()
@@ -25,16 +32,9 @@ def process_settings_rpc(settings, config):
     except SignerMissingException:
         pass
 
-    gas_oracle = rpc.get_gas_oracle()
-    settings.set('GAS_ORACLE', gas_oracle)
-
     nonce_oracle = rpc.get_nonce_oracle()
     settings.set('NONCE_ORACLE', nonce_oracle)
 
-    settings.set('CONN', conn)
-    settings.set('RPC_ID_GENERATOR', rpc.id_generator)
-    settings.set('RPC_SEND', config.true('_RPC_SEND'))
-    
     return settings
 
 
@@ -91,6 +91,9 @@ def process_settings_contract(settings, config):
     try:
         exec_address_in = config.get('_EXEC_ADDRESS')
     except KeyError:
+        return settings
+
+    if exec_address_in == None:
         return settings
 
     exec_address = to_checksum_address(exec_address_in)

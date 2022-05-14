@@ -749,13 +749,16 @@ input {}
         self.payload,
         )
 
-        if self.status != Status.PENDING:
+        status = Status.UNKNOWN.name
+        logg.debug('selfstatus {}'.format(self.status))
+        if self.result != None and self.result.status != Status.PENDING:
             s += """gas_used {}
 """.format(
         self.result.fee_cost,
+            status = self.result.status.name
         )
 
-        s += 'status ' + self.status.name + '\n'
+        s += 'status ' + status + '\n'
 
         if self.block != None:
             s += """block_number {}
