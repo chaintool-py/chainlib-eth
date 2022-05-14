@@ -410,12 +410,14 @@ class TxFactory:
         txe = EIP155Transaction(tx, tx['nonce'], tx['chainId'])
         txes = txe.serialize()
         gas_price = strip_0x(txes['gasPrice'])
+        gas_price = compact(gas_price)
         gas = strip_0x(txes['gas'])
+        gas = compact(gas)
         return {
             'from': tx['from'],
             'to': txes['to'],
-            'gasPrice': add_0x(compact(gas_price)),
-            'gas': add_0x(compact(gas)),
+            'gasPrice': add_0x(gas_price, compact_value=True),
+            'gas': add_0x(gas, compact_value=True),
             'data': txes['data'],
                 }
 
