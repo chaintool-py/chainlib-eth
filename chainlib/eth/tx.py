@@ -658,7 +658,7 @@ class Tx(BaseTx, Src):
 
 
     def apply_receipt(self, rcpt, strict=False):
-        result = TxResult(rcpt)
+        result = TxResult(src=rcpt)
         self.apply_result(result)
 
 
@@ -754,9 +754,9 @@ input {}
         if self.result != None and self.result.status != Status.PENDING:
             s += """gas_used {}
 """.format(
-        self.result.fee_cost,
-            status = self.result.status.name
+            self.result.fee_cost,
         )
+        status = self.result.status.name
 
         s += 'status ' + status + '\n'
 
