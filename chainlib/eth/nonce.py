@@ -42,12 +42,12 @@ class NonceOracle(BaseNonceOracle):
     :param id_generator: json-rpc id generator 
     :type id_generator: chainlib.connection.JSONRPCIdGenerator
     """
-    def __init__(self, address, id_generator=None):
+    def __init__(self, address, id_generator=None, confirmed=None):
         self.id_generator = id_generator
-        super(NonceOracle, self).__init__(add_0x(address))
+        super(NonceOracle, self).__init__(add_0x(address), confirmed=confirmed)
 
 
-    def get_nonce(self):
+    def get_nonce(self, confirmed=False):
         """Load initial nonce value.
         """
         raise NotImplementedError('Class must be extended')
@@ -74,12 +74,12 @@ class RPCNonceOracle(NonceOracle):
     :param id_generator: json-rpc id generator 
     :type id_generator: chainlib.connection.JSONRPCIdGenerator
     """
-    def __init__(self, address, conn, id_generator=None):
+    def __init__(self, address, conn, id_generator=None, confirmed=False):
         self.conn = conn
-        super(RPCNonceOracle, self).__init__(address, id_generator=id_generator)
+        super(RPCNonceOracle, self).__init__(address, id_generator=id_generator, confirmed=confirmed)
 
 
-    def get_nonce(self):
+    def get_nonce(self, confirmed=False):
         """Load and return nonce value from network.
 
         Note! First call to next_nonce after calling get_nonce will return the same value!
@@ -87,7 +87,7 @@ class RPCNonceOracle(NonceOracle):
         :rtype: int
         :returns: Initial nonce
         """
-        o = nonce(self.address, id_generator=self.id_generator)
+        o = nonce(self.address, confirmed=confirmed, id_generator=self.id_generator)
         r = self.conn.do(o)
         n = strip_0x(r)
         return int(n, 16)
@@ -103,13 +103,13 @@ class OverrideNonceOracle(NonceOracle):
     :param id_generator: json-rpc id generator (not used)
     :type id_generator: chainlib.connection.JSONRPCIdGenerator
     """
-    def __init__(self, address, nonce, id_generator=None):
+    def __init__(self, address, nonce, id_generator=None, confirmed=False):
         self.initial_nonce = nonce
         self.nonce = self.initial_nonce
-        super(OverrideNonceOracle, self).__init__(address, id_generator=id_generator)
+        super(OverrideNonceOracle, self).__init__(address, id_generator=id_generator, confirmed=confirmed)
 
 
-    def get_nonce(self):
+    def get_nonce(self, confirmed=False):
         """Returns initial nonce value set at object construction.
 
         :rtype: int

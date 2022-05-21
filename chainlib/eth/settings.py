@@ -14,7 +14,7 @@ from chainlib.eth.address import to_checksum_address
 
 def process_settings_rpc(settings, config):
     rpc = chainlib.eth.cli.Rpc(settings.get('WALLET'))
-    conn = rpc.connect_by_config(config)
+    conn = rpc.connect_by_config(config, nonce_confirmed=True)
 
     settings.set('CONN', conn)
     settings.set('RPC_ID_GENERATOR', rpc.id_generator)

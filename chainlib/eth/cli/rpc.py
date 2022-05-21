@@ -23,7 +23,7 @@ class Rpc(BaseRpc):
         super(Rpc, self).__init__(EthHTTPConnection, wallet=wallet)
 
     
-    def connect_by_config(self, config):
+    def connect_by_config(self, config, nonce_confirmed=True):
         """
 
         If the standard arguments for nonce and fee price/price have been defined (which generate the configuration keys "_NONCE", "_FEE_PRICE" and "_FEE_LIMIT" respectively) , the corresponding overrides for fee and nonce generators will be defined.
@@ -38,9 +38,9 @@ class Rpc(BaseRpc):
             except KeyError:
                 pass
             if nonce != None:
-                self.nonce_oracle = OverrideNonceOracle(self.get_sender_address(), nonce, id_generator=self.id_generator)
+                self.nonce_oracle = OverrideNonceOracle(self.get_sender_address(), nonce, confirmed=nonce_confirmed, id_generator=self.id_generator)
             else:
-                self.nonce_oracle = RPCNonceOracle(self.get_sender_address(), self.conn, id_generator=self.id_generator)
+                self.nonce_oracle = RPCNonceOracle(self.get_sender_address(), self.conn, confirmed=nonce_confirmed, id_generator=self.id_generator)
         
         fee_price = None
         fee_limit = None
