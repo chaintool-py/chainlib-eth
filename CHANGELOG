@@ -1,3 +1,6 @@
+- 0.3.2
+	* Fix crash when supplying block number to block cli tool
+	* Allow non-pending nonce bootstrap
 - 0.3.1
 	* Fix missing application of status on tx result 
 - 0.3.0
