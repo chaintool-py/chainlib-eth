@@ -1,3 +1,5 @@
+- 0.3.3
+	* Update flags bit value cli command to use new cli flags generator
 - 0.3.2
 	* Fix crash when supplying block number to block cli tool
 	* Allow non-pending nonce bootstrap

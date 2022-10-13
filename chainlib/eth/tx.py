@@ -756,7 +756,10 @@ input {}
 """.format(
             self.result.fee_cost,
         )
-        status = self.result.status.name
+        try:
+            status = self.result.status.name
+        except AttributeError:
+            logg.debug('tx {} does not have a result yet', self.hash)
 
         s += 'status ' + status + '\n'
 

@@ -2,22 +2,32 @@
 import sys
 
 # external imports
-import chainlib.eth.cli
+from chainlib.eth.cli.arg import ArgFlag
 from hexathon import add_0x
 
+
 cmds = {
-        'gas': chainlib.eth.cli.argflag_std_write | chainlib.eth.cli.Flag.WALLET,
-        'info': chainlib.eth.cli.argflag_reset(chainlib.cli.argflag_std_base_read, chainlib.eth.cli.Flag.CHAIN_SPEC),
-        'get': chainlib.eth.cli.argflag_reset(chainlib.cli.argflag_std_base_read, chainlib.eth.cli.Flag.CHAIN_SPEC),
-        'decode': chainlib.cli.argflag_std_base | chainlib.eth.cli.Flag.CHAIN_SPEC,
-        'encode': chainlib.eth.cli.argflag_std_write | chainlib.eth.cli.Flag.EXEC | chainlib.eth.cli.Flag.FEE | chainlib.eth.cli.Flag.FMT_HUMAN | chainlib.eth.cli.Flag.FMT_WIRE | chainlib.eth.cli.Flag.FMT_RPC,
-        'count': chainlib.eth.cli.argflag_std_base_read | chainlib.eth.cli.Flag.WALLET,
-        'raw': chainlib.eth.cli.argflag_std_write | chainlib.eth.cli.Flag.EXEC,
-        'balance': chainlib.eth.cli.argflag_std_base | chainlib.eth.cli.Flag.WALLET,
-        'wait': chainlib.eth.cli.argflag_reset(chainlib.eth.cli.argflag_std_base_read | chainlib.eth.cli.Flag.NO_TARGET | chainlib.eth.cli.Flag.RPC_AUTH, chainlib.eth.cli.Flag.CHAIN_SPEC | chainlib.eth.cli.Flag.RAW),
-        'checksum': 0,
+        'gas': [['std_write', 'wallet'], []], #chainlib.eth.cli.argflag_std_write | chainlib.eth.cli.Flag.WALLET,
+        'info' : [['std_base_read'], ['chain_spec']],
+        'get' : [['std_base_read'], ['chain_spec']],
+        'decode': [['std_base', 'chain_spec'], []],
+        'encode': [['std_write', 'exec' ,'fee', 'fmt_human', 'fmt_wire', 'fmt_rpc'], []],
+        'count' : [['std_base_read', 'wallet'], []],
+        'raw': [['std_write', 'exec'], []],
+        'balance': [['std_base', 'wallet'], []],
+        'wait': [['std_base_read', 'target', 'rpc_auth'], ['chain_spec', 'raw']],
+        'checksum': [[], []],
         }
 
+
 if __name__ == '__main__':
-    b = cmds[sys.argv[1]]
-    print(add_0x(hex(b)))
+    args = ArgFlag()
+    r = 0
+    instructions = cmds[sys.argv[1]]
+    for k in instructions[0]:
+        v = args.get(k)
+        r = args.more(r, v)
+    for k in instructions[1]:
+        v = args.get(k)
+        r = args.less(r, v)
+    print(add_0x(hex(r)))
