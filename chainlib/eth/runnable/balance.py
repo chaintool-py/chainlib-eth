@@ -24,6 +24,7 @@ from chainlib.eth.cli.arg import (
         Arg,
         ArgFlag,
         process_args,
+        stdin_arg,
         )
 from chainlib.eth.cli.config import (
         Config,
@@ -46,7 +47,12 @@ script_dir = os.path.dirname(os.path.realpath(__file__))
 
 
 def process_config_local(config, arg, args, flags):
-    config.add(args.address, '_RECIPIENT', False)
+    recipient = None
+    if args.address:
+        recipient = add_0x(args.address)
+    else:
+        recipient = stdin_arg()
+    config.add(recipient, '_RECIPIENT', False)
     return config
 
 
@@ -56,8 +62,8 @@ flags = arg_flags.STD_READ
 
 argparser = chainlib.eth.cli.ArgumentParser()
 argparser = process_args(argparser, arg, flags)
-
 argparser.add_argument('address', type=str, help='Ethereum address of recipient')
+
 args = argparser.parse_args()
 
 logg = process_log(args, logg)
@@ -86,11 +92,14 @@ def main():
 
     balance_str = str(balance_value)
     balance_len = len(balance_str)
-    if balance_len < decimals + 1:
-        print('0.{}'.format(balance_str.zfill(decimals)))
+    if config.get('_RAW'):
+        print(balance_str)
     else:
-        offset = balance_len-decimals
-        print('{}.{}'.format(balance_str[:offset],balance_str[offset:]))
+        if balance_len < decimals + 1:
+            print('0.{}'.format(balance_str.zfill(decimals)))
+        else:
+            offset = balance_len-decimals
+            print('{}.{}'.format(balance_str[:offset],balance_str[offset:]))
 
 
 if __name__ == '__main__':

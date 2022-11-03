@@ -3,4 +3,4 @@ pysha3==1.0.2
 hexathon~=0.1.7
 websocket-client==0.57.0
 potaahto~=0.1.1
-chainlib~=0.3.0
+chainlib~=0.3.2

@@ -19,7 +19,7 @@ class Config(BaseConfig):
     default_fee_limit = 21000
 
 
-def process_config(config, arg, args, flags):
+def process_config(config, arg, args, flags, pos_arg_name=None):
     config = base_process_config(config, arg, args, flags)
     if arg.match('provider', flags):
 
@@ -33,5 +33,6 @@ def process_config(config, arg, args, flags):
 
     if arg.match('wallet', flags):
         config.add(getattr(args, 'z'), '_Z')
+
 
     return config

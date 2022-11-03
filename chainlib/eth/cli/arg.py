@@ -3,6 +3,7 @@ from chainlib.cli.arg import (
     Arg as BaseArg,
     ArgFlag,
     process_args,
+    stdin_arg,
     )
 
 

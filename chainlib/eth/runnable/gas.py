@@ -49,17 +49,21 @@ logg = logging.getLogger()
 
 def from_data_arg(data):
     try:
-        return strip_0x(data)
+        data = strip_0x(data)
+        logg.info('appended input hex data: {}'.format(data))
+        return data
     except ValueError:
         pass
 
+    filename = data
     try:
-        f = open(data, 'r')
+        f = open(filename, 'r')
     except:
         raise ValueError("data not hex and not file we can open")
 
     data = f.read()
     f.close()
+    logg.info('appended input data from file {}: {}'.format(filename, data))
 
     data = data.rstrip()
     return strip_0x(data)
@@ -72,7 +76,7 @@ def process_config_local(config, arg, args, flags):
     if data == '':
         data = None
     config.add(data, '_DATA', False)
-    config.add(args.amount, '_VALUE', False)
+    config.add(args.amount[0], '_VALUE', False)
     return config
 
 
