@@ -48,6 +48,7 @@ from chainlib.eth.cli.arg import (
         Arg,
         ArgFlag,
         process_args,
+        stdin_arg,
         )
 from chainlib.eth.cli.config import (
         Config,
@@ -65,14 +66,19 @@ config_dir = os.path.join(script_dir, '..', 'data', 'config')
 
 
 def process_config_local(config, arg, args, flags):
-    config.add(args.item, '_ITEM', False)
+    item = config.get('_POSARG')
+    try:
+        item = strip_0x(item)
+    except TypeError:
+        item = stdin_arg()
+        item = strip_0x(item)
+
+    config.add(item, '_ITEM', False)
     return config
 
 
 def process_settings_local(settings, config):
     item = config.get('_ITEM')
-    item = strip_0x(item)
-
     if len(item) == 40:
         config.add(item, '_RECIPIENT', False)
     elif len(item) == 64:
@@ -94,7 +100,7 @@ args = argparser.parse_args()
 logg = process_log(args, logg)
 
 config = Config()
-config = process_config(config, arg, args, flags)
+config = process_config(config, arg, args, flags, positional_name='item')
 config = process_config_local(config, arg, args, flags)
 logg.debug('config loaded:\n{}'.format(config))
 

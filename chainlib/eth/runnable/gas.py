@@ -93,7 +93,7 @@ args = argparser.parse_args()
 logg = process_log(args, logg)
 
 config = Config()
-config = process_config(config, arg, args, flags)
+config = process_config(config, arg, args, flags, positional_name='amount')
 config = process_config_local(config, arg, args, flags)
 logg.debug('config loaded:\n{}'.format(config))
 
@@ -130,13 +130,14 @@ def main():
                     settings.get('SENDER_ADDRESS'),
                     settings.get('RPC_ID_GENERATOR'),
                     )
-            recipient_balance = balance(
-                    settings.get('CONN'),
-                    settings.get('RECIPIENT'),
-                    settings.get('RPC_ID_GENERATOR'),
-                    )
             logg.debug('sender {} balance before: {}'.format(settings.get('SENDER_ADDRESS'), sender_balance))
-            logg.debug('recipient {} balance before: {}'.format(settings.get('RECIPIENT'), recipient_balance))
+            if settings.get('RECIPIENT') != None:
+                recipient_balance = balance(
+                        settings.get('CONN'),
+                        settings.get('RECIPIENT'),
+                        settings.get('RPC_ID_GENERATOR'),
+                        )
+                logg.debug('recipient {} balance before: {}'.format(settings.get('RECIPIENT'), recipient_balance))
         except urllib.error.URLError:
             pass
      
@@ -160,13 +161,14 @@ def main():
                         settings.get('SENDER_ADDRESS'),
                         settings.get('RPC_ID_GENERATOR'),
                         )
-                recipient_balance = balance(
-                        settings.get('CONN'),
-                        settings.get('RECIPIENT'),
-                        settings.get('RPC_ID_GENERATOR'),
-                        )
                 logg.debug('sender {} balance before: {}'.format(settings.get('SENDER_ADDRESS'), sender_balance))
-                logg.debug('recipient {} balance before: {}'.format(settings.get('RECIPIENT'), recipient_balance))
+                if settings.get('RECIPIENT') != None:
+                    recipient_balance = balance(
+                            settings.get('CONN'),
+                            settings.get('RECIPIENT'),
+                            settings.get('RPC_ID_GENERATOR'),
+                            )
+                    logg.debug('recipient {} balance before: {}'.format(settings.get('RECIPIENT'), recipient_balance))
             if r['status'] == 0:
                 logg.critical('VM revert for {}. Wish I could tell you more'.format(tx_hash_hex))
                 sys.exit(1)

@@ -61,7 +61,8 @@ script_dir = os.path.dirname(os.path.realpath(__file__))
 config_dir = os.path.join(script_dir, '..', 'data', 'config')
 
 def process_config_local(config, arg, args, flags):
-    config.add(args.block, '_BLOCK', False)
+    if len(args.block) > 0:
+        config.add(args.block[0], '_BLOCK', False)
     return config
 
 
@@ -95,7 +96,7 @@ arg = Arg(arg_flags)
 flags = arg_flags.STD_BASE_READ
 flags = arg_flags.less(flags, arg_flags.CHAIN_SPEC)
 argparser = process_args(argparser, arg, flags)
-argparser.add_argument('block', nargs='?', type=str, help='Block hash or number to retrieve')
+argparser.add_argument('block', type=str, help='Block hash or number to retrieve')
 args = argparser.parse_args()
 
 logg = process_log(args, logg)

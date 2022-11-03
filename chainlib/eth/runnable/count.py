@@ -40,8 +40,10 @@ config_dir = os.path.join(script_dir, '..', 'data', 'config')
 
 
 def process_config_local(config, arg, args, flags):
-    config.add(args.address, '_RECIPIENT', False)
+    recipient = config.get('_POSARG')
+    config.add(recipient, '_RECIPIENT', False)
     return config
+
 
 argparser = chainlib.eth.cli.ArgumentParser()
 arg_flags = ArgFlag()
@@ -56,7 +58,7 @@ logg = process_log(args, logg)
 logg.debug('flags {} {} {}'.format(flags, arg_flags.SEQ, flags & arg_flags.SEQ))
 
 config = Config()
-config = process_config(config, arg, args, flags)
+config = process_config(config, arg, args, flags, positional_name='address')
 config = process_config_local(config, arg, args, flags)
 logg.debug('config loaded:\n{}'.format(config))
 

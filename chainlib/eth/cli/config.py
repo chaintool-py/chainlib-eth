@@ -19,8 +19,8 @@ class Config(BaseConfig):
     default_fee_limit = 21000
 
 
-def process_config(config, arg, args, flags, pos_arg_name=None):
-    config = base_process_config(config, arg, args, flags)
+def process_config(config, arg, args, flags, positional_name=None):
+    config = base_process_config(config, arg, args, flags, positional_name=positional_name)
     if arg.match('provider', flags):
 
         if not bool(config.get('RPC_DIALECT')):

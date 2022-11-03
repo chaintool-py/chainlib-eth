@@ -68,11 +68,13 @@ results_translation = {
 def process_config_local(config, arg, args, flags):
     config.add(args.local, '_LOCAL', False)
     config.add(args.long, '_LONG', False)
-    config.add(args.entry, '_ENTRY', False)
-    if config.get('_ENTRY') != None:
+    config.add(None, '_ENTRY', False)
+    if len(args.entry) > 0:
+        config.add(args.entry[0], '_ENTRY', True)
         if config.get('_ENTRY') not in results_translation.keys():
             raise ValueError('Unknown entry {}'.format(config.get('_ENTRY')))
     return config
+
 
 arg_flags = ArgFlag()
 arg = Arg(arg_flags)

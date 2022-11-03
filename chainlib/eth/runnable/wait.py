@@ -47,6 +47,7 @@ from chainlib.eth.cli.arg import (
         Arg,
         ArgFlag,
         process_args,
+        stdin_arg,
         )
 from chainlib.eth.cli.config import (
         Config,
@@ -64,7 +65,16 @@ config_dir = os.path.join(script_dir, '..', 'data', 'config')
 def process_config_local(config, arg, args, flags):
     config.add(args.ignore, '_IGNORE', False)
     config.add(args.ignore_all, '_IGNORE_ALL', False)
-    config.add(args.hashes, '_HASH', False)
+
+    hsh = config.get('_POSARG')
+    try:
+        hsh = strip_0x(hsh)
+    except TypeError:
+        hsh = stdin_arg()
+        hsh = strip_0x(hsh)
+
+    config.add(hsh, '_HASH', False)
+
     return config
 
 
@@ -87,7 +97,7 @@ args = argparser.parse_args()
 logg = process_log(args, logg)
 
 config = Config()
-config = process_config(config, arg, args, flags)
+config = process_config(config, arg, args, flags, positional_name='hashes')
 config = process_config_local(config, arg, args, flags)
 logg.debug('config loaded:\n{}'.format(config))
 

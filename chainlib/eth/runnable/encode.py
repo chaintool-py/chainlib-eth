@@ -11,7 +11,8 @@ import urllib
 import sha3
 
 # external imports
-from chainlib.cli import flag_reset
+#from chainlib.cli import flag_reset
+from chainlib.settings import ChainSettings
 from funga.eth.signer import EIP155Signer
 from funga.eth.keystore.dict import DictKeystore
 from hexathon import (
@@ -35,6 +36,7 @@ from chainlib.eth.cli.encode import CLIEncoder
 from chainlib.eth.constant import ZERO_ADDRESS
 from chainlib.eth.address import to_checksum
 from chainlib.eth.connection import EthHTTPConnection
+from chainlib.eth.settings import process_settings
 from chainlib.jsonrpc import (
         JSONRPCRequest,
         IntSequenceGenerator,
@@ -81,30 +83,36 @@ config = process_config(config, arg, args, flags)
 config = process_config_local(config, arg, args, flags)
 logg.debug('config loaded:\n{}'.format(config))
 
-wallet = chainlib.eth.cli.Wallet(EIP155Signer)
-wallet.from_config(config)
+settings = ChainSettings()
+settings = process_settings(settings, config)
+logg.debug('settings loaded:\n{}'.format(settings))
 
-rpc = chainlib.eth.cli.Rpc(wallet=wallet)
-conn = rpc.connect_by_config(config)
 
-send = config.true('_RPC_SEND')
+#wallet = chainlib.eth.cli.Wallet(EIP155Signer)
+#wallet.from_config(config)
+#
+#rpc = chainlib.eth.cli.Rpc(wallet=wallet)
+#conn = rpc.connect_by_config(config)
+#
+#send = config.true('_RPC_SEND')
 
-chain_spec = None
-try:
-    chain_spec = ChainSpec.from_chain_str(config.get('CHAIN_SPEC'))
-except AttributeError:
-    pass
+#chain_spec = None
+#try:
+#    chain_spec = ChainSpec.from_chain_str(config.get('CHAIN_SPEC'))
+#except AttributeError:
+#    pass
 
 
 def main():
 
     signer_address = ZERO_ADDRESS
     signer = None
-    try:
-        signer = rpc.get_signer()
-        signer_address = rpc.get_signer_address()
-    except SignerMissingException:
-        pass
+    #try:
+        #signer = rpc.get_signer()
+    #    signer_address = rpc.get_signer_address()
+    #except SignerMissingException:
+    #    pass
+    signer_address = settings.get('SENDER_ADDRESS')
 
     code = '0x'
     cli_encoder = CLIEncoder(signature=config.get('_SIGNATURE'))
@@ -140,7 +148,8 @@ def main():
     if config.get('RPC_PROVIDER'):
         logg.debug('provider {}'.format(config.get('RPC_PROVIDER')))
         if not config.get('_FEE_LIMIT') or not config.get('_FEE_PRICE'):
-            gas_oracle = rpc.get_gas_oracle()
+            #gas_oracle = rpc.get_gas_oracle()
+            gas_oracle = settings.get('GAS_ORACLE')
             (price, limit) = gas_oracle.get_gas()
         if not config.get('_FEE_PRICE'):
             config.add(price, '_FEE_PRICE')
@@ -149,7 +158,7 @@ def main():
 
         if mode == 'tx':
             if not config.get('_NONCE'):
-                nonce_oracle = rpc.get_nonce_oracle()
+                nonce_oracle = settings.get('NONCE_ORACLE') #rpc.get_nonce_oracle()
                 config.add(nonce_oracle.get_nonce(), '_NONCE')
     else: 
         for arg in [
@@ -163,8 +172,8 @@ def main():
 
 
     if mode == 'call': #signer == None or config.true('_NOTX'):
-        c = TxFactory(chain_spec)
-        j = JSONRPCRequest(id_generator=rpc.id_generator)
+        c = TxFactory(settings.get('CHAIN_SPEC'))
+        j = JSONRPCRequest(id_generator=settings.get('RPC_ID_GENERATOR'))
         o = j.template()
         gas_limit = add_0x(int.to_bytes(config.get('_FEE_LIMIT'), 8, byteorder='big').hex(), compact_value=True)
         gas_price = add_0x(int.to_bytes(config.get('_FEE_PRICE'), 8, byteorder='big').hex(), compact_value=True)
@@ -193,21 +202,31 @@ def main():
             print(o)
             return
 
-    if signer == None:
+    if settings.get('SIGNER') == None:
         logg.error('mode "tx" without signer does not make sense. Please specify a key file with -y.')
         sys.exit(1)
 
-    if chain_spec == None:
+    if settings.get('CHAIN_SPEC') == None:
         raise ValueError('chain spec must be specified')
 
-    c = TxFactory(chain_spec, signer=signer, gas_oracle=rpc.get_gas_oracle(), nonce_oracle=rpc.get_nonce_oracle())
-    tx = c.template(signer_address, config.get('_EXEC_ADDRESS'), use_nonce=True)
+    c = TxFactory(
+            settings.get('CHAIN_SPEC'),
+            signer=settings.get('SIGNER'),
+            gas_oracle=settings.get('FEE_ORACLE'),
+            nonce_oracle=settings.get('NONCE_ORACLE'),
+            )
+
+    tx = c.template(
+            settings.get('SENDER_ADDRESS'),
+            settings.get('EXEC'),
+            use_nonce=True,
+            )
     tx = c.set_code(tx, code)
     tx_format = TxFormat.JSONRPC
     if config.get('_RAW'):
         tx_format = TxFormat.RLP_SIGNED
     (tx_hash_hex, o) = c.finalize(tx, tx_format=tx_format)
-    if send:
+    if settings.get('SEND'):
         r = conn.do(o)
         print(r)
     else:
