@@ -128,9 +128,6 @@ def main():
         if mode != 'arg':
             logg.error('mode tx without contract method signature makes no sense. Use eth-get with --data instead.')
             sys.exit(1)
-        if args.format == 'rpc':
-            logg.error('rpc format with arg put does not make sense')
-            sys.exit(1)
 
     if mode == 'arg':
         print(strip_0x(code))

@@ -47,8 +47,31 @@ from chainlib.eth.settings import process_settings
 logg = logging.getLogger()
 
 
+def from_data_arg(data):
+    try:
+        return strip_0x(data)
+    except ValueError:
+        pass
+
+    try:
+        f = open(data, 'r')
+    except:
+        raise ValueError("data not hex and not file we can open")
+
+    data = f.read()
+    f.close()
+
+    data = data.rstrip()
+    return strip_0x(data)
+
+
 def process_config_local(config, arg, args, flags):
-    config.add(args.data, '_DATA', False)
+    data = ''
+    for data_arg in args.data:
+        data += from_data_arg(data_arg)
+    if data == '':
+        data = None
+    config.add(data, '_DATA', False)
     config.add(args.amount, '_VALUE', False)
     return config
 
@@ -59,7 +82,7 @@ flags = arg_flags.STD_WRITE | arg_flags.WALLET
 
 argparser = chainlib.eth.cli.ArgumentParser()
 argparser = process_args(argparser, arg, flags)
-argparser.add_argument('--data', type=str, help='Transaction data')
+argparser.add_argument('--data', type=str, action='append', help='Transaction data')
 argparser.add_argument('amount', type=str, help='Token amount to send')
 args = argparser.parse_args()
 
@@ -94,9 +117,7 @@ def main():
             nonce_oracle=settings.get('NONCE_ORACLE'),
             )
 
-    recipient = to_checksum_address(config.get('_RECIPIENT'))
-    if not config.true('_UNSAFE') and not is_checksum_address(recipient):
-        raise ValueError('invalid checksum address')
+    recipient = settings.get('RECIPIENT')
 
     if logg.isEnabledFor(logging.DEBUG):
         try:
@@ -119,7 +140,7 @@ def main():
             settings.get('SENDER_ADDRESS'),
             settings.get('RECIPIENT'),
             settings.get('VALUE'),
-            data=config.get('_DATA'),
+            data=settings.get('DATA'),
             id_generator=settings.get('RPC_ID_GENERATOR'),
         )
     

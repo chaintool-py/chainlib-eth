@@ -10,6 +10,7 @@ from chainlib.block import BlockSpec
 # local imports
 import chainlib.eth.cli
 from chainlib.eth.address import to_checksum_address
+from chainlib.eth.constant import ZERO_ADDRESS
 
 
 def process_settings_rpc(settings, config):
@@ -58,11 +59,35 @@ def process_settings_blockspec(settings, config):
     return settings
 
 
+def __try_zero_address(config, address):
+    try:
+        if int(address) == 0:
+            return ZERO_ADDRESS
+    except ValueError:
+        pass
+
+    try:
+        if int(address, 16) == 0:
+            return ZERO_ADDRESS
+    except ValueError:
+        pass
+
+    recipient = to_checksum_address(address)
+    if not config.true('_UNSAFE') and recipient != address:
+        raise ValueError('invalid checksum address: {}'.format(address))
+
+    return add_0x(recipient)
+
+
 def process_settings_wallet(settings, config):
     wallet = chainlib.eth.cli.Wallet()
     wallet.from_config(config)
     
     settings.set('WALLET', wallet)
+
+    if config.get('_Z'):
+        settings.set('RECIPIENT', None)
+        return settings
 
     recipient_in = None
     try:
@@ -77,10 +102,7 @@ def process_settings_wallet(settings, config):
         recipient_in = wallet.from_address(recipient_in)
         recipient_in = strip_0x(recipient_in)
 
-    recipient = to_checksum_address(recipient_in)
-    if not config.true('_UNSAFE') and recipient != recipient_in:
-        raise ValueError('invalid checksum address: {}'.format(recipient_in))
-    recipient = add_0x(recipient)
+    recipient = __try_zero_address(config, recipient_in)
 
     settings.set('RECIPIENT', recipient)
     return settings
@@ -105,17 +127,18 @@ def process_settings_contract(settings, config):
     return settings
 
 
+
 def process_settings_data(settings, config):
     data = None
     try:
         data = config.get('_DATA')
     except KeyError:
+        settings.set('DATA', None)
         return settings
 
     if data == None:
         return settings
 
-    data = add_0x(data)
     settings.set('DATA', data)
     
     return settings
