@@ -31,8 +31,8 @@ def process_config(config, arg, args, flags, pos_arg_name=None):
                 ]:
             raise ValueError('unknown rpc dialect {}'.format(config.get('RPC_DIALECT'))) 
 
-    if arg.match('wallet', flags):
-        config.add(getattr(args, 'z'), '_Z')
+    if arg.match('create', flags):
+        config.add(getattr(args, 'null'), '_NULL')
 
 
     return config

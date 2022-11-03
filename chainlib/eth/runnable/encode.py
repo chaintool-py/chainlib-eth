@@ -64,7 +64,8 @@ def process_config_local(config, arg, args, flags):
 
 arg_flags = ArgFlag()
 arg = Arg(arg_flags)
-flags = arg_flags.STD_WRITE | arg_flags.EXEC | arg_flags.FEE | arg_flags.FMT_HUMAN | arg_flags.FMT_WIRE | arg_flags.FMT_RPC 
+flags = arg_flags.STD_WRITE | arg_flags.EXEC | arg_flags.FEE | arg_flags.FMT_HUMAN | arg_flags.FMT_WIRE | arg_flags.FMT_RPC
+flags |= arg_flags.CREATE
 
 argparser = chainlib.eth.cli.ArgumentParser()
 argparser = process_args(argparser, arg, flags)

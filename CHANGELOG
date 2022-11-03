@@ -1,3 +1,8 @@
+- 0.3.4
+	* option for net amount in eth-gas (deduct fee from desired spend)
+	* implement height for eth-balance
+	* data input from file in gas command
+	* get address from keyfile in balance call
 - 0.3.3
 	* Update flags bit value cli command to use new cli flags generator
 - 0.3.2

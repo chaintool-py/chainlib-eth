@@ -82,7 +82,7 @@ def process_config_local(config, arg, args, flags):
 
 arg_flags = ArgFlag()
 arg = Arg(arg_flags)
-flags = arg_flags.STD_WRITE | arg_flags.WALLET
+flags = arg_flags.STD_WRITE | arg_flags.WALLET | arg_flags.CREATE | arg_flags.VALUE
 
 argparser = chainlib.eth.cli.ArgumentParser()
 argparser = process_args(argparser, arg, flags)
@@ -117,7 +117,7 @@ def main():
     g = Gas(
             settings.get('CHAIN_SPEC'),
             signer=settings.get('SIGNER'),
-            gas_oracle=settings.get('GAS_ORACLE'),
+            gas_oracle=settings.get('FEE_ORACLE'),
             nonce_oracle=settings.get('NONCE_ORACLE'),
             )
 

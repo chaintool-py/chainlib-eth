@@ -1,3 +1,6 @@
+# standard imports
+import logging
+
 # external imports
 from chainlib.settings import process_settings as base_process_settings
 from chainlib.error import SignerMissingException
@@ -12,6 +15,8 @@ import chainlib.eth.cli
 from chainlib.eth.address import to_checksum_address
 from chainlib.eth.constant import ZERO_ADDRESS
 
+logg = logging.getLogger(__name__)
+
 
 def process_settings_rpc(settings, config):
     rpc = chainlib.eth.cli.Rpc(settings.get('WALLET'))
@@ -23,6 +28,7 @@ def process_settings_rpc(settings, config):
 
     gas_oracle = rpc.get_gas_oracle()
     settings.set('GAS_ORACLE', gas_oracle)
+    settings.set('FEE_ORACLE', gas_oracle)
 
     try:
         settings.set('SIGNER', rpc.get_signer())
@@ -79,6 +85,25 @@ def __try_zero_address(config, address):
     return add_0x(recipient)
 
 
+def __calculate_net_amount(settings, config):
+    price = settings.get('FEE_PRICE')
+    if price == None:
+        fee_oracle = settings.get('FEE_ORACLE')
+        # TODO: pass on code and input
+        r = fee_oracle.get_fee()
+        price = r[0]
+
+    value = settings.get('VALUE')
+    if config.true('_TOTAL'):
+        delta = config.get('_FEE_LIMIT') * price
+        value -= delta
+        if value < 0:
+            raise ValueError('Resulting value is negative')
+        logg.info('total switch set, adjusting sent amount {} by {} to {}'.format(settings.get('VALUE'), delta, value))
+
+    return value
+
+
 def process_settings_wallet(settings, config):
     wallet = chainlib.eth.cli.Wallet()
     wallet.from_config(config)
@@ -86,7 +111,7 @@ def process_settings_wallet(settings, config):
     settings.set('WALLET', wallet)
 
     try:
-        if config.get('_Z'):
+        if config.get('_NULL'):
             settings.set('RECIPIENT', None)
             return settings
     except KeyError:
@@ -100,6 +125,9 @@ def process_settings_wallet(settings, config):
 
     if recipient_in == None:
         return settings
+    elif recipient_in == 'null':
+        settings.set('RECIPIENT', None)
+        return settings
 
     if wallet.get_signer_address() == None and recipient_in != None:
         recipient_in = wallet.from_address(recipient_in)
@@ -108,6 +136,7 @@ def process_settings_wallet(settings, config):
     recipient = __try_zero_address(config, recipient_in)
 
     settings.set('RECIPIENT', recipient)
+
     return settings
 
 
@@ -147,6 +176,14 @@ def process_settings_data(settings, config):
     return settings
 
 
+def process_settings_value(settings, config):
+    updated_value = __calculate_net_amount(settings, config)
+    settings.set('VALUE', updated_value)
+
+
+    return settings
+
+
 def process_settings_hash(settings, config):
     hshs = None
     try:
@@ -178,5 +215,6 @@ def process_settings(settings, config):
     settings = process_settings_blockspec(settings, config)
     settings = process_settings_data(settings, config)
     settings = process_settings_hash(settings, config)
+    settings = process_settings_value(settings, config)
     settings = process_settings_contract(settings, config)
     return settings
