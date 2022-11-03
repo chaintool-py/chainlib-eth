@@ -85,9 +85,12 @@ def process_settings_wallet(settings, config):
     
     settings.set('WALLET', wallet)
 
-    if config.get('_Z'):
-        settings.set('RECIPIENT', None)
-        return settings
+    try:
+        if config.get('_Z'):
+            settings.set('RECIPIENT', None)
+            return settings
+    except KeyError:
+        pass
 
     recipient_in = None
     try:

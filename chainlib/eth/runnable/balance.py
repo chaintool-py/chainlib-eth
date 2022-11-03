@@ -37,6 +37,7 @@ from chainlib.eth.gas import (
         balance,
         )
 from chainlib.eth.settings import process_settings
+from chainlib.eth.jsonrpc import to_blockheight_param
 
 
 logg = logging.getLogger()
@@ -75,7 +76,8 @@ def main():
     r = None
     decimals = 18
 
-    o = balance(settings.get('RECIPIENT'), id_generator=settings.get('RPC_ID_GENERATOR'))
+    height = to_blockheight_param(config.get('_HEIGHT'))
+    o = balance(settings.get('RECIPIENT'), id_generator=settings.get('RPC_ID_GENERATOR'), height=height)
     r = settings.get('CONN').do(o)
    
     hx = strip_0x(r)
