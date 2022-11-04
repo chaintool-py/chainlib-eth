@@ -1,4 +1,4 @@
-- 0.3.4
+- 0.4.0
 	* option for net amount in eth-gas (deduct fee from desired spend)
 	* implement height for eth-balance
 	* data input from file in gas command

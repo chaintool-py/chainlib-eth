@@ -724,68 +724,81 @@ class Tx(BaseTx, Src):
         return self.__str__()
 
 
-    def to_human(self):
+    def to_human(self, fields=None, skip_keys=False):
         """Human-readable string dump of transaction contents.
 
         :rtype: str
         :returns: Contents
         """
-        s = """hash {}
-from {}
-to {}
-value {}
-nonce {}
-gas_price {}
-gas_limit {}
-input {}
-""".format(
-        self.hash,
-        self.outputs[0],
-        self.inputs[0],
-        self.value,
-        self.nonce,
-        self.gas_price,
-        self.gas_limit,
-        self.payload,
-        )
+
+        outkeys = [
+                'hash',
+                'from',
+                'to',
+                'value',
+                'nonce',
+                'gas_price',
+                'gas_limit',
+                'input',
+                'status',
+                ]
+
+        outvals = [
+            self.hash,
+            self.outputs[0],
+            self.inputs[0],
+            self.value,
+            self.nonce,
+            self.gas_price,
+            self.gas_limit,
+            self.payload,
+                ]
 
         status = Status.UNKNOWN.name
         logg.debug('selfstatus {}'.format(self.status))
-        if self.result != None and self.result.status != Status.PENDING:
-            s += """gas_used {}
-""".format(
-            self.result.fee_cost,
-        )
+        
         try:
             status = self.result.status.name
         except AttributeError:
             logg.debug('tx {} does not have a result yet', self.hash)
 
-        s += 'status ' + status + '\n'
+        #s += 'status ' + status + '\n'
+        outvals.append(status)
 
+        if self.result != None and self.result.status != Status.PENDING:
+            outkeys.append('gas_used')
+            outvals.append(self.result.fee_cost)
         if self.block != None:
-            s += """block_number {}
-block_hash {}
-tx_index {}
-""".format(
-        self.block.number,
-        self.block.hash,
-        self.result.tx_index,
-        )
+            outkeys += [
+                'block_hash',
+                'tx_index',
+                'src',
+                ]
+            outvals += [
+                self.block.number,
+                self.block.hash,
+                self.result.tx_index,
+                ]
 
-
-        if self.contract != None:
-            s += """contract {}
-""".format(
-        self.contract,
-        )
 
         if self.wire != None:
-            s += """src {}
-""".format(
-        str(self.wire),
-        )
+            outkeys.append('src')
+            outvals.append(self.wire)
+
+        if self.result != None and self.result.contract != None:
+            outkeys.append('contract')
+            outvals.append(self.result.contract)
+
+        s = ''
+        for i, k in enumerate(outkeys):
+            if fields != None:
+                if k not in fields:
+                    continue
+            if len(s) > 0:
+                s += '\n'
+            if skip_keys:
+                s += outvals[i]
+            else:
+                s += '{} {}'.format(k, outvals[i])
 
         return s
-
-

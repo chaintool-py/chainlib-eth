@@ -71,8 +71,9 @@ def from_data_arg(data):
 
 def process_config_local(config, arg, args, flags):
     data = ''
-    for data_arg in args.data:
-        data += from_data_arg(data_arg)
+    if args.data != None:
+        for data_arg in args.data:
+            data += from_data_arg(data_arg)
     if data == '':
         data = None
     config.add(data, '_DATA', False)

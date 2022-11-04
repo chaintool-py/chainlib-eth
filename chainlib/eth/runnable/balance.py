@@ -48,8 +48,9 @@ script_dir = os.path.dirname(os.path.realpath(__file__))
 
 def process_config_local(config, arg, args, flags):
     recipient = None
-    if args.address:
-        recipient = add_0x(args.address)
+    address = config.get('_POSARG')
+    if address:
+        recipient = add_0x(address)
     else:
         recipient = stdin_arg()
     config.add(recipient, '_RECIPIENT', False)
@@ -70,7 +71,7 @@ logg = process_log(args, logg)
 logg.debug('flags {} {} {}'.format(flags, arg_flags.SEQ, flags & arg_flags.SEQ))
 
 config = Config()
-config = process_config(config, arg, args, flags)
+config = process_config(config, arg, args, flags, positional_name='address')
 config = process_config_local(config, arg, args, flags)
 logg.debug('config loaded:\n{}'.format(config))
 

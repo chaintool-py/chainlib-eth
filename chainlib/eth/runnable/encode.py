@@ -112,6 +112,7 @@ def main():
     #    signer_address = rpc.get_signer_address()
     #except SignerMissingException:
     #    pass
+    conn = settings.get('CONN')
     signer_address = settings.get('SENDER_ADDRESS')
 
     code = '0x'
@@ -190,7 +191,7 @@ def main():
         o['params'].append(height)
         o = j.finalize(o)
 
-        if config.get('_RPC_SEND'):
+        if settings.get('RPC_SEND'):
             r = conn.do(o)
             try:
                 print(strip_0x(r))

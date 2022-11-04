@@ -160,7 +160,8 @@ def main():
         if settings.get('RPC_SEND'):
             r = settings.get('CONN').do(o)
             if config.true('_WAIT'):
-                r = settings.get('CONN').wait(tx_hash_hex)
+                #r = settings.get('CONN').wait(tx_hash_hex)
+                r = settings.get('CONN').wait(r)
                 if r['status'] == 0:
                     logg.critical('VM revert for {}. Wish I could tell you more'.format(tx_hash_hex))
                     sys.exit(1)

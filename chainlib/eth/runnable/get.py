@@ -41,7 +41,6 @@ from chainlib.eth.block import (
         Block,
         block_by_hash,
         )
-from chainlib.eth.runnable.util import decode_for_puny_humans
 from chainlib.eth.jsonrpc import to_blockheight_param
 import chainlib.eth.cli
 from chainlib.eth.cli.arg import (
@@ -89,7 +88,7 @@ def process_settings_local(settings, config):
 
 arg_flags = ArgFlag()
 arg = Arg(arg_flags)
-flags = arg_flags.STD_BASE_READ | arg_flags.TARGET
+flags = arg_flags.STD_BASE_READ | arg_flags.TARGET | arg_flags.TAB
 flags = arg_flags.less(flags, arg_flags.CHAIN_SPEC)
 
 argparser = chainlib.eth.cli.ArgumentParser()
@@ -116,7 +115,7 @@ def get_transaction(conn, chain_spec, tx_hash, id_generator):
         logg.error('Transaction {} not found'.format(tx_hash))
         sys.exit(1)
 
-    if config.true('_RAW'):
+    if config.true('_RAW') and config.get('_OUTARG') == None:
         tx_src = Tx.src_normalize(tx_src)
         return pack(tx_src, chain_spec).hex()
 
@@ -162,8 +161,8 @@ def main():
                 hsh,
                 settings.get('RPC_ID_GENERATOR'),
                 )
-        if not config.true('_RAW'):
-            r = r.to_human()
+        if not config.true('_RAW') or config.get('_OUTARG') != None:
+            r = r.to_human(fields=config.get('_OUTARG'), skip_keys=config.true('_RAW'))
     else:
         r = get_address(
             settings.get('CONN'),
@@ -172,7 +171,9 @@ def main():
             settings.get('HEIGHT'),
             )
     if r != None:
-        print(r)
+        sys.stdout.write(r)
+        if not config.true('_NOLINE'):
+            sys.stdout.write('\n')
 
 
 if __name__ == '__main__':

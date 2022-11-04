@@ -23,7 +23,6 @@ class Src(BaseSrc):
     @classmethod
     def src_normalize(self, v):
         src = snake_and_camel(v)
-        logg.debug('normalize has {}'.format(src))
         if isinstance(src.get('v'), str):
             try:
                 src['v'] = int(src['v'])
