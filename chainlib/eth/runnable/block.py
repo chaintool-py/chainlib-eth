@@ -39,6 +39,7 @@ from chainlib.eth.block import (
         Block,
         block_by_hash,
         block_by_number,
+        block_latest,
         )
 from chainlib.eth.runnable.util import decode_for_puny_humans
 from chainlib.eth.jsonrpc import to_blockheight_param
@@ -67,7 +68,10 @@ def process_config_local(config, arg, args, flags):
 
 
 def process_settings_local(settings, config):
-    block_identifier = config.get('_BLOCK')
+    block_identifier = config.get('_POSARG')
+    if block_identifier == None:
+        return process_settings(settings, config)
+
     maybe_hex = None
     is_number = False
     try:
@@ -102,7 +106,7 @@ args = argparser.parse_args()
 logg = process_log(args, logg)
 
 config = Config()
-config = process_config(config, arg, args, flags)
+config = process_config(config, arg, args, flags, positional_name='block')
 config = process_config_local(config, arg, args, flags)
 logg.debug('config loaded:\n{}'.format(config))
 
@@ -135,7 +139,16 @@ def get_block(settings):
     return block_process(r)
 
 
+def get_block_number_latest(conn, id_generator):
+    o = block_latest(id_generator)
+    r = conn.do(o)
+    return int(r, 16)
+
+
 def get_block_number(conn, block_number, id_generator):
+    o = None
+    if block_number == None:
+        block_number = get_block_number_latest(conn, id_generator)
     o = block_by_number(block_number, include_tx=False)
     block_src = conn.do(o)
     if block_src == None:
