@@ -158,14 +158,20 @@ def main():
     else:
         o = raw(config.get('_DATA'), id_generator=settings.get('RPC_ID_GENERATOR'))
         if settings.get('RPC_SEND'):
-            r = settings.get('CONN').do(o)
+            tx_hash_hex = settings.get('CONN').do(o)
+            out = tx_hash_hex
             if config.true('_WAIT'):
                 #r = settings.get('CONN').wait(tx_hash_hex)
-                r = settings.get('CONN').wait(r)
+                r = settings.get('CONN').wait(tx_hash_hex)
                 if r['status'] == 0:
                     logg.critical('VM revert for {}. Wish I could tell you more'.format(tx_hash_hex))
                     sys.exit(1)
-            print(r)
+                if config.true('_RAW'):
+                    out = json.dumps(r)
+            sys.stdout.write(out)
+            if not config.true('_NULL'):
+                sys.stdout.write('\n')
+
         else:
             print(o)
 
