@@ -48,7 +48,6 @@ from chainlib.eth.tx import (
         )
 from chainlib.error import SignerMissingException
 from chainlib.chain import ChainSpec
-from chainlib.eth.runnable.util import decode_for_puny_humans
 from chainlib.eth.jsonrpc import to_blockheight_param
 from chainlib.eth.address import to_checksum_address
 

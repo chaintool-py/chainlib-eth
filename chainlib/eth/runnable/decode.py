@@ -19,7 +19,7 @@ from hexathon import (
 
 # local imports
 import chainlib.eth.cli
-from chainlib.eth.runnable.util import decode_for_puny_humans
+from chainlib.eth.cli.decode import decode_for_puny_humans
 from chainlib.eth.cli.arg import (
         Arg,
         ArgFlag,
@@ -57,7 +57,7 @@ def process_config_local(config, arg, args, flags):
 
 arg_flags = ArgFlag()
 arg = Arg(arg_flags)
-flags = arg_flags.VERBOSE | arg_flags.CHAIN_SPEC | arg_flags.RAW | arg_flags.ENV | arg_flags.SEQ
+flags = arg_flags.VERBOSE | arg_flags.CHAIN_SPEC | arg_flags.RAW | arg_flags.ENV | arg_flags.SEQ | arg_flags.TAB
 
 argparser = chainlib.eth.cli.ArgumentParser()
 argparser = process_args(argparser, arg, flags)
@@ -81,6 +81,8 @@ def main():
             config.get('_TX_DATA'),
             settings.get('CHAIN_SPEC'),
             sys.stdout,
+            fields=config.get('_OUTARG'),
+            skip_keys=config.true('_RAW'),
             )
 
 if __name__ == '__main__':

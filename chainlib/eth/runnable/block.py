@@ -41,7 +41,6 @@ from chainlib.eth.block import (
         block_by_number,
         block_latest,
         )
-from chainlib.eth.runnable.util import decode_for_puny_humans
 from chainlib.eth.jsonrpc import to_blockheight_param
 import chainlib.eth.cli
 from chainlib.eth.cli.arg import (

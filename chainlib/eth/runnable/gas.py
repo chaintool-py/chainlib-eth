@@ -26,7 +26,7 @@ from chainlib.eth.address import to_checksum_address
 from chainlib.eth.connection import EthHTTPConnection
 from chainlib.eth.gas import Gas
 from chainlib.eth.gas import balance as gas_balance
-from chainlib.eth.runnable.util import decode_for_puny_humans
+from chainlib.eth.cli.decode import decode_for_puny_humans
 from chainlib.eth.address import (
         is_same_address,
         is_checksum_address,
@@ -83,7 +83,7 @@ def process_config_local(config, arg, args, flags):
 
 arg_flags = ArgFlag()
 arg = Arg(arg_flags)
-flags = arg_flags.STD_WRITE | arg_flags.WALLET | arg_flags.CREATE | arg_flags.VALUE
+flags = arg_flags.STD_WRITE | arg_flags.WALLET | arg_flags.CREATE | arg_flags.VALUE | arg_flags.TAB
 
 argparser = chainlib.eth.cli.ArgumentParser()
 argparser = process_args(argparser, arg, flags)
@@ -179,8 +179,14 @@ def main():
             print(o['params'][0])
         else:
             io_str = io.StringIO()
-            decode_for_puny_humans(o['params'][0], settings.get('CHAIN_SPEC'), io_str)
-            print(io_str.getvalue())
+            decode_for_puny_humans(
+                    o['params'][0],
+                    settings.get('CHAIN_SPEC'),
+                    io_str,
+                    fields=config.get('_OUTARG'),
+                    skip_keys=config.true('_RAW'),
+                    )
+            sys.stdout.write(io_str.getvalue())
  
 
 

@@ -705,12 +705,16 @@ class Tx(BaseTx, Src):
 
 
     @staticmethod
-    def from_src(src, block=None, rcpt=None, strict=False):
+    def from_src(src, block=None, rcpt=None, strict=False, chain_spec=None):
         """Creates a new Tx object.
 
         Alias of constructor.
         """
-        return Tx(src, block=block, rcpt=rcpt, strict=strict)
+        tx = Tx(src, block=block, rcpt=rcpt, strict=strict)
+        if chain_spec != None:
+            tx.generate_wire(chain_spec)
+        return tx
+
 
 
     def __str__(self):
@@ -770,16 +774,15 @@ class Tx(BaseTx, Src):
             outvals.append(self.result.fee_cost)
         if self.block != None:
             outkeys += [
+                'block_number',
                 'block_hash',
                 'tx_index',
-                'src',
                 ]
             outvals += [
                 self.block.number,
                 self.block.hash,
                 self.result.tx_index,
                 ]
-
 
         if self.wire != None:
             outkeys.append('src')
