@@ -7,9 +7,9 @@ from hexathon import add_0x
 
 
 cmds = {
-        'gas': [['std_write', 'wallet'], []], #chainlib.eth.cli.argflag_std_write | chainlib.eth.cli.Flag.WALLET,
+        'gas': [['std_write', 'wallet', 'value'], []],
         'info' : [['std_base_read'], ['chain_spec']],
-        'get' : [['std_base_read'], ['chain_spec']],
+        'get' : [['std_base_read', 'tab'], ['chain_spec']],
         'decode': [['std_base', 'chain_spec'], []],
         'encode': [['std_write', 'exec' ,'fee', 'fmt_human', 'fmt_wire', 'fmt_rpc'], []],
         'count' : [['std_base_read', 'wallet'], []],
