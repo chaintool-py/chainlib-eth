@@ -1,1 +1,1 @@
-include *requirements.txt LICENSE chainlib/eth/data/config/*
+include *requirements.txt LICENSE WAIVER WAIVER.asc chainlib/eth/data/config/*
