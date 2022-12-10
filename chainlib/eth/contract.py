@@ -27,6 +27,11 @@ class ABIContractType(enum.Enum):
     BYTES32 = 'bytes32'
     BYTES4 = 'bytes4'
     UINT256 = 'uint256'
+    UINT128 = 'uint128'
+    UINT64 = 'uint64'
+    UINT32 = 'uint32'
+    UINT16 = 'uint16'
+    UINT8 = 'uint8'
     ADDRESS = 'address'
     STRING = 'string'
     BOOLEAN = 'bool'
@@ -138,6 +143,20 @@ class ABIContractDecoder(ABIContract):
         return int(v, 16)
 
 
+    def uintn(self, v, bitsize):
+        # all uints no matter what size are returned to 256 bit boundary
+        return self.uint256(v)
+
+        l = len(v) * 8 * 2
+        if bitsize % 8 > 0:
+            raise ValueError('must be 8 multiple')
+        elif bitsize > 256:
+            raise ValueError('max 256 bits')
+        elif l < bitsize:
+            raise ValueError('input value length {} shorter than bitsize {}'.format(l, bitsize))
+        return int(v[:int(bitsize/8)], 16)
+
+
     def bytes32(self, v):
         """Parse value as bytes32.
 
@@ -211,9 +230,21 @@ class ABIContractDecoder(ABIContract):
         r = []
         logg.debug('contents {}'.format(self.contents))
         for i in range(len(self.types)):
-            m = getattr(self, self.types[i])
-            s = self.contents[i]
-            r.append(m(s))
+            m = None
+            try:
+                m = getattr(self, self.types[i])
+                logg.debug('executing module {}'.format(m))
+                s = self.contents[i]
+                r.append(m(s))
+            except AttributeError as e:
+                if len(self.types[i]) > 4 and self.types[i][:4] == 'uint':
+                    m = getattr(self, 'uintn')
+                    s = self.contents[i]
+                    v = m(s, int(self.types[i][4:]))
+                    r.append(v)
+                else:
+                    raise e
+
         return r
 
 
@@ -303,6 +334,28 @@ class ABIContractEncoder(ABIMethodEncoder):
         b = v.to_bytes(32, 'big')
         self.contents.append(b.hex())
         self.types.append(ABIContractType.UINT256)
+        self.__log_latest(v)
+
+
+    def uintn(self, v, bitsize):
+        """Encode value to uint256 and add to input value vector.
+
+        :param v: Integer value
+        :type v: int
+        """
+        if bitsize % 8 > 0:
+            raise ValueError('must be 8 multiple')
+        elif bitsize > 256:
+            raise ValueError('max 256 bits')
+
+        # encodings of all uint types are padded to word boundary
+        return self.uint256(v)
+
+        v = int(v)
+        b = v.to_bytes(int(bitsize / 8), 'big')
+        self.contents.append(b.hex())
+        typ = getattr(ABIContractType, 'UINT' + str(bitsize))
+        self.types.append(typ)
         self.__log_latest(v)
 
 

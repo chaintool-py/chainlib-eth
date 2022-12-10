@@ -1,3 +1,7 @@
+- 0.4.7
+	* Add support for all power of two uint sizes
+- 0.4.6
+	* Correct license classifier for python package
 - 0.4.5
 	* Change license to AGPL3 and copyright waived to public domain
 - 0.4.4

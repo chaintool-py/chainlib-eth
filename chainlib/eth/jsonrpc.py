@@ -18,7 +18,6 @@
 # external imports
 from hexathon import add_0x
 
-
 def to_blockheight_param(height):
     """Translate blockheight specifier to Ethereum json-rpc blockheight argument.
 
