@@ -47,11 +47,11 @@ from .constant import (
 from .contract import ABIContractEncoder
 from .jsonrpc import to_blockheight_param
 from .src import Src
-from .dialect import DefaultDialectFilter
+from .dialect import DialectFilter
 
 logg = logging.getLogger(__name__)
 
-eth_dialect_filter = DefaultDialectFilter()
+eth_dialect_filter = DialectFilter()
 
 
 class TxFormat(enum.IntEnum):

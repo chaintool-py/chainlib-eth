@@ -2,7 +2,7 @@
 
 # local imports
 from chainlib.eth.error import EthException
-from chainlib.dialect import DialectFilter
+from chainlib.dialect import DialectFilter as BaseDialectFilter
 
 
 class DefaultErrorParser:
@@ -12,7 +12,7 @@ class DefaultErrorParser:
         return EthException('default parser code {}'.format(error))
 
 
-class DefaultDialectFilter(DialectFilter):
+class DialectFilter(BaseDialectFilter):
 
     def apply_src(self, src):
         try:
