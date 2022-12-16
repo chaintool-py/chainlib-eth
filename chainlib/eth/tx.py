@@ -524,23 +524,25 @@ class TxFactory:
 
 class TxResult(BaseTxResult, Src):
 
-    def apply_src(self, v):
+    def apply_src(self, v, dialect_filter=None):
         self.contract = None
 
-        v = super(TxResult, self).apply_src(v)
+        super(TxResult, self).apply_src(v, dialect_filter=dialect_filter)
 
-        self.set_hash(v['transaction_hash'])
+
+    def load_src(self, dialect_filter=None):
+        self.set_hash(self.src['transaction_hash'])
         try:
-            status_number = int(v['status'], 16)
+            status_number = int(self.src['status'], 16)
         except TypeError:
-            status_number = int(v['status'])
+            status_number = int(self.src['status'])
         except KeyError as e:
             if strict:
                 raise(e)
             logg.debug('setting "success" status on missing status property for {}'.format(self.hash))
             status_number = 1
 
-        if v['block_number'] == None:
+        if self.src['block_number'] == None:
             self.status = Status.PENDING
         else:
             if status_number == 1:
@@ -548,22 +550,22 @@ class TxResult(BaseTxResult, Src):
             elif status_number == 0:
                 self.status = Status.ERROR
             try:
-                self.tx_index = hex_to_int(v['transaction_index'])
+                self.tx_index = hex_to_int(self.src['transaction_index'])
             except TypeError:
-                self.tx_index = int(v['transaction_index'])
-            self.block_hash = v['block_hash']
+                self.tx_index = int(self.src['transaction_index'])
+            self.block_hash = self.src['block_hash']
 
         
         # TODO: replace with rpc receipt/transaction translator when available
-        contract_address = v.get('contract_address')
+        contract_address = self.src.get('contract_address')
         if contract_address != None:
             self.contract = contract_address
 
-        self.logs = v['logs']
+        self.logs = self.src['logs']
         try:
-            self.fee_cost = hex_to_int(v['gas_used'])
+            self.fee_cost = hex_to_int(self.src['gas_used'])
         except TypeError:
-            self.fee_cost = int(v['gas_used'])
+            self.fee_cost = int(self.src['gas_used'])
 
 
 class Tx(BaseTx, Src):
@@ -600,53 +602,55 @@ class Tx(BaseTx, Src):
                 dialect_filter.apply_result(rcpt)
 
 
-    def apply_src(self, src, dialect_filter=None):
-        src = super(Tx, self).apply_src(src, dialect_filter=dialect_filter)
+    #def apply_src(self, src, dialect_filter=None):
+    #    src = super(Tx, self).apply_src(src, dialect_filter=dialect_filter)
 
-        hsh = self.normal(src['hash'], SrcItem.HASH)
+
+    def load_src(self, dialect_filter=None):
+        hsh = self.normal(self.src['hash'], SrcItem.HASH)
         self.set_hash(hsh)
 
         try:
-            self.value = hex_to_int(src['value'])
+            self.value = hex_to_int(self.src['value'])
         except TypeError:
-            self.value = int(src['value'])
+            self.value = int(self.src['value'])
 
         try:
-            self.nonce = hex_to_int(src['nonce'])
+            self.nonce = hex_to_int(self.src['nonce'])
         except TypeError:
-            self.nonce = int(src['nonce'])
+            self.nonce = int(self.src['nonce'])
 
         try:
-            self.fee_limit = hex_to_int(src['gas'])
+            self.fee_limit = hex_to_int(self.src['gas'])
         except TypeError:
-            self.fee_limit = int(src['gas'])
+            self.fee_limit = int(self.src['gas'])
 
         try:
-            self.fee_price = hex_to_int(src['gas_price'])
+            self.fee_price = hex_to_int(self.src['gas_price'])
         except TypeError:
-            self.fee_price = int(src['gas_price'])
+            self.fee_price = int(self.src['gas_price'])
 
         self.gas_price = self.fee_price
         self.gas_limit = self.fee_limit
 
-        address_from = self.normal(src['from'], SrcItem.ADDRESS)
+        address_from = self.normal(self.src['from'], SrcItem.ADDRESS)
         self.outputs = [to_checksum(address_from)]
 
-        to = src['to']
+        to = self.src['to']
         if to == None:
             to = ZERO_ADDRESS
         self.inputs = [to_checksum(strip_0x(to))]
 
-        self.payload = self.normal(src['input'], SrcItem.PAYLOAD)
+        self.payload = self.normal(self.src['input'], SrcItem.PAYLOAD)
 
         try:
-            self.set_wire(src['raw'])
+            self.set_wire(self.src['raw'])
         except KeyError:
-            logg.debug('no inline raw tx src, and no raw rendering implemented, field will be "None"')
+            logg.debug('no inline raw tx self.src, and no raw rendering implemented, field will be "None"')
 
-        self.v = src.get('v')
-        self.r = src.get('r')
-        self.s = src.get('s')
+        self.v = self.src.get('v')
+        self.r = self.src.get('r')
+        self.s = self.src.get('s')
 
         #self.status = Status.PENDING
         if dialect_filter != None:
