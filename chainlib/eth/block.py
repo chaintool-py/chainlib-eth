@@ -93,9 +93,11 @@ class Block(BaseBlock, Src):
    
     tx_generator = Tx
 
-    def __init__(self, src=None):
-        super(Block, self).__init__(src=src)
+    def __init__(self, src=None, dialect_filter=None):
+        super(Block, self).__init__(src=src, dialect_filter=dialect_filter)
 
+
+    def load_src(self, dialect_filter=None):
         self.set_hash(self.src['hash'])
         try:
             self.number = int(strip_0x(self.src['number']), 16)
@@ -116,6 +118,9 @@ class Block(BaseBlock, Src):
         self.fee_limit = self.src['gas_limit']
         self.fee_cost = self.src['gas_used']
         self.parent_hash = self.src['parent_hash']
+
+        if dialect_filter != None:
+            dialect_filter.apply_block(self)
 
 
     def tx_index_by_hash(self, tx_hash):

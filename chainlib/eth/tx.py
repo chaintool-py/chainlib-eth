@@ -47,9 +47,11 @@ from .constant import (
 from .contract import ABIContractEncoder
 from .jsonrpc import to_blockheight_param
 from .src import Src
+from .dialect import DefaultDialectFilter
 
 logg = logging.getLogger(__name__)
 
+eth_dialect_filter = DefaultDialectFilter()
 
 
 class TxFormat(enum.IntEnum):
@@ -581,7 +583,7 @@ class Tx(BaseTx, Src):
     #:todo: divide up constructor method
     """
 
-    def __init__(self, src, block=None, result=None, strict=False, rcpt=None):
+    def __init__(self, src, block=None, result=None, strict=False, rcpt=None, dialect_filter=eth_dialect_filter):
         # backwards compat
         self.gas_price = None
         self.gas_limit = None
@@ -590,20 +592,16 @@ class Tx(BaseTx, Src):
         self.r = None
         self.s = None
 
-        super(Tx, self).__init__(src, block=block, result=result, strict=strict)
+        super(Tx, self).__init__(src, block=block, result=result, strict=strict, dialect_filter=dialect_filter)
 
         if result == None and rcpt != None:
             self.apply_receipt(rcpt)
+            if dialect_filter != None:
+                dialect_filter.apply_result(rcpt)
 
 
-    def apply_src(self, src):
-        try:
-            inpt = src['input']
-        except KeyError:
-            inpt = src['data']
-            src['input'] = src['data']
-
-        src = super(Tx, self).apply_src(src)
+    def apply_src(self, src, dialect_filter=None):
+        src = super(Tx, self).apply_src(src, dialect_filter=dialect_filter)
 
         hsh = self.normal(src['hash'], SrcItem.HASH)
         self.set_hash(hsh)
@@ -651,18 +649,20 @@ class Tx(BaseTx, Src):
         self.s = src.get('s')
 
         #self.status = Status.PENDING
+        if dialect_filter != None:
+            dialect_filter.apply_tx(self)
 
 
     def as_dict(self):
         return self.src
 
 
-    def apply_receipt(self, rcpt, strict=False):
+    def apply_receipt(self, rcpt, strict=False, dialect_filter=None):
         result = TxResult(src=rcpt)
         self.apply_result(result)
 
 
-    def apply_result(self, result, strict=False):
+    def apply_result(self, result, strict=False, dialect_filter=None):
         """Apply receipt data to transaction object.
 
         Effect is the same as passing a receipt at construction.
@@ -680,7 +680,7 @@ class Tx(BaseTx, Src):
         super(Tx, self).apply_result(result)
 
 
-    def apply_block(self, block):
+    def apply_block(self, block, dialect_filter=None):
         """Apply block to transaction object.
 
         :param block: Block object
@@ -705,16 +705,15 @@ class Tx(BaseTx, Src):
 
 
     @staticmethod
-    def from_src(src, block=None, rcpt=None, strict=False, chain_spec=None):
+    def from_src(src, block=None, rcpt=None, strict=False, chain_spec=None, dialect_filter=eth_dialect_filter):
         """Creates a new Tx object.
 
         Alias of constructor.
         """
-        tx = Tx(src, block=block, rcpt=rcpt, strict=strict)
+        tx = Tx(src, block=block, rcpt=rcpt, strict=strict, dialect_filter=dialect_filter)
         if chain_spec != None:
             tx.generate_wire(chain_spec)
         return tx
-
 
 
     def __str__(self):
