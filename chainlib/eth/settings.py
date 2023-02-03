@@ -25,6 +25,7 @@ def process_settings_rpc(settings, config):
     settings.set('CONN', conn)
     settings.set('RPC_ID_GENERATOR', rpc.id_generator)
     settings.set('RPC_SEND', config.true('_RPC_SEND'))
+    settings.set('WAIT', config.true('_WAIT'))
 
     gas_oracle = rpc.get_gas_oracle()
     settings.set('GAS_ORACLE', gas_oracle)

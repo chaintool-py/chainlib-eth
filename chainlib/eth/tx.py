@@ -637,9 +637,9 @@ class Tx(BaseTx, Src):
         self.outputs = [to_checksum(address_from)]
 
         to = self.src['to']
-        if to == None:
-            to = ZERO_ADDRESS
-        self.inputs = [to_checksum(strip_0x(to))]
+        if to != None:
+            to = to_checksum(strip_0x(to))
+        self.inputs = [to]
 
         self.payload = self.normal(self.src['input'], SrcItem.PAYLOAD)
 

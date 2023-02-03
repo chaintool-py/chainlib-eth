@@ -144,7 +144,7 @@ def main():
      
     (tx_hash_hex, o) = g.create(
             settings.get('SENDER_ADDRESS'),
-            settings.get('RECIPIENT'),
+            recipient,
             settings.get('VALUE'),
             data=settings.get('DATA'),
             id_generator=settings.get('RPC_ID_GENERATOR'),
