@@ -61,6 +61,10 @@ config_dir = os.path.join(script_dir, '..', 'data', 'config')
 def process_config_local(config, arg, args, flags):
     config.add(args.signature, '_SIGNATURE', False)
     config.add(args.contract_args, '_CONTRACT_ARGS', False)
+    # workaround to avoid rpc lookup of fee parameters when using arg mode
+    if args.mode == 'arg':
+        config.add(0, '_FEE_PRICE', True)
+        config.add(0, '_FEE_LIMIT', True)
     return config
 
 arg_flags = ArgFlag()

@@ -181,7 +181,6 @@ def process_settings_value(settings, config):
     updated_value = __calculate_net_amount(settings, config)
     settings.set('VALUE', updated_value)
 
-
     return settings
 
 

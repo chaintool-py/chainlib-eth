@@ -1,3 +1,7 @@
+- 0.4.10
+	* Remove rpc lookup when using arg-mode in eth-encode regardless of fee arguments
+- 0.4.9
+	* Enable contract creation with eth-gas tool when recipient is omitted
 - 0.4.8
 	* Add support for dialect differences in tx and block processing
 - 0.4.7
