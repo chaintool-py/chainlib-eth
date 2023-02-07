@@ -160,7 +160,6 @@ def process_settings_contract(settings, config):
     return settings
 
 
-
 def process_settings_data(settings, config):
     data = None
     try:

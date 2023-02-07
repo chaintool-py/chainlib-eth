@@ -31,8 +31,8 @@ def process_config(config, arg, args, flags, positional_name=None):
                 ]:
             raise ValueError('unknown rpc dialect {}'.format(config.get('RPC_DIALECT'))) 
 
-    if arg.match('create', flags):
-        config.add(getattr(args, 'null'), '_NULL')
+    #if arg.match('create', flags):
+    #    config.add(getattr(args, 'null'), '_NULL')
 
 
     return config
