@@ -51,7 +51,10 @@ def process_config_local(config, arg, args, flags):
         data = strip_0x(data)
 
     config.add(data, '_TX_DATA', False)
-
+    
+    # workaround to avoid rpc lookup of fee parameters when using arg mode
+    config.add(0, '_FEE_PRICE', True)
+    config.add(0, '_FEE_LIMIT', True)
     return config
 
 

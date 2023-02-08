@@ -34,10 +34,12 @@ class ABIContractType(enum.Enum):
     UINT8 = 'uint8'
     ADDRESS = 'address'
     STRING = 'string'
+    BYTES = 'bytes'
     BOOLEAN = 'bool'
 
 dynamic_contract_types = [
     ABIContractType.STRING,
+    ABIContractType.BYTES,
     ]
 
 
@@ -97,6 +99,13 @@ class ABIMethodEncoder(ABIContract):
         if not isinstance(v, ABIContractType):
             raise TypeError('method type not valid; expected {}, got {}'.format(type(ABIContractType).__name__, type(v).__name__))
         self.method_contents.append(v.value)
+        self.__log_method()
+
+
+    def typ_literal(self, v):
+        if type(v).__name__ != 'str':
+            raise ValueError('literal type must be string')
+        self.method_contents.append(v)
         self.__log_method()
 
 
@@ -298,6 +307,7 @@ class ABIContractLogDecoder(ABIMethodEncoder, ABIContractDecoder):
         self.types.append(v.value)
 
 
+
     def apply(self, topics, data):
         """Set log entry data to parse.
 
@@ -430,7 +440,12 @@ class ABIContractEncoder(ABIMethodEncoder):
         return contents
 
 
-    def bytes_fixed(self, mx, v, exact=0):
+    def bytes(self, v):
+        l = len(v)
+        
+
+
+    def bytes_fixed(self, mx, v, exact=0, enforce_word=False):
         """Add arbirary length byte data to value vector.
 
         :param mx: Max length of input data.
@@ -445,15 +460,23 @@ class ABIContractEncoder(ABIMethodEncoder):
         if typ == 'str':
             v = strip_0x(v)
             l = len(v)
+            if mx == 0:
+                mx = l
             if exact > 0 and l != exact * 2:
                 raise ValueError('value wrong size; expected {}, got {})'.format(mx, l))
+            if enforce_word and mx % 32 > 0:
+                raise ValueError('value size {} does not match word boundary'.format(mx))
             if l > mx * 2:
                 raise ValueError('value too long ({})'.format(l))
             v = pad(v, mx)
         elif typ == 'bytes':
             l = len(v)
+            if mx == 0:
+                mx = l
             if exact > 0 and l != exact:
                 raise ValueError('value wrong size; expected {}, got {})'.format(mx, l))
+            if enforce_word and mx % 32 > 0:
+                raise ValueError('value size {} does not match word boundary'.format(mx))
             b = bytearray(mx)
             b[mx-l:] = v
             v = pad(b.hex(), mx)
