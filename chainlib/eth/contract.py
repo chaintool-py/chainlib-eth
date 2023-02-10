@@ -440,10 +440,6 @@ class ABIContractEncoder(ABIMethodEncoder):
         return contents
 
 
-    def bytes(self, v):
-        l = len(v)
-        
-
 
     def bytes_fixed(self, mx, v, exact=0, enforce_word=False):
         """Add arbirary length byte data to value vector.

@@ -83,7 +83,7 @@ def process_config_local(config, arg, args, flags):
 
 arg_flags = ArgFlag()
 arg = Arg(arg_flags)
-flags = arg_flags.STD_WRITE | arg_flags.WALLET | arg_flags.CREATE | arg_flags.VALUE | arg_flags.TAB
+flags = arg_flags.STD_WRITE | arg_flags.WALLET | arg_flags.VALUE | arg_flags.TAB
 
 argparser = chainlib.eth.cli.ArgumentParser()
 argparser = process_args(argparser, arg, flags)
