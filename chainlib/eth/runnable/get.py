@@ -133,7 +133,7 @@ def get_transaction(conn, chain_spec, tx_hash, id_generator):
         rcpt = snake_and_camel(rcpt)
         o = block_by_hash(rcpt['block_hash'])
         r = conn.do(o)
-        block = Block(r)
+        block = Block(r, dialect_filter=settings.get('RPC_DIALECT_FILTER'))
         tx.apply_block(block)
     tx.generate_wire(chain_spec)
     return tx

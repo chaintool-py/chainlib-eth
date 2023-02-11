@@ -229,7 +229,7 @@ def main():
     if config.get('_RAW'):
         tx_format = TxFormat.RLP_SIGNED
     (tx_hash_hex, o) = c.finalize(tx, tx_format=tx_format)
-    if settings.get('SEND'):
+    if settings.get('RPC_SEND'):
         r = conn.do(o)
         print(r)
     else:

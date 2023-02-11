@@ -98,6 +98,9 @@ class Block(BaseBlock, Src):
 
 
     def load_src(self, dialect_filter=None):
+        if dialect_filter != None:
+            dialect_filter.apply_block(self)
+
         self.set_hash(self.src['hash'])
         try:
             self.number = int(strip_0x(self.src['number']), 16)
@@ -119,8 +122,6 @@ class Block(BaseBlock, Src):
         self.fee_cost = self.src['gas_used']
         self.parent_hash = self.src['parent_hash']
 
-        if dialect_filter != None:
-            dialect_filter.apply_block(self)
 
 
     def tx_index_by_hash(self, tx_hash):

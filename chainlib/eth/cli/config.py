@@ -21,15 +21,14 @@ class Config(BaseConfig):
 
 def process_config(config, arg, args, flags, positional_name=None):
     config = base_process_config(config, arg, args, flags, positional_name=positional_name)
-    if arg.match('provider', flags):
-
-        if not bool(config.get('RPC_DIALECT')):
-            config.add('default', 'RPC_DIALECT', exists_ok=True)
-        elif config.get('RPC_DIALECT') not in [
-                'openethereum',
-                'default',
-                ]:
-            raise ValueError('unknown rpc dialect {}'.format(config.get('RPC_DIALECT'))) 
+#    if arg.match('provider', flags):
+#        if not bool(config.get('RPC_DIALECT')):
+#            config.add('default', 'RPC_DIALECT', exists_ok=True)
+#        elif config.get('RPC_DIALECT') not in [
+#                'openethereum',
+#                'default',
+#                ]:
+#            raise ValueError('unknown rpc dialect {}'.format(config.get('RPC_DIALECT'))) 
 
     #if arg.match('create', flags):
     #    config.add(getattr(args, 'null'), '_NULL')
