@@ -211,7 +211,12 @@ def main():
     (tx_hash_hex, o) = c.finalize(tx, tx_format=tx_format)
     if settings.get('RPC_SEND'):
         r = conn.do(o)
-        print(r)
+        if settings.get('WAIT'):
+            r = conn.wait(tx_hash_hex)
+            if r['status'] == 0:
+                logg.critical('VM revert. Wish I could tell you more')
+                sys.exit(1)
+        print(tx_hash_hex)
     else:
         if config.get('_RAW'):
             o = strip_0x(o)
