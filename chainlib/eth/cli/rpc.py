@@ -1,6 +1,7 @@
 # external imports
 from chainlib.cli import Rpc as BaseRpc
 from chainlib.eth.connection import EthHTTPConnection
+from chainlib.eth.constant import ZERO_ADDRESS
 
 # local imports
 from chainlib.eth.gas import (
@@ -19,6 +20,9 @@ class Rpc(BaseRpc):
 
 
     """
+
+    default_sender_address = ZERO_ADDRESS
+
     def __init__(self, wallet=None):
         super(Rpc, self).__init__(EthHTTPConnection, wallet=wallet)
 
@@ -59,10 +63,11 @@ class Rpc(BaseRpc):
         else:
             self.fee_oracle = RPCGasOracle(self.conn, id_generator=self.id_generator)
 
-        error_parser = None
-        if config.get('RPC_DIALECT') == 'openethereum':
-            from chainlib.eth.dialect.openethereum import DialectErrorParser
-            self.error_parser = DialectErrorParser()
+        # todo move to separate repo for dialect apply
+        #error_parser = None
+        #if config.get('RPC_DIALECT') == 'openethereum':
+        #    from chainlib.eth.dialect.openethereum import DialectErrorParser
+        #    self.error_parser = DialectErrorParser()
 
         return self.conn
 

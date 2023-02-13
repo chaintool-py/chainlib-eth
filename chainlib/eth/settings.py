@@ -31,14 +31,15 @@ def process_settings_rpc(settings, config):
     settings.set('GAS_ORACLE', gas_oracle)
     settings.set('FEE_ORACLE', gas_oracle)
 
+    sender_address = rpc.get_sender_address()
     try:
         settings.set('SIGNER', rpc.get_signer())
-        sender_address = rpc.get_sender_address()
-        settings.set('SENDER_ADDRESS', add_0x(sender_address))
     except AttributeError:
         pass
     except SignerMissingException:
         pass
+
+    settings.set('SENDER_ADDRESS', add_0x(sender_address))
 
     nonce_oracle = rpc.get_nonce_oracle()
     settings.set('NONCE_ORACLE', nonce_oracle)

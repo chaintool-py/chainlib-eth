@@ -78,7 +78,7 @@ def process_config_local(config, arg, args, flags):
 
 arg_flags = ArgFlag()
 arg = Arg(arg_flags)
-flags = arg_flags.STD_READ | arg_flags.ENV
+flags = arg_flags.STD_READ_NOEX | arg_flags.ENV | arg_flags.TAB
 
 argparser = chainlib.eth.cli.ArgumentParser()
 argparser = process_args(argparser, arg, flags)

@@ -90,30 +90,10 @@ settings = process_settings(settings, config)
 logg.debug('settings loaded:\n{}'.format(settings))
 
 
-#wallet = chainlib.eth.cli.Wallet(EIP155Signer)
-#wallet.from_config(config)
-#
-#rpc = chainlib.eth.cli.Rpc(wallet=wallet)
-#conn = rpc.connect_by_config(config)
-#
-#send = config.true('_RPC_SEND')
-
-#chain_spec = None
-#try:
-#    chain_spec = ChainSpec.from_chain_str(config.get('CHAIN_SPEC'))
-#except AttributeError:
-#    pass
-
-
 def main():
 
     signer_address = ZERO_ADDRESS
     signer = None
-    #try:
-        #signer = rpc.get_signer()
-    #    signer_address = rpc.get_signer_address()
-    #except SignerMissingException:
-    #    pass
     conn = settings.get('CONN')
     signer_address = settings.get('SENDER_ADDRESS')
 
