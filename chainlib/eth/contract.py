@@ -429,11 +429,21 @@ class ABIContractEncoder(ABIMethodEncoder):
         :type v: str
         """
         b = v.encode('utf-8')
-        l = len(b)
+        return self._bytes(b, pad=True)
+
+
+    def bytes(self, v):
+        b = bytes.fromhex(v)
+        return self._bytes(b, pad=True)
+        
+
+    def _bytes(self, v, pad=False):
+        l = len(v)
         contents = l.to_bytes(32, 'big')
-        contents += b
+        contents += v
         padlen = 32 - (l % 32)
-        contents += padlen * b'\x00'
+        if pad:
+            contents += padlen * b'\x00'
         self.bytes_fixed(len(contents), contents)
         self.types.append(ABIContractType.STRING)
         self.__log_latest(v)

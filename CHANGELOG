@@ -1,3 +1,5 @@
+- 0.4.16
+	* Add dynamic bytes encoding in contracts module
 - 0.4.15
 	* Enable setting of unsigned sender address for contract calls
 - 0.4.14
