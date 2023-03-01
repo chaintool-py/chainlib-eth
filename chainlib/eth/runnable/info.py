@@ -132,7 +132,7 @@ def main():
 
     o = block_by_number(first_block_number, False, id_generator=settings.get('RPC_ID_GENERATOR'))
     r = settings.get('CONN').do(o)
-    last_block = Block(r)
+    last_block = Block(r, dialect_filter=settings.get('RPC_DIALECT_FILTER'))
     last_timestamp = last_block.timestamp
 
     if config.true('_LONG'):
@@ -141,7 +141,7 @@ def main():
         for i in range(BLOCK_SAMPLES): 
             o = block_by_number(first_block_number-i, False, id_generator=settings.get('RPC_ID_GENERATOR'))
             r = settings.get('CONN').do(o)
-            block = Block(r)
+            block = Block(r, dialect_filter=settings.get('RPC_DIALECT_FILTER'))
             aggr_time += last_block.timestamp - block.timestamp
         
             gas_limit = int(r['gasLimit'], 16)

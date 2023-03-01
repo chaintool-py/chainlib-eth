@@ -167,7 +167,7 @@ def get_block_hash(conn, block_hash, id_generator):
 
 
 def block_process(block_src):
-    return Block(block_src)
+    return Block(block_src, dialect_filter=settings.get('RPC_DIALECT_FILTER'))
 
 
 def main():

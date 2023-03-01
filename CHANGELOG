@@ -1,3 +1,5 @@
+- 0.4.17
+	* Add dialect filter to info and block cli tools
 - 0.4.16
 	* Add dynamic bytes encoding in contracts module
 - 0.4.15
