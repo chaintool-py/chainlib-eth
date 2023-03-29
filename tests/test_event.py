@@ -19,7 +19,7 @@ class TestContractLog(EthTesterCase):
         dec.topic('TestEventOne')
         dec.typ(ABIContractType.UINT256)
         dec.typ(ABIContractType.BYTES32)
-        s = dec.get_method_signature()
+        s = dec.get_signature()
         n = 42
         topics = [
                 s,

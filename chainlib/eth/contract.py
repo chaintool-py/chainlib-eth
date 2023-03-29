@@ -36,11 +36,16 @@ class ABIContractType(enum.Enum):
     STRING = 'string'
     BYTES = 'bytes'
     BOOLEAN = 'bool'
+    TUPLE = 'tuple'
 
 dynamic_contract_types = [
     ABIContractType.STRING,
     ABIContractType.BYTES,
     ]
+
+pointer_contract_types = [
+    ABIContractType.TUPLE,
+        ] + dynamic_contract_types
 
 
 class ABIContract:
@@ -49,6 +54,12 @@ class ABIContract:
     def __init__(self):
         self.types = []
         self.contents = []
+        self.dirty = False
+
+
+    def add_type(self, v):
+        self.types.append(v)
+        self.dirty = True
 
 
 class ABIMethodEncoder(ABIContract):
@@ -79,9 +90,10 @@ class ABIMethodEncoder(ABIContract):
         :rtype: str
         :returns: Method signature
         """
+        contents = '(' + ','.join(self.method_contents) + ')'
         if self.method_name == None:
-            return ''
-        return '{}({})'.format(self.method_name, ','.join(self.method_contents))
+            return contents
+        return self.method_name + contents
 
 
     def typ(self, v):
@@ -94,8 +106,8 @@ class ABIMethodEncoder(ABIContract):
         :raises AttributeError: Type set before method name
         :raises TypeError: Invalid type
         """
-        if self.method_name == None:
-            raise AttributeError('method name must be set before adding types')
+        if isinstance(v, ABIContractEncoder):
+            return self.typ_tuple(v)
         if not isinstance(v, ABIContractType):
             raise TypeError('method type not valid; expected {}, got {}'.format(type(ABIContractType).__name__, type(v).__name__))
         self.method_contents.append(v.value)
@@ -109,8 +121,35 @@ class ABIMethodEncoder(ABIContract):
         self.__log_method()
 
 
+    def typ_tuple(self, v):
+        if not isinstance(v, ABIContractEncoder):
+            raise TypeError('tuple type not valid; expected {}, got {}'.format(type(ABIContractEncoder).__name__, type(v).__name__))
+        r = v.get_method()
+        self.method_contents.append(r)
+        self.__log_method()
+
+
     def __log_method(self):
         logg.debug('method set to {}'.format(self.get_method()))
+
+
+    def get_signature(self):
+        """Generate topic signature from set topic.
+
+        :rtype: str
+        :returns: Topic signature, in hex
+        """
+        if self.method_name == None:
+            return ''
+        s = self.get_method()
+        return keccak256_string_to_hex(s)
+
+
+    def get_method_signature(self):
+        s = self.get_signature()
+        if s == '':
+            return s
+        return s[:8]
 
 
 
@@ -127,7 +166,9 @@ class ABIContractDecoder(ABIContract):
         """
         if not isinstance(v, ABIContractType):
             raise TypeError('method type not valid; expected {}, got {}'.format(type(ABIContractType).__name__, type(v).__name__))
-        self.types.append(v.value)
+        if v == ABIContractType.TUPLE:
+            raise NotImplementedError('sorry, tuple decoding not yet implemented')
+        self.add_type(v.value)
         self.__log_typ()
 
 
@@ -286,17 +327,6 @@ class ABIContractLogDecoder(ABIMethodEncoder, ABIContractDecoder):
         """
         self.method(event)
 
-
-    def get_method_signature(self):
-        """Generate topic signature from set topic.
-
-        :rtype: str
-        :returns: Topic signature, in hex
-        """
-        s = self.get_method()
-        return keccak256_string_to_hex(s)
-
-
     def typ(self, v):
         """Add type to event argument array.
 
@@ -304,7 +334,7 @@ class ABIContractLogDecoder(ABIMethodEncoder, ABIContractDecoder):
         :type v: chainlib.eth.contract.ABIContractType
         """
         super(ABIContractLogDecoder, self).typ(v)
-        self.types.append(v.value)
+        self.add_type(v.value)
 
 
 
@@ -319,12 +349,18 @@ class ABIContractLogDecoder(ABIMethodEncoder, ABIContractDecoder):
         :type data: str
         :raises ValueError: Topic of input does not match topic set in parser
         """
-        t = self.get_method_signature()
+        t = self.get_signature()
         if topics[0] != t:
             raise ValueError('topic mismatch')
         for i in range(len(topics) - 1):
             self.contents.append(topics[i+1])
         self.contents += data
+
+
+    # Backwards compatibility
+    def get_method_signature(self):
+        logg.warning('ABIContractLogDecoder.get_method_signature() is deprecated. Use ABIContractLogDecoder.get_signature() instead')
+        return self.get_signature()
               
 
 class ABIContractEncoder(ABIMethodEncoder):
@@ -343,7 +379,7 @@ class ABIContractEncoder(ABIMethodEncoder):
         v = int(v)
         b = v.to_bytes(32, 'big')
         self.contents.append(b.hex())
-        self.types.append(ABIContractType.UINT256)
+        self.add_type(ABIContractType.UINT256)
         self.__log_latest(v)
 
 
@@ -365,7 +401,7 @@ class ABIContractEncoder(ABIMethodEncoder):
         b = v.to_bytes(int(bitsize / 8), 'big')
         self.contents.append(b.hex())
         typ = getattr(ABIContractType, 'UINT' + str(bitsize))
-        self.types.append(typ)
+        self.add_type(typ)
         self.__log_latest(v)
 
 
@@ -395,7 +431,7 @@ class ABIContractEncoder(ABIMethodEncoder):
         :type v: str
         """
         self.bytes_fixed(32, v, 20)
-        self.types.append(ABIContractType.ADDRESS)
+        self.add_type(ABIContractType.ADDRESS)
         self.__log_latest(v)
 
 
@@ -406,7 +442,7 @@ class ABIContractEncoder(ABIMethodEncoder):
         :type v: str
         """
         self.bytes_fixed(32, v)
-        self.types.append(ABIContractType.BYTES32)
+        self.add_type(ABIContractType.BYTES32)
         self.__log_latest(v)
 
 
@@ -417,9 +453,17 @@ class ABIContractEncoder(ABIMethodEncoder):
         :type v: str
         """
         self.bytes_fixed(4, v)
-        self.types.append(ABIContractType.BYTES4)
+        self.add_type(ABIContractType.BYTES4)
         self.__log_latest(v)
 
+
+    def tuple(self, v):
+        if type(v).__name__ != 'ABIContractEncoder':
+            raise ValueError('Type for tuple must be ABIContractEncoder')
+        r = v.get_contents()
+        self.bytes_fixed(int(len(r) / 2), r)
+        self.add_type(ABIContractType.TUPLE)
+        self.__log_latest(v)
 
 
     def string(self, v):
@@ -445,10 +489,9 @@ class ABIContractEncoder(ABIMethodEncoder):
         if pad:
             contents += padlen * b'\x00'
         self.bytes_fixed(len(contents), contents)
-        self.types.append(ABIContractType.STRING)
+        self.add_type(ABIContractType.STRING)
         self.__log_latest(v)
         return contents
-
 
 
     def bytes_fixed(self, mx, v, exact=0, enforce_word=False):
@@ -490,14 +533,6 @@ class ABIContractEncoder(ABIMethodEncoder):
             raise ValueError('invalid input {}'.format(typ))
         self.contents.append(v.ljust(64, '0'))
 
-    
-    def get_method_signature(self):
-        """Return abi encoded signature of currently set method.
-        """
-        s = self.get_method()
-        if s == '':
-            return s
-        return keccak256_string_to_hex(s)[:8]
 
 
     def get_contents(self):
@@ -511,7 +546,7 @@ class ABIContractEncoder(ABIMethodEncoder):
         l = len(self.types)
         pointer_cursor = 32 * l
         for i in range(l):
-            if self.types[i] in dynamic_contract_types:
+            if self.types[i] in pointer_contract_types:
                 content_length = len(self.contents[i])
                 pointer_contents += self.contents[i]
                 direct_contents += pointer_cursor.to_bytes(32, 'big').hex()
@@ -524,6 +559,7 @@ class ABIContractEncoder(ABIMethodEncoder):
             if l > 64:
                 l = 64
             logg.debug('code word {} {}'.format(int(i / 64), s[i:i+64]))
+        self.dirty = False
         return s
 
 

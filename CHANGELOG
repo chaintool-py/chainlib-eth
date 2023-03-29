@@ -1,3 +1,7 @@
+- 0.4.18
+	* Set a dirty bit on abi encoder when type added before contents generation
+	* Support for tuple abi encoding (decoding not implemented)
+	* Rename log decoder signature method to get_signature
 - 0.4.17
 	* Add dialect filter to info and block cli tools
 - 0.4.16
