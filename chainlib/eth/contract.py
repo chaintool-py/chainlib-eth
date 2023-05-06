@@ -8,6 +8,7 @@ from hexathon import (
         strip_0x,
         add_0x,
         pad,
+        same as same_hex,
         )
 
 # local imports
@@ -26,12 +27,14 @@ class ABIContractType(enum.Enum):
     """
     BYTES32 = 'bytes32'
     BYTES4 = 'bytes4'
+    BYTESN = 'bytesn'
     UINT256 = 'uint256'
     UINT128 = 'uint128'
     UINT64 = 'uint64'
     UINT32 = 'uint32'
     UINT16 = 'uint16'
     UINT8 = 'uint8'
+    UINTN = 'uintn'
     ADDRESS = 'address'
     STRING = 'string'
     BYTES = 'bytes'
@@ -350,7 +353,8 @@ class ABIContractLogDecoder(ABIMethodEncoder, ABIContractDecoder):
         :raises ValueError: Topic of input does not match topic set in parser
         """
         t = self.get_signature()
-        if topics[0] != t:
+        logg.debug('ttt {}'.format(t))
+        if not same_hex(topics[0], t):
             raise ValueError('topic mismatch')
         for i in range(len(topics) - 1):
             self.contents.append(topics[i+1])
@@ -400,7 +404,8 @@ class ABIContractEncoder(ABIMethodEncoder):
         v = int(v)
         b = v.to_bytes(int(bitsize / 8), 'big')
         self.contents.append(b.hex())
-        typ = getattr(ABIContractType, 'UINT' + str(bitsize))
+        #typ = getattr(ABIContractType, 'UINT' + str(bitsize))
+        typ = ABIContractType.UINTN
         self.add_type(typ)
         self.__log_latest(v)
 
@@ -454,6 +459,20 @@ class ABIContractEncoder(ABIMethodEncoder):
         """
         self.bytes_fixed(4, v)
         self.add_type(ABIContractType.BYTES4)
+        self.__log_latest(v)
+
+
+    def bytesn(self, v, n):
+        """Encode value to bytes of given count and add to input value vector.
+
+        :param v: Bytes, in hex
+        :type v: str
+        """
+        padbytes = '00' * 64
+        padbytes += v
+        v = v[-64:]
+        self.bytes_fixed(32, v, enforce_word=True)
+        self.add_type(ABIContractType.BYTESN)
         self.__log_latest(v)
 
 
