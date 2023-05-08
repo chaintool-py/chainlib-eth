@@ -1,0 +1,277 @@
+.TH eth-gas 1
+.SH NAME
+eth-gas - Create EVM gas token transaction
+.SH SYNOPSIS
+.P
+\fBeth-gas\fP -a RECIPIENT -y KEYFILE [ -p \fIrpc_provider ] [ -s ] [ -u ] AMOUNT
+.P
+\fBeth-gas\fP -a RECIPIENT -y KEYFILE [ --fee-price PRICE ] [ --fee-limit LIMIT ] [ --nonce NONCE ] [ -s ] [ -u ] AMOUNT
+.SH DESCRIPTION
+\fBeth-gas\fP generates serialized gas token transactions in various output formats.
+
+If an \fIrpc_provider\fP is available, the valuess \fIfee_price\fP and \fInonce\fP will be automatically retrieved if they are not explicitly specified. If missing values cannot be retrieved, an error will occur.
+
+Providing all arguments enables fully offline creation of the transaction.
+
+See \fBEXAMPLES\fP for more details on inputs and outputs.
+
+
+.SS OPTIONS
+
+.TP
+\fB-0\fP
+Omit newline to output
+
+.TP
+\fB-a\fP, \fB--recipient-address\fP
+Beneficiary of the gas token transaction.
+
+
+.TP
+\fB-c \fI\fIconfig_dir\fP\fP, \fB--config \fI\fIconfig_dir\fP\fP
+Load configuration files from given directory. All files with an .ini extension will be loaded, of which all must contain valid ini file data.
+
+.TP
+\fB--dumpconfig \fI\fIformat\fP\fP
+Output configuration settings rendered from environment and inputs. Valid arguments are \fIini\fP for ini file output, and \fIenv\fP for environment variable output. See \fBCONFIGURATION\fP.
+
+.TP
+\fB--env-prefix\fP
+Environment prefix for variables to overwrite configuration. Example: If \fB--env-prefix\fP is set to \fBFOO\fP then configuration variable \fBBAR_BAZ\fP would be set by environment variable \fBFOO_BAZ_BAR\fP. Also see \fBENVIRONMENT\fP.
+
+.TP
+\fB--fee-limit\fP
+Set the limit of execution units for the transaction. If used with \fB-s\fP this may incur actual network token cost. If \fB--fee-price\fP is not explicitly set, the price \fImay\fP be retrieved from the network, and multiplied with this value to define the cost.
+
+.TP
+\fB--fee-price\fP
+Set fee unit price to offer for the transaction. If used with \fB-s\fP this may incur actual network token cost.
+
+.TP
+\fB--height\fP
+Block height at which to query state for. Does not apply to transactions.
+
+.TP
+\fB-i \fI\fIchain_spec\fP\fP, \fB--chain-spec \fI\fIchain_spec\fP\fP
+Chain specification string, in the format <engine>:<fork>:<chain_id>:<common_name>. Example: "evm:london:1:ethereum". Overrides the \fIRPC_CREDENTIALS\fP configuration setting.
+
+.TP
+\fB-n \fI\fInamespace\fP\fP, \fB--namespace \fI\fInamespace\fP\fP
+Load given configuration namespace. Configuration will be loaded from the immediate configuration subdirectory with the same name.
+
+.TP
+\fB--no-logs\fP
+Turn of logging completely. Negates \fB-v\fP and \fB-vv\fP
+
+.TP
+\fB--nonce\fP
+Explicitly set nonce to use for transaction.
+
+.TP
+\fB-p\fP, \fB--rpc-provider\fP
+Fully-qualified URL of RPC provider. Overrides the \fIRPC_PROVIDER\fP configuration setting.
+
+.TP
+\fB--passphrase-file \fI\fIpath\fP\fP
+Path to file containing password to unlock key file
+
+.TP
+\fB--raw\fP
+Produce output most optimized for machines.
+
+.TP
+\fB--rpc-auth\fP
+RPC endpoint authentication method, e.g. how to handle a HTTP WWW-Authenticate header. Overrides the \fIRPC_AUTH\fP configuration setting.
+
+.TP
+\fB--rpc-credentials\fP
+RPC endpoint authentication data. Format depends on the authentication method defined in \fB--rpc-auth\fP. Overrides the \fIRPC_CREDENTIALS\fP configuration setting.
+
+.TP
+\fB--rpc-dialect\fP
+RPC backend dialect. If specified it \fImay\fP help with encoding and decoding issues. Overrides the \fIRPC_DIALECT\fP configuration setting.
+
+.TP
+\fB-s\fP
+Send to network. If set, network state may change. This means tokens may be spent and so on. Use with care. Only applies to transactions.
+
+.TP
+\fB--seq\fP
+Use numeric sequencial jsonrpc query ids. Useful for buggy server implementations who expects such.
+
+.TP
+\fB--total\fP
+Deduct calculated fee from value.
+
+.TP
+\fB-u\fP, \fB--unsafe\fP
+Allow addresses that do not pass checksum.
+
+.TP
+\fB-v\fP
+Verbose. Show logs for important state changes.
+
+.TP
+\fB-vv\fP
+Very verbose. Show logs with debugging information.
+
+.TP
+\fB-w\fP
+Wait for the last transaction to be confirmed on the network. Will generate an error if the EVM execution fails.
+
+.TP
+\fB-ww\fP
+Wait for \fIall\fP transactions sequentially to be confirmed on the network. Will generate an error if EVM execution fails for any of the transactions.
+
+.TP
+\fB-y \fI\fIpath\fP\fP, \fB--key-path \fI\fIpath\fP\fP
+Path to signing key. Overrides the \fIWALLET_KEY_FILE\fP configuration setting.
+
+.SH CONFIGURATION
+
+All configuration settings may be overriden both by environment variables, or by overriding settings with the contents of ini-files in the directory defined by the \fB-c\fP option.
+
+The active configuration, with values assigned from environment and arguments, can be output using the \fB--dumpconfig\fP \fIformat\fP option. Note that entries having keys prefixed with underscore (e.g. _SEQ) are not actual configuration settings, and thus cannot be overridden with environment variables.
+
+To refer to a configuration setting by environment variables, the \fIsection\fP and \fIkey\fP are concatenated together with an underscore, and transformed to upper-case. For example, the configuration variable \fIFOO_BAZ_BAR\fP refers to an ini-file entry as follows:
+
+.EX
+[foo]
+bar_baz = xyzzy
+.EE
+
+In the \fBENVIRONMENT\fP section below, the relevant configuration settings for this tool is listed along with a short description of its meaning.
+
+Some configuration settings may also be overriden by command line options. Also note that the use of the \fB-n\fP and \fB--env-prefix\fP options affect how environment and configuration is read. The effects of options on how configuration settings are affective is described in the respective \fBOPTIONS\fP section.
+
+.SH EXAMPLES
+
+.P
+In the follwing we willconsaider transactions signed by the private key for address Eb3907eCad74a0013c259D5874AE7f22DcBcC95C:
+
+.SS Offline transaction
+
+.EX
+$ eth-gas -y <\fIkey_file_path\fP> -a 00000000000000000000000000000000DeaDBeef --fee-price 100000000000 --fee-limit 21000 --nonce 42 1024
+from: Eb3907eCad74a0013c259D5874AE7f22DcBcC95C
+to: 00000000000000000000000000000000DeaDBeef
+nonce: 42
+gasPrice: 100000000000 (100 gwei)
+gas: 21000
+value: 1024 (0.000000000000001024 eth)
+data: 0x
+v: 37
+recovery_byte: 0
+r: 0x0c97432d4db724e66a56f7ced04174cf6129e2555709f206dd6d3a156b4af23a
+s: 0x287862548314a59c7ca6139eee8b51400eb40a67b08b8dc13d67302abecccae0
+chainId: 1
+hash: 0x003030af05460633e85b16fff7a17607818dc67e58f89396e5491ad6f5438971
+hash_unsigned: 0xa59cf9e5438b186de381892b7879ce66476d5469478c7148880da5d553ade651
+src: 0xf8662a85174876e8008252089400000000000000000000000000000000deadbeef8204008025a00c97432d4db724e66a56f7ced04174cf6129e2555709f206dd6d3a156b4af23aa0287862548314a59c7ca6139eee8b51400eb40a67b08b8dc13d67302abecccae0
+.EE
+
+.SS Offline transaction with arbitrary data
+
+.EX
+$ eth-gas -y <\fIkey_file_path\fP> -a 00000000000000000000000000000000DeaDBeef --fee-price 100000000000 --fee-limit 21000 --nonce 42 --data 0x2a 1024 
+from: Eb3907eCad74a0013c259D5874AE7f22DcBcC95C
+to: 00000000000000000000000000000000DeaDBeef
+nonce: 42
+gasPrice: 100000000000 (100 gwei)
+gas: 21000
+value: 1024 (0.000000000000001024 eth)
+data: 0x2a
+v: 37
+recovery_byte: 0
+r: 0x800b6982d3f178201d7e7e7693b9c90b3fbcd54d04b6fff5284c81101fad54dd
+s: 0x3b86d710d31ac74b58f0040b0f51fdb6bdbabea62a68cf99c05e765e7e81de87
+chainId: 1
+hash: 0xede30052befd80760c5ab543babdccc3d97fe90523e5710d77220155a82faa47
+hash_unsigned: 0xad82d8cf1a412541c8a94ef71c50e9172c3a37853af036adee2f55c577da9770
+src: 0xf8662a85174876e8008252089400000000000000000000000000000000deadbeef8204002a25a0800b6982d3f178201d7e7e7693b9c90b3fbcd54d04b6fff5284c81101fad54dda03b86d710d31ac74b58f0040b0f51fdb6bdbabea62a68cf99c05e765e7e81de87
+.EE
+
+.SS Offline transaction with wire-format output
+
+.EX
+$ eth-gas -y <\fIkey_file_path\fP> -a 00000000000000000000000000000000DeaDBeef --fee-price 100000000000 --fee-limit 21000 --nonce 42 --raw 1024
+0xf8662a85174876e8008252089400000000000000000000000000000000deadbeef8204008025a00c97432d4db724e66a56f7ced04174cf6129e2555709f206dd6d3a156b4af23aa0287862548314a59c7ca6139eee8b51400eb40a67b08b8dc13d67302abecccae0
+.EE
+
+.SS Sign transaction for a different network
+
+.EX
+$ eth-gas -i evm:london:3:rinkeby -y /home/lash/src/contrib/grassrootseconomics/cic-dev/UTC--2021-01-08T17-18-44.521011372Z--eb3907ecad74a0013c259d5874ae7f22dcbcc95c  -a 00000000000000000000000000000000DeaDBeef --fee-price 100000000000 --fee-limit 21000 --nonce 42 --data 0x2a 1024 
+from: Eb3907eCad74a0013c259D5874AE7f22DcBcC95C
+to: 00000000000000000000000000000000DeaDBeef
+nonce: 42
+gasPrice: 100000000000 (100 gwei)
+gas: 21000
+value: 1024 (0.000000000000001024 eth)
+data: 0x2a
+v: 41
+recovery_byte: 0
+r: 0xe522c25784111a512cbf46f883e3bdacffc2cdbd465fa1042892c28fc10ee054
+s: 0x5f84eb51a0c9871cfcedaba4e6274b300014899b3a2fec9292de6fe5919bcd07
+chainId: 3
+hash: 0x771200a20072294a6a843b89b98d5f868c9aa94da75dacf6a9f5834dfd241199
+hash_unsigned: 0xa5f9e8a5cda6985d81f4129955b7529f48ecb54728badac16ec550384e3a2bcc
+src: 0xf8662a85174876e8008252089400000000000000000000000000000000deadbeef8204002a29a0e522c25784111a512cbf46f883e3bdacffc2cdbd465fa1042892c28fc10ee054a05f84eb51a0c9871cfcedaba4e6274b300014899b3a2fec9292de6fe5919bcd07
+.EE
+
+.P
+The wire-format can in turn be decoded using the \fBeth-decode\fP tool)
+.SH ENVIRONMENT
+
+
+.TP
+\fICHAIN_SPEC\fP
+String specifying the type of chain connected to, in the format \fI<engine>:<fork>:<network_id>:<common_name>\fP. For EVM nodes the \fIengine\fP value will always be \fIevm\fP.
+
+.TP
+\fIRPC_AUTH\fP
+Authentication method to use for the \fIRPC_PROVIDER\fP. Currently only \fIbasic\fP is supported.
+
+.TP
+\fIRPC_CREDENTIALS\fP
+Authentication credentials to use for \fIRPC_AUTH\fP. For \fIbasic\fP authentication the value must be given as \fI<user>:<pass>\fP.
+
+.TP
+\fIRPC_DIALECT\fP
+Enables translations of EVM node specific formatting and response codes.
+
+.TP
+\fIRPC_PROVIDER\fP
+Fully-qualified URL to the RPC endpoint of the blockchain node.
+
+.TP
+\fIWALLET_KEY_FILE\fP
+The wallet key file containing private key to use for transaction signing. Overridden by \fB-y\fP.
+
+.TP
+\fIWALLET_PASSPHRASE\fP
+Passphrase to unlock wallet. \fBWARNING:\fP it is \fBunsafe\fP to pass the passphrase as an environment variable. If the key unlocks something of value, the passphrase should rather be in a configuration file, preferably as an encrypted entry. Alternatively, a passphrase can be read from file using the \fB--passphrase-file\fP option. Files containing passphrases should only be accessible by the owner.
+
+.SH LICENSE
+
+This documentation and its source is licensed under the Creative Commons Attribution-Sharealike 4.0 International license.
+
+The source code of the tool this documentation describes is licensed under the GNU General Public License 3.0.
+
+.SH COPYRIGHT
+
+Louis Holbrook <dev@holbrook.no> (https://holbrook.no)
+PGP: 59A844A484AC11253D3A3E9DCDCBD24DD1D0E001
+
+
+
+.SH SOURCE CODE
+
+https://git.defalsify.org
+
+
+.SH SEE ALSO
+
+.BP
+confini-dump(1), eth-keyfile(1)
+

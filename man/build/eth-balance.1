@@ -1,0 +1,98 @@
+.TH eth-balance 1
+
+.SH NAME
+eth-balance \- Get network gas token balance for an address
+
+.SH SYNOPSIS
+\fBeth-balance\fP [ -p \fIrpc_provider\fP ] \fIaddress\fP
+
+.SH DESCRIPTION
+.P
+Query the network for the gas token balance of an account.
+.P
+The balance will be returned as an integer value denominated in the gas unit.
+
+
+.SS OPTION
+
+.TP
+\fB-0\fP
+Omit newline to output
+
+.TP
+\fB-a\fP, \fB --address\fP
+Address to get balance for.
+
+.TP
+\fB-c \fI\fIconfig_dir\fP\fP, \fB--config \fI\fIconfig_dir\fP\fP
+Load configuration files from given directory. All files with an .ini extension will be loaded, of which all must contain valid ini file data.
+
+.TP
+\fB--dumpconfig \fI\fIformat\fP\fP
+Output configuration settings rendered from environment and inputs. Valid arguments are \fIini\fP for ini file output, and \fIenv\fP for environment variable output. See \fBCONFIGURATION\fP.
+
+.TP
+\fB--env-prefix\fP
+Environment prefix for variables to overwrite configuration. Example: If \fB--env-prefix\fP is set to \fBFOO\fP then configuration variable \fBBAR_BAZ\fP would be set by environment variable \fBFOO_BAZ_BAR\fP. Also see \fBENVIRONMENT\fP.
+
+.TP
+\fB-n \fI\fInamespace\fP\fP, \fB--namespace \fI\fInamespace\fP\fP
+Load given configuration namespace. Configuration will be loaded from the immediate configuration subdirectory with the same name.
+
+.TP
+\fB--no-logs\fP
+Turn of logging completely. Negates \fB-v\fP and \fB-vv\fP
+
+.TP
+\fB--raw\fP
+Produce output most optimized for machines.
+
+.TP
+\fB-v\fP
+Verbose. Show logs for important state changes.
+
+.TP
+\fB-vv\fP
+Very verbose. Show logs with debugging information.
+
+.SH CONFIGURATION
+
+All configuration settings may be overriden both by environment variables, or by overriding settings with the contents of ini-files in the directory defined by the \fB-c\fP option.
+
+The active configuration, with values assigned from environment and arguments, can be output using the \fB--dumpconfig\fP \fIformat\fP option. Note that entries having keys prefixed with underscore (e.g. _SEQ) are not actual configuration settings, and thus cannot be overridden with environment variables.
+
+To refer to a configuration setting by environment variables, the \fIsection\fP and \fIkey\fP are concatenated together with an underscore, and transformed to upper-case. For example, the configuration variable \fIFOO_BAZ_BAR\fP refers to an ini-file entry as follows:
+
+.EX
+[foo]
+bar_baz = xyzzy
+.EE
+
+In the \fBENVIRONMENT\fP section below, the relevant configuration settings for this tool is listed along with a short description of its meaning.
+
+Some configuration settings may also be overriden by command line options. Also note that the use of the \fB-n\fP and \fB--env-prefix\fP options affect how environment and configuration is read. The effects of options on how configuration settings are affective is described in the respective \fBOPTIONS\fP section.
+
+
+.SH LICENSE
+
+This documentation and its source is licensed under the Creative Commons Attribution-Sharealike 4.0 International license.
+
+The source code of the tool this documentation describes is licensed under the GNU General Public License 3.0.
+
+.SH COPYRIGHT
+
+Louis Holbrook <dev@holbrook.no> (https://holbrook.no)
+PGP: 59A844A484AC11253D3A3E9DCDCBD24DD1D0E001
+
+
+
+.SH SOURCE CODE
+
+https://git.defalsify.org
+
+
+.SH SEE ALSO
+
+.BP
+confini-dump(1), eth-keyfile(1)
+

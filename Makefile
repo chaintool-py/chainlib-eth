@@ -1,5 +1,5 @@
 PREFIX ?= /usr/local
-BUILD_DIR = build/$(PREFIX)/share/man
+BUILD_DIR = man/build/
 
 man:
 	mkdir -vp $(BUILD_DIR)

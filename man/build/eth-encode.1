@@ -1,0 +1,253 @@
+.TH eth-encode 1
+
+.SH NAME
+eth-encode \- Encode arbitrary contract calls and transactions
+
+.SH SYNOPSIS
+\fBeth-encode\fP [ --mode \fImode\fP ] [ -f \fIformat\fP ] [ -p \fIrpc_provider\fP ] [ -i \fIchain_Spec\fP] [ -s ] [ -w ] [ -e \fIsmart_contract_address\fP ] --signature \fIcontract_method_name\fP [ \fIvalue_specifiers\fP ... ]
+
+.SH DESCRIPTION
+
+Generate wire-format or rpc query any EVM smart contract call or transaction by specifying method and arguments.
+
+The resulting call or transaction can either be stored offline for later use, or directly sent to the network using the \fB-s\fP option.
+
+A description of value formatting is given in the \fBSPECIFYING VALUES\fP section below. Usage is demonstrated in the \fBEXAMPLES\fP section.
+
+.SS OPTIONS
+
+.TP
+\fB-0\fP
+Omit newline to output
+
+.TP
+\fB-c \fI\fIconfig_dir\fP\fP, \fB--config \fI\fIconfig_dir\fP\fP
+Load configuration files from given directory. All files with an .ini extension will be loaded, of which all must contain valid ini file data.
+
+.TP
+\fB--dumpconfig \fI\fIformat\fP\fP
+Output configuration settings rendered from environment and inputs. Valid arguments are \fIini\fP for ini file output, and \fIenv\fP for environment variable output. See \fBCONFIGURATION\fP.
+
+.TP
+\fB-e\fP, \fB--executable-address\fP
+Address of an executable code point on the network.
+
+.TP
+\fB--env-prefix\fP
+Environment prefix for variables to overwrite configuration. Example: If \fB--env-prefix\fP is set to \fBFOO\fP then configuration variable \fBBAR_BAZ\fP would be set by environment variable \fBFOO_BAZ_BAR\fP. Also see \fBENVIRONMENT\fP.
+
+.TP
+\fB--fee-limit\fP
+Set the limit of execution units for the transaction. If used with \fB-s\fP this may incur actual network token cost. If \fB--fee-price\fP is not explicitly set, the price \fImay\fP be retrieved from the network, and multiplied with this value to define the cost.
+
+.TP
+\fB--fee-price\fP
+Set fee unit price to offer for the transaction. If used with \fB-s\fP this may incur actual network token cost.
+
+.TP
+\fB--height\fP
+Block height at which to query state for. Does not apply to transactions.
+
+.TP
+\fB-i \fI\fIchain_spec\fP\fP, \fB--chain-spec \fI\fIchain_spec\fP\fP
+Chain specification string, in the format <engine>:<fork>:<chain_id>:<common_name>. Example: "evm:london:1:ethereum". Overrides the \fIRPC_CREDENTIALS\fP configuration setting.
+
+.TP
+\fB--mode \fI\fImode
+\fP\fP
+Mode of operation encoding is for. Must be one of "tx," "call," or "arg." See \fBMODES\fP below.
+
+.TP
+\fB-n \fI\fInamespace\fP\fP, \fB--namespace \fI\fInamespace\fP\fP
+Load given configuration namespace. Configuration will be loaded from the immediate configuration subdirectory with the same name.
+
+.TP
+\fB--no-logs\fP
+Turn of logging completely. Negates \fB-v\fP and \fB-vv\fP
+
+.TP
+\fB--nonce\fP
+Explicitly set nonce to use for transaction.
+
+.TP
+\fB-p\fP, \fB--rpc-provider\fP
+Fully-qualified URL of RPC provider. Overrides the \fIRPC_PROVIDER\fP configuration setting.
+
+.TP
+\fB--passphrase-file \fI\fIpath\fP\fP
+Path to file containing password to unlock key file
+
+.TP
+\fB--raw\fP
+Produce output most optimized for machines.
+
+.TP
+\fB--rpc-auth\fP
+RPC endpoint authentication method, e.g. how to handle a HTTP WWW-Authenticate header. Overrides the \fIRPC_AUTH\fP configuration setting.
+
+.TP
+\fB--rpc-credentials\fP
+RPC endpoint authentication data. Format depends on the authentication method defined in \fB--rpc-auth\fP. Overrides the \fIRPC_CREDENTIALS\fP configuration setting.
+
+.TP
+\fB--rpc-dialect\fP
+RPC backend dialect. If specified it \fImay\fP help with encoding and decoding issues. Overrides the \fIRPC_DIALECT\fP configuration setting.
+
+.TP
+\fB-s\fP
+Send to network. If set, network state may change. This means tokens may be spent and so on. Use with care. Only applies to transactions.
+
+.TP
+\fB--seq\fP
+Use numeric sequencial jsonrpc query ids. Useful for buggy server implementations who expects such.
+
+.TP
+\fB-u\fP, \fB--unsafe\fP
+Allow addresses that do not pass checksum.
+
+.TP
+\fB-v\fP
+Verbose. Show logs for important state changes.
+
+.TP
+\fB-vv\fP
+Very verbose. Show logs with debugging information.
+
+.TP
+\fB-w\fP
+Wait for the last transaction to be confirmed on the network. Will generate an error if the EVM execution fails.
+
+.TP
+\fB-ww\fP
+Wait for \fIall\fP transactions sequentially to be confirmed on the network. Will generate an error if EVM execution fails for any of the transactions.
+
+.TP
+\fB-y \fI\fIpath\fP\fP, \fB--key-path \fI\fIpath\fP\fP
+Path to signing key. Overrides the \fIWALLET_KEY_FILE\fP configuration setting.
+
+.SH CONFIGURATION
+
+All configuration settings may be overriden both by environment variables, or by overriding settings with the contents of ini-files in the directory defined by the \fB-c\fP option.
+
+The active configuration, with values assigned from environment and arguments, can be output using the \fB--dumpconfig\fP \fIformat\fP option. Note that entries having keys prefixed with underscore (e.g. _SEQ) are not actual configuration settings, and thus cannot be overridden with environment variables.
+
+To refer to a configuration setting by environment variables, the \fIsection\fP and \fIkey\fP are concatenated together with an underscore, and transformed to upper-case. For example, the configuration variable \fIFOO_BAZ_BAR\fP refers to an ini-file entry as follows:
+
+.EX
+[foo]
+bar_baz = xyzzy
+.EE
+
+In the \fBENVIRONMENT\fP section below, the relevant configuration settings for this tool is listed along with a short description of its meaning.
+
+Some configuration settings may also be overriden by command line options. Also note that the use of the \fB-n\fP and \fB--env-prefix\fP options affect how environment and configuration is read. The effects of options on how configuration settings are affective is described in the respective \fBOPTIONS\fP section.
+
+.SH MODES
+
+The modes parameter specifies what kind of operaion the encoding should be generated for. There are three valid modes:
+
+.SS tx
+Generates a transaction that changes state. Used with \fB--format\fP \fIrpc\fP it will generate an \fIeth_sendRawTransaction\fP jsonrpc object. Used with \fB--format\fP \fIbin\fP it outputs signed RLP only in hexdecimal.
+
+.SS call
+Generates a query that reads state. Used with \fB--format\fP \fIrpc\fP it will generate a \fIeth_call\fP jsonrpc object with applicable fields filled out from environment, arguments and/or rpc retrieval. \fB--format\fP \fIbin\fP is not valid for this mode.
+
+.SS arg
+Encodes the argument part only, optionally with a method signature. \fB--format\fP \fIrpc\fP is not valid for this mode.
+
+.SH SPECIFYING VALUES
+Dynamic value types are not yet supported.
+
+.SS Specifying an unsigned integer:
+.IP u:1024
+
+.SS Specifying an address:
+.IP a:19062190B1925b5b6689D7073fDfC8c2976EF8Cb
+
+.SS Specifying bytes values:
+
+.IP b:deadbeef 
+.IP b4:deadbeef
+.IP b32:deadbeef
+
+.SS Specifying a string value:
+
+.IP s:foobar
+.SH EXAMPLES
+
+.SS Build a signed ERC20 transfer in wire format, setting nonce and fee details manually.
+.EX
+$ eth-encode -f bin -y <\fIkey_file_path\fP> -e <\fItoken_address\fP> --fee-price 1000000000 --fee-limit 100000 --nonce 42 --signature transfer a:00000000000000000000000000000000DeaDBeef u:1024
+.EE
+
+.SS Build Smart contract call with method signature, retrieving fee and nonce settings from rpc
+
+\fBeth-encode\fP --mode call -f rpc -e <\fItoken_address\fP> --signature balanceOf -p <\fIrpc_endpoint\fP> a:deadbeef
+
+.SS Build smart contract ERC20 transfer argument with signature
+.EX
+\fBeth-encode\fP --mode arg --signature transfer a:00000000000000000000000000000000DeaDBeef u:1024
+.TP Outupt
+a9059cbb00000000000000000000000000000000000000000000000000000000deadbeef0000000000000000000000000000000000000000000000000000000000000400
+.EE
+
+.SS Build smart contract ERC20 transfer argument types without signature
+.EX
+\fBeth-encode\fP --mode arg a:00000000000000000000000000000000DeaDBeef u:1024
+.TP Output
+00000000000000000000000000000000000000000000000000000000deadbeef0000000000000000000000000000000000000000000000000000000000000400
+.EE
+.SH ENVIRONMENT
+
+
+.TP
+\fICHAIN_SPEC\fP
+String specifying the type of chain connected to, in the format \fI<engine>:<fork>:<network_id>:<common_name>\fP. For EVM nodes the \fIengine\fP value will always be \fIevm\fP.
+
+.TP
+\fIRPC_AUTH\fP
+Authentication method to use for the \fIRPC_PROVIDER\fP. Currently only \fIbasic\fP is supported.
+
+.TP
+\fIRPC_CREDENTIALS\fP
+Authentication credentials to use for \fIRPC_AUTH\fP. For \fIbasic\fP authentication the value must be given as \fI<user>:<pass>\fP.
+
+.TP
+\fIRPC_DIALECT\fP
+Enables translations of EVM node specific formatting and response codes.
+
+.TP
+\fIRPC_PROVIDER\fP
+Fully-qualified URL to the RPC endpoint of the blockchain node.
+
+.TP
+\fIWALLET_KEY_FILE\fP
+The wallet key file containing private key to use for transaction signing. Overridden by \fB-y\fP.
+
+.TP
+\fIWALLET_PASSPHRASE\fP
+Passphrase to unlock wallet. \fBWARNING:\fP it is \fBunsafe\fP to pass the passphrase as an environment variable. If the key unlocks something of value, the passphrase should rather be in a configuration file, preferably as an encrypted entry. Alternatively, a passphrase can be read from file using the \fB--passphrase-file\fP option. Files containing passphrases should only be accessible by the owner.
+
+.SH LICENSE
+
+This documentation and its source is licensed under the Creative Commons Attribution-Sharealike 4.0 International license.
+
+The source code of the tool this documentation describes is licensed under the GNU General Public License 3.0.
+
+.SH COPYRIGHT
+
+Louis Holbrook <dev@holbrook.no> (https://holbrook.no)
+PGP: 59A844A484AC11253D3A3E9DCDCBD24DD1D0E001
+
+
+
+.SH SOURCE CODE
+
+https://git.defalsify.org
+
+
+.SH SEE ALSO
+
+.BP
+confini-dump(1), eth-keyfile(1)
+
