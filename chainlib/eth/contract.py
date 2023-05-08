@@ -8,6 +8,7 @@ from hexathon import (
         strip_0x,
         add_0x,
         pad,
+        same as same_hex,
         )
 
 # local imports
@@ -350,7 +351,7 @@ class ABIContractLogDecoder(ABIMethodEncoder, ABIContractDecoder):
         :raises ValueError: Topic of input does not match topic set in parser
         """
         t = self.get_signature()
-        if topics[0] != t:
+        if not same_hex(topics[0], t):
             raise ValueError('topic mismatch')
         for i in range(len(topics) - 1):
             self.contents.append(topics[i+1])
@@ -430,7 +431,7 @@ class ABIContractEncoder(ABIMethodEncoder):
         :param v: Ethereum address, in hex
         :type v: str
         """
-        self.bytes_fixed(32, v, 20)
+        self.bytes_fixed(32, v, exact=20)
         self.add_type(ABIContractType.ADDRESS)
         self.__log_latest(v)
 
@@ -532,7 +533,6 @@ class ABIContractEncoder(ABIMethodEncoder):
         else:
             raise ValueError('invalid input {}'.format(typ))
         self.contents.append(v.ljust(64, '0'))
-
 
 
     def get_contents(self):

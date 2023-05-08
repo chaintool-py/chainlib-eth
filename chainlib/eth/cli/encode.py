@@ -7,6 +7,8 @@ from chainlib.eth.contract import (
         ABIContractType,
         ABIContractEncoder,
         )
+from chainlib.eth.constant import ZERO_ADDRESS
+from chainlib.eth.constant import ZERO_CONTENT
 
 logg = logging.getLogger(__name__)
 
@@ -81,7 +83,7 @@ class CLIEncoder(ABIContractEncoder):
         return (s, a)
 
 
-    def translate_type(self, typ):
+    def translate(self, typ, val):
         r = None
         for tr in self.__translations:
             r = getattr(self, tr)(typ)
@@ -90,13 +92,18 @@ class CLIEncoder(ABIContractEncoder):
         if r == None:
             raise ValueError('no translation for type {}'.format(typ))
         logg.debug('type {} translated to {}'.format(typ, r[0]))
-        return r[1]
+        if int(val) == 0:
+            if r[0][0] == 'B':
+                val = ZERO_CONTENT
+            elif r[0][0] == 'A':
+                val = ZERO_ADDRESS
+        return (r[1], val,)
 
 
     def add_from(self, arg):
         logg.debug('arg {}'.format(arg))
         (typ, val) = arg.split(':', maxsplit=1)
-        real_typ = self.translate_type(typ)
+        (real_typ, val) = self.translate(typ, val)
         if self.signature != None:
             self.typ(real_typ)
         fn = getattr(self, real_typ.value)
