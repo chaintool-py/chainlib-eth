@@ -1,3 +1,4 @@
+PACKAGE=chainlib-eth
 PREFIX ?= /usr/local
 BUILD_DIR = man/build/
 
@@ -14,3 +15,11 @@ man:
 	chainlib-man.py -b `PYTHONPATH=. python chainlib/eth/runnable/flags.py balance` -v -n eth-balance -d $(BUILD_DIR)/ man
 
 .PHONY: man
+
+build:
+	python setup.py bdist_wheel
+
+.PHONY clean:
+	rm -rf build
+	rm -rf dist
+	rm -rf $(PACKAGE).egg-info

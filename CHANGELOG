@@ -1,3 +1,7 @@
+- 0.4.22
+	* Add roles and contracts index in unittest fixture
+- 0.4.21
+	* Add man pages to installer
 - 0.4.20
 	* Enable short 0 value in eth-encode for address and bytes
 - 0.4.19

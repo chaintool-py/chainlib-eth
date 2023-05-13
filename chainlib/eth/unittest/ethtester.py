@@ -68,6 +68,8 @@ class EthTesterCase(unittest.TestCase):
         for a in self.keystore.list():
             self.accounts.append(add_0x(to_checksum_address(a)))
 
+        self.publisher = self.accounts[0]
+
         def rpc_with_tester(chain_spec=self.chain_spec, url=None):
             return self.rpc
 
@@ -75,6 +77,11 @@ class EthTesterCase(unittest.TestCase):
         RPCConnection.register_constructor(ConnType.CUSTOM, rpc_with_tester, tag='signer')
         RPCConnection.register_location('custom', self.chain_spec, tag='default', exist_ok=True)
         RPCConnection.register_location('custom', self.chain_spec, tag='signer', exist_ok=True)
+
+        self.contracts = {}
+        self.roles = {
+            'publisher': self.publisher,
+                }
         
 
     def tearDown(self):
