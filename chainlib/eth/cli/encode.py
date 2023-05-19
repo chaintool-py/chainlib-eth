@@ -92,7 +92,7 @@ class CLIEncoder(ABIContractEncoder):
         if r == None:
             raise ValueError('no translation for type {}'.format(typ))
         logg.debug('type {} translated to {}'.format(typ, r[0]))
-        if int(val) == 0:
+        if int(val, 16) == 0:
             if r[0][0] == 'B':
                 val = ZERO_CONTENT
             elif r[0][0] == 'A':
