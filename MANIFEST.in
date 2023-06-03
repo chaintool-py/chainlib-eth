@@ -1,1 +1,1 @@
-include *requirements.txt LICENSE WAIVER WAIVER.asc CHANGELOG chainlib/eth/data/config/** man/build/**
+include *requirements.txt LICENSE WAIVER WAIVER.asc CHANGELOG chainlib/eth/data/config/** man/build/** README*

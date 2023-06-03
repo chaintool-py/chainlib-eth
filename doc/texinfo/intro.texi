@@ -1,0 +1,15 @@
+@chapter Overview
+
+This is the Ethereum (EVM) implementation of the @code{chainlib} block interface.
+
+It contains implementations for:
+
+@itemize
+@item RPC client implementation.
+@item Nonce and fee generators.
+@item Transaction and block objects.
+@item EVM ABI encoding and decoding.
+@item CLI tool suite for common operations.
+@end itemize
+
+Please refer to the documentation for the @code{chainlib} package to achieve a broader context of what @code{chainlib-eth implements}.

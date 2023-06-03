@@ -1,0 +1,32 @@
+@chapter CLI tooling
+
+When installed, the python package @code{chainlib-eth} will install a selection of CLI tools in the python executable script path.
+
+It will also install man pages for each tool in the man path. The man pages describe arguments, configurations and environment variables relevant for each tool. They will not be repeated here.
+
+The man pages have been generated using the @code{chainlib-man.py} script from the @code{chainlib} package. Please refer to the @code{chainlib} package documentation for further details on the logical structure of the applicable arguments.
+
+@table @command
+@item eth-balance
+Gas token balance of a specific address.
+@item eth-block
+Retrieve a block by number or hash.
+@item eth-checksum
+Transform an ethereum address to a checksummed address.
+@item eth-count
+Get the amount of confirmed transactions on network for an account. Corresponds to the nonce of the next future transaction.
+@item eth-decode
+Decode a transaction from its serialized (wire) format.
+@item eth-encode
+Sncode method calls and/or individual arguments for the EVM ABI. Can be used to interface with smart contracts and generate constructor arguments.
+@item eth-gas
+Generate transactions for private accounts and smart contracts, with or without gas token value.
+@item eth-get
+Retrieve a transaction, or bytecode for an address.
+@item eth-info
+Retrieve general stats for a blockchain network.
+@item eth-raw
+Covert a signed wire format transaction to raw transaction for RPC.
+@item eth-wait
+Block until transaction has been completed (transaction "receipt" exists).
+@end table

@@ -23,3 +23,13 @@ build:
 	rm -rf build
 	rm -rf dist
 	rm -rf $(PACKAGE).egg-info
+
+readme:
+	make -C doc/texinfo readme
+	pandoc -f docbook -t gfm doc/texinfo/build/docbook.xml > README.md
+
+python: build
+
+doc:
+	make -C doc/texinfo
+

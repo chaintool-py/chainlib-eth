@@ -20,6 +20,10 @@ while True:
     test_requirements.append(l.rstrip())
 f.close()
 
+f = open('README.md', 'r')
+description = f.read()
+f.close()
+
 man_dir = 'man/build'
 mans = [
         'eth-balance',
@@ -39,4 +43,6 @@ setup(
         install_requires=requirements,
         tests_require=test_requirements,
         data_files=[("man/man1", mans)],
+        long_description=description,
+        long_description_content_type='text/markdown',
     )
