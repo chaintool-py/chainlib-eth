@@ -1,6 +1,6 @@
 funga-eth~=0.6.6
-pysha3==1.0.2
+safe-pysha3==1.0.4
 hexathon~=0.1.7
 websocket-client==0.57.0
 potaahto~=0.1.1
-chainlib~=0.4.7
+chainlib~=0.4.17
