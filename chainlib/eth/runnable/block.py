@@ -114,7 +114,6 @@ settings = process_settings_local(settings, config)
 logg.debug('settings loaded:\n{}'.format(settings))
 
 
-
 def get_block(settings):
     hsh = None
     try:
