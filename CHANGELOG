@@ -1,3 +1,9 @@
+- 0.5.1
+	* Pass dialect filter to load tx from src
+	* Apply dialect to receipts / results
+	* Make eth base dialect usable for all sources
+- 0.5.0
+	* Implement rpc batch limiting
 - 0.4.27
 	* Fix break in encoding string values for eth-encode CLI tool
 - 0.4.26

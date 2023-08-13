@@ -606,7 +606,9 @@ class Tx(BaseTx, Src):
     #    src = super(Tx, self).apply_src(src, dialect_filter=dialect_filter)
 
 
-    def load_src(self, dialect_filter=None):
+    def load_src(self, dialect_filter=eth_dialect_filter):
+        src = dialect_filter.apply_tx(self.src)
+        self.apply_src(src)
         hsh = self.normal(self.src['hash'], SrcItem.HASH)
         self.set_hash(hsh)
 
@@ -652,18 +654,14 @@ class Tx(BaseTx, Src):
         self.r = self.src.get('r')
         self.s = self.src.get('s')
 
-        #self.status = Status.PENDING
-        if dialect_filter != None:
-            dialect_filter.apply_tx(self)
-
 
     def as_dict(self):
         return self.src
 
 
     def apply_receipt(self, rcpt, strict=False, dialect_filter=None):
-        result = TxResult(src=rcpt)
-        self.apply_result(result)
+        result = TxResult(src=rcpt, dialect_filter=dialect_filter)
+        self.apply_result(result, dialect_filter=dialect_filter)
 
 
     def apply_result(self, result, strict=False, dialect_filter=None):

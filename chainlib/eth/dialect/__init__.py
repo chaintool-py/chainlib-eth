@@ -14,10 +14,13 @@ class DefaultErrorParser:
 
 class DialectFilter(BaseDialectFilter):
 
-    def apply_src(self, src):
+    def apply_tx(self, src):
         try:
             inpt = src['input']
         except KeyError:
-            inpt = src['data']
-            src['input'] = src['data']
+            try:
+                inpt = src['data']
+                src['input'] = src['data']
+            except KeyError:
+                pass
         return src

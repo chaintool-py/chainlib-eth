@@ -14,6 +14,7 @@ from hexathon import (
 
 # local imports
 from chainlib.eth.tx import Tx
+from chainlib.eth.tx import eth_dialect_filter
 from .src import Src
 
 logg = logging.getLogger(__name__)
@@ -122,6 +123,9 @@ class Block(BaseBlock, Src):
         self.fee_cost = self.src['gas_used']
         self.parent_hash = self.src['parent_hash']
 
+
+    def tx_by_index(self, idx, dialect_filter=eth_dialect_filter):
+        return super(Block, self).tx_by_index(idx, dialect_filter=dialect_filter)
 
 
     def tx_index_by_hash(self, tx_hash):
