@@ -1,3 +1,5 @@
+- 0.5.2
+	* Fix crash in tx load when no dialect filter
 - 0.5.1
 	* Pass dialect filter to load tx from src
 	* Apply dialect to receipts / results

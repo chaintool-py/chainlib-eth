@@ -607,7 +607,9 @@ class Tx(BaseTx, Src):
 
 
     def load_src(self, dialect_filter=eth_dialect_filter):
-        src = dialect_filter.apply_tx(self.src)
+        src = self.src
+        if dialect_filter != None:
+            src = dialect_filter.apply_tx(src)
         self.apply_src(src)
         hsh = self.normal(self.src['hash'], SrcItem.HASH)
         self.set_hash(hsh)

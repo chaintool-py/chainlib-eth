@@ -127,7 +127,7 @@ def get_transaction(conn, chain_spec, tx_hash, id_generator):
     rcpt = conn.do(o)
 
     if tx == None:
-        tx = Tx(tx_src)
+        tx = Tx(tx_src, dialect_filter=settings.get('RPC_DIALECT_FILTER'))
     if rcpt != None:
         tx.apply_receipt(rcpt)
         rcpt = snake_and_camel(rcpt)
