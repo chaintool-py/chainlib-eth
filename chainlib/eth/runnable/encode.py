@@ -97,13 +97,17 @@ def main():
     conn = settings.get('CONN')
     signer_address = settings.get('SENDER_ADDRESS')
 
+    signature = config.get('_SIGNATURE')
     code = '0x'
-    cli_encoder = CLIEncoder(signature=config.get('_SIGNATURE'))
-
-    for arg in config.get('_CONTRACT_ARGS'):
-        cli_encoder.add_from(arg)
-    
-    code += cli_encoder.get()
+    if len(signature) > 2:
+        if signature[:2] == '0x':
+            code += strip_0x(signature)
+            code += ''.join(config.get('_CONTRACT_ARGS'))
+        else:
+            cli_encoder = CLIEncoder(signature=signature)
+            for arg in config.get('_CONTRACT_ARGS'):
+                cli_encoder.add_from(arg)
+            code += cli_encoder.get()
 
     exec_address = config.get('_EXEC_ADDRESS')
     if exec_address:
