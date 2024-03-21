@@ -4,3 +4,4 @@ gmon.out
 dist/
 build/
 *.egg-info
+.venv
