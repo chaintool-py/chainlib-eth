@@ -98,6 +98,25 @@ class Block(BaseBlock, Src):
         super(Block, self).__init__(src=src, dialect_filter=dialect_filter)
 
 
+    def __parse_author(self, src):
+        author = None
+        try:
+            author = self.src['author']
+        except KeyError:
+            pass
+        if author:
+            return author
+
+        try:
+            author = self.src['miner']
+        except KeyError:
+            pass
+        if author:
+            return author
+
+        return self.src['coinbase']
+
+
     def load_src(self, dialect_filter=None):
         if dialect_filter != None:
             dialect_filter.apply_block(self)
@@ -114,14 +133,7 @@ class Block(BaseBlock, Src):
         except TypeError:
             self.timestamp = int(self.src['timestamp'])
 
-        try:
-            self.author = self.src['author']
-        except KeyError:
-            self.author = self.src['miner']
-
-        self.fee_limit = self.src['gas_limit']
-        self.fee_cost = self.src['gas_used']
-        self.parent_hash = self.src['parent_hash']
+        self.author = self.__parse_author(self.src)
 
 
     def tx_by_index(self, idx, dialect_filter=eth_dialect_filter):

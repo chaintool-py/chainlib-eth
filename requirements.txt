@@ -1,4 +1,4 @@
-funga-eth~=0.7.5
+funga-eth~=0.8.0
 safe-pysha3==1.0.4
 hexathon~=0.1.7
 websocket-client==0.57.0
