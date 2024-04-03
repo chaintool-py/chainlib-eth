@@ -160,6 +160,16 @@ class Block(BaseBlock, Src):
 
 
     def to_human(self):
+        try:
+            self.fee_limit = hex_to_int(self.fee_limit)
+        except TypeError:
+            pass
+
+        try:
+            self.fee_cost = hex_to_int(self.fee_cost)
+        except TypeError:
+            pass
+
         s = """hash: {}
 number: {}
 parent: {}
@@ -176,8 +186,8 @@ txs: {}
     self.timestamp,
     datetime.datetime.fromtimestamp(self.timestamp),
     self.author,
-    hex_to_int(self.fee_limit),
-    hex_to_int(self.fee_cost),
+    self.fee_limit,
+    self.fee_cost,
     len(self.txs),
         )
 
