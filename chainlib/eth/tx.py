@@ -597,9 +597,7 @@ class Tx(BaseTx, Src):
         super(Tx, self).__init__(src, block=block, result=result, strict=strict, dialect_filter=dialect_filter)
 
         if result == None and rcpt != None:
-            self.apply_receipt(rcpt)
-            if dialect_filter != None:
-                dialect_filter.apply_result(rcpt)
+            self.apply_receipt(rcpt, dialect_filter=dialect_filter)
 
 
     #def apply_src(self, src, dialect_filter=None):
@@ -644,8 +642,12 @@ class Tx(BaseTx, Src):
         if to != None:
             to = to_checksum(strip_0x(to))
         self.inputs = [to]
+    
+        try:
+            self.payload = self.normal(self.src['input'], SrcItem.PAYLOAD)
+        except KeyError:
+            self.payload = self.normal(self.src['data'], SrcItem.PAYLOAD)
 
-        self.payload = self.normal(self.src['input'], SrcItem.PAYLOAD)
 
         try:
             self.set_wire(self.src['raw'])

@@ -1,3 +1,12 @@
+- 0.6.3
+	* Accept both "input" and "data" as parameter key for payload in base tx source
+- 0.6.2
+	* Revert input / data field hack in base dialect filter
+- 0.6.1
+	* Accept int or hex for fee limit and cost
+- 0.6.0
+	* Handle missing block author field
+	* Work around pysha break in python 3.11
 - 0.5.2
 	* Fix crash in tx load when no dialect filter
 - 0.5.1

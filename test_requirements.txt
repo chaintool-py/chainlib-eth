@@ -2,3 +2,4 @@ eth_tester==0.10.0b4
 py-evm==0.10.0b4
 rlp==3.0.0
 coverage==5.5
+#setuptools==70.0.0
