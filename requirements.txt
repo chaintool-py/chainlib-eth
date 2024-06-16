@@ -3,4 +3,4 @@ safe-pysha3==1.0.4
 hexathon~=0.1.7
 websocket-client==0.57.0
 potaahto~=0.1.2
-chainlib~=0.5.2
+chainlib~=0.5.4
